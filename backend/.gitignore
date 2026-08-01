@@ -1,5 +1,6 @@
 __pycache__
 .env
+.env.example
 CLAUDE.md
 codecompass-app.2025-11-19.private-key.pem
 cloned_repos/
