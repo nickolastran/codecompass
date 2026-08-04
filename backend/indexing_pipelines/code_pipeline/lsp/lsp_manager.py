@@ -19,7 +19,6 @@ from .lsp_config import (
 )
 from ..languages.language_handler import LanguageHandler
 
-
 class LSPManager:
     """
     Manages multiple LSP clients for multi-language support.
@@ -108,7 +107,6 @@ class LSPManager:
     def initialize_all(self, root_uri: str):
         """
         Initialize all LSP servers.
-
         Must be called before using any LSP functionality.
 
         Args:
@@ -121,7 +119,6 @@ class LSPManager:
     def shutdown_all(self, cleanup_generated: bool = True):
         """
         Shutdown all LSP servers gracefully.
-
         Should be called when done with LSP operations to clean up resources.
 
         Args:

@@ -11,7 +11,6 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 import xml.etree.ElementTree as ET
 
-
 @dataclass
 class WikiPage:
     """Represents a single wiki page."""
@@ -84,7 +83,6 @@ class WikiPage:
             parent_section=parent_section
         )
 
-
 @dataclass
 class WikiSection:
     """Represents a hierarchical section containing pages."""
@@ -136,7 +134,6 @@ class WikiSection:
             pages=pages,
             subsections=subsections
         )
-
 
 @dataclass
 class WikiStructure:
@@ -276,5 +273,4 @@ class WikiStructure:
             for related_id in page.related_pages:
                 if related_id not in self.pages:
                     errors.append(f"Page '{page.id}' references non-existent related page '{related_id}'")
-
         return errors

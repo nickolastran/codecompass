@@ -3,7 +3,6 @@
 """
 
 import os
-
 import chromadb
 from sentence_transformers import SentenceTransformer
 from config import DOCUMENTATION_CHROMA_DB_PATH
@@ -45,14 +44,8 @@ class Documentation_Retreival:
 
         # Parse the results
         # A list with each element being one of the retreived chunks
-    
-
         # One string with all the context
-
-
         # A list with all the filepaths
-
-
         # Extract first batch from Chroma (because everything is batched)
         docs = results["documents"][0]
         metas = results["metadatas"][0]
@@ -65,7 +58,6 @@ class Documentation_Retreival:
 
         # 3. A list with all the file paths (from metadata["source"])
         filepaths_list = [m.get("source") for m in metas]
-
 
         #print("full_context=", full_context)
         #print("chunks_list=", chunks_list)

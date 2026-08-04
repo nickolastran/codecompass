@@ -1,9 +1,7 @@
 """
 LSP-based edge builders for the knowledge graph.
-
 This module provides functionality to add CALLS and IMPORTS edges to the graph
 by using LSP (Language Server Protocol) to resolve symbols and dependencies.
-
 Now supports multi-language codebases via LSPManager.
 """
 
@@ -17,7 +15,6 @@ from ..core.graph_model import Graph, Node, NodeLabel, EdgeType
 from .lsp_client import to_lsp_pos
 from .lsp_manager import LSPManager
 
-
 def _uri_to_path(uri: str) -> Path:
     """Convert a file:// URI to a filesystem Path."""
     if uri.startswith("file://"):
@@ -28,7 +25,6 @@ def _uri_to_path(uri: str) -> Path:
             path_str = path_str[1:]  # Remove leading / on Windows
         return Path(path_str)
     return Path(uri)
-
 
 def build_span_index(graph: Graph) -> Dict[str, List[Tuple[int, int, str]]]:
     """
@@ -75,7 +71,6 @@ def build_span_index(graph: Graph) -> Dict[str, List[Tuple[int, int, str]]]:
 
     return dict(index)
 
-
 def map_location_to_node(span_index: Dict[str, List[Tuple[int, int, str]]],
                          uri: str,
                          line: int) -> Optional[str]:
@@ -112,7 +107,6 @@ def map_location_to_node(span_index: Dict[str, List[Tuple[int, int, str]]],
                 best_span_size = span_size
 
     return best_match
-
 
 def add_imports_edges(graph: Graph, lsp_manager: LSPManager) -> int:
     """
@@ -183,7 +177,6 @@ def add_imports_edges(graph: Graph, lsp_manager: LSPManager) -> int:
 
     return edges_added
 
-
 def _resolve_import_to_file_node(graph: Graph,
                                   source_file: Path,
                                   module_name: str) -> Optional[str]:
@@ -250,7 +243,6 @@ def _resolve_import_to_file_node(graph: Graph,
                 continue
 
     return None
-
 
 def add_calls_edges(graph: Graph,
                     lsp_manager: LSPManager,

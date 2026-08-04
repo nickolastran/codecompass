@@ -1,6 +1,5 @@
 """
 Language Handler Abstract Interface
-
 Defines the contract for language-specific operations in CodeCompass.
 Each language (Python, TypeScript, Go, Rust, etc.) implements this interface
 to provide Tree-sitter parsing and LSP server configuration.
@@ -8,11 +7,8 @@ to provide Tree-sitter parsing and LSP server configuration.
 
 from abc import ABC, abstractmethod
 from typing import List, Optional, Tuple
-
 from tree_sitter import Language, Parser
-
 from indexing_pipelines.code_pipeline.core.graph_model import Node
-
 
 class LanguageHandler(ABC):
     """

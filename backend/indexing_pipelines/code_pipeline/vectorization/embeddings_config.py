@@ -13,7 +13,6 @@ import voyageai
 from pathlib import Path
 from dotenv import load_dotenv
 
-
 class SimpleEmbeddings:
     """
     Lightweight wrapper around SentenceTransformer for Chroma.
@@ -44,7 +43,6 @@ class SimpleEmbeddings:
             prompt_name="query",
         )
         return embedding[0].tolist()
-
 
 class VoyageEmbeddings:
     """
@@ -83,7 +81,6 @@ class VoyageEmbeddings:
         embeddings = result.embeddings
         return embeddings[0]
 
-
 def get_embeddings(use_local: bool = True):
     """
     Get the configured embeddings model.
@@ -118,7 +115,6 @@ def get_embeddings(use_local: bool = True):
         # Voyage AI voyage-code-3 (requires VOYAGE_API_KEY in environment)
         print("[Embeddings] Using Voyage AI voyage-code-3")
         return VoyageEmbeddings()
-
 
 # Default embedder - change use_local to switch models
 DEFAULT_EMBEDDINGS = get_embeddings(use_local=False)

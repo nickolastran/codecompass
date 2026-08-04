@@ -25,9 +25,7 @@ class Document_Indexing:
         # get or create a collection
         # collection name is always the user_id
         collection_name = self.user_id
-
         client = chromadb.PersistentClient(path=DOCUMENTATION_CHROMA_DB_PATH)
-
         self.collection = client.get_or_create_collection(name=collection_name, metadata={"hnsw:space": "cosine"})
 
     def Index_File(self, filepath: str):

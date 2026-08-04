@@ -1,4 +1,4 @@
-// src/lib/github/app.ts
+
 import { App } from "@octokit/app";
 import fs from "fs";
 

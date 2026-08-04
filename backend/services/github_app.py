@@ -1,4 +1,4 @@
-# app/services/github_app.py
+
 import os
 import time
 
@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
-
 
 class GitHubAppService:
     def __init__(self):
@@ -43,6 +42,5 @@ class GitHubAppService:
         response.raise_for_status()
 
         return response.json()["token"]
-
 
 github_app = GitHubAppService()

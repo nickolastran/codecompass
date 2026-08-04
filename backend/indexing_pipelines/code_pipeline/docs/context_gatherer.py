@@ -23,14 +23,12 @@ from ..languages.language_config import ENABLED_LANGUAGES
 from ..vectorization.process_graph import index_graph_into_vectors, node_text
 from .wiki_structure import WikiStructure, WikiPage
 
-
 # Constants for context gathering
 MIN_FILES_PER_PAGE = 5
 MAX_CONTEXT_CHARS = 12000  # ~3k tokens
 K_SEEDS = 3  # Vector search seeds
 HOPS = 2  # Graph expansion hops
 MAX_NEIGHBORS = 30  # Max neighbors from graph expansion
-
 
 @dataclass
 class PageContext:
@@ -68,7 +66,6 @@ class PageContext:
             parts.append("\n```\n\n")
 
         return "".join(parts)
-
 
 class ContextGatherer:
     """Gathers context for wiki pages using GraphRAG."""
@@ -271,7 +268,6 @@ class ContextGatherer:
 
         if debug:
             print(f"[GATHER] Final: {len(context.file_paths)} files, {context.total_chars} chars")
-
         return context
 
     def gather_all_contexts(
@@ -301,7 +297,6 @@ class ContextGatherer:
             context = self.gather_context_for_page(page, min_files, max_chars, debug)
             contexts[page.id] = context
             print(f"      -> {len(context.file_paths)} files, {context.total_chars} chars")
-
         return contexts
 
     def _resolve_file_paths(self, paths: List[str]) -> List[str]:
@@ -429,7 +424,6 @@ class ContextGatherer:
                     node_path = self._normalize_path(node.path)
                     if node_path == file_path:
                         context.definition_ids.add(node.id)
-
             return True
 
         except Exception as e:
@@ -499,7 +493,6 @@ def main():
         action="store_true",
         help="Enable debug logging"
     )
-
     args = parser.parse_args()
 
     # Load environment
@@ -529,7 +522,6 @@ def main():
     print(f"  Total pages: {len(contexts)}")
     print(f"  Average files per page: {sum(len(c.file_paths) for c in contexts.values()) / len(contexts):.1f}")
     print(f"  Average chars per page: {sum(c.total_chars for c in contexts.values()) / len(contexts):.0f}")
-
 
 if __name__ == "__main__":
     main()

@@ -348,5 +348,4 @@ class CHandler(LanguageHandler):
                 if result:
                     return result
             return None
-
         return traverse(root)

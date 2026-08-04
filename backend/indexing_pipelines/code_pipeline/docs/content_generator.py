@@ -14,7 +14,6 @@ from dotenv import load_dotenv
 from .wiki_structure import WikiStructure, WikiPage
 from .context_gatherer import PageContext
 
-
 # Load the documentation prompt template
 DOCUMENTATION_PROMPT_TEMPLATE = """You are an expert technical writer and software architect.
 Your task is to generate a comprehensive and accurate technical wiki page in Markdown format about a specific feature, system, or module within a given software project.
@@ -128,7 +127,6 @@ SOURCE CODE CONTENT:
 Generate the complete markdown documentation for this wiki page now.
 """
 
-
 class ContentGenerator:
     """Generates markdown content for wiki pages using LLM."""
 
@@ -201,7 +199,6 @@ class ContentGenerator:
 
         # Post-process
         markdown = self._post_process_markdown(markdown, context, debug)
-
         return markdown
 
     def _build_prompt(self, page: WikiPage, context: PageContext) -> str:
@@ -225,7 +222,6 @@ class ContentGenerator:
             file_list=file_list,
             source_code=source_code
         )
-
         return prompt
 
     def _call_llm(self, prompt: str) -> str:
@@ -251,7 +247,6 @@ class ContentGenerator:
             messages=[{"role": "user", "content": prompt}],
             temperature=0.3,  # Lower temperature for more consistent output
         )
-
         return response.choices[0].message.content
 
     def _call_anthropic(self, prompt: str) -> str:
@@ -269,7 +264,6 @@ class ContentGenerator:
             temperature=0.3,
             messages=[{"role": "user", "content": prompt}]
         )
-
         return response.content[0].text
 
     def _post_process_markdown(
@@ -320,9 +314,7 @@ class ContentGenerator:
         if citation_count == 0:
             if debug:
                 print("  [WARN] No source citations found")
-
         return markdown
-
 
 def generate_single_page(
     page: WikiPage,
@@ -367,7 +359,6 @@ def generate_single_page(
 
     if debug:
         print(f"[SAVE] Markdown saved to {file_path}")
-
     return str(file_path)
 
 
@@ -412,7 +403,6 @@ def main():
         action="store_true",
         help="Enable debug logging"
     )
-
     args = parser.parse_args()
 
     # Load wiki structure
@@ -461,7 +451,6 @@ def main():
     if current_file and current_content:
         context.file_paths.add(current_file)
         context.sources[current_file] = '\n'.join(current_content)
-
     context.total_chars = sum(len(s) for s in context.sources.values())
 
     # Generate page
@@ -474,9 +463,7 @@ def main():
         args.model,
         debug=args.debug
     )
-
     print(f"\n✓ Page generated: {output_path}")
-
 
 if __name__ == "__main__":
     main()

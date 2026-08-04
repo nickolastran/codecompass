@@ -8,13 +8,10 @@ into database records with proper parent-child relationships and metadata.
 import json
 import logging
 import os
-
-# Import types from indexing pipeline
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import UUID
-
 from supabase import Client
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
@@ -218,7 +215,6 @@ async def delete_pages_by_documentation_id(
 ) -> int:
     """
     Delete all pages associated with a documentation_id.
-
     Useful for cleanup after failed insertions or re-indexing.
 
     Args:

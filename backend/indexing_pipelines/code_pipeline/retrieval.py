@@ -142,7 +142,6 @@ def graphrag_context(KG, vectorstore: Chroma, query: str, *, k_seeds=2, hops=2, 
 
     linenums_list = [(doc.metadata["start_line"], doc.metadata["end_line"]) for doc in seed_docs]
 
-
     if debug:
         print(f"\n  [GRAPHRAG DEBUG] Query: {query}")
         print(f"  [GRAPHRAG DEBUG] Vector search returned {len(seed_ids)} seeds:")
@@ -151,7 +150,6 @@ def graphrag_context(KG, vectorstore: Chroma, query: str, *, k_seeds=2, hops=2, 
             if node:
                 print(f"    {i+1}. {node.label.value} {node.name} (score: {score:.3f}) - {node.path}")
          
-
     # 2) Expand in the KG (both directions). Filter to definition nodes.
     neighbor_ids = KG.khop(
         seeds=seed_ids,
@@ -197,9 +195,7 @@ def graphrag_context(KG, vectorstore: Chroma, query: str, *, k_seeds=2, hops=2, 
     )
     return context, chunks_list, filepaths_list, linenums_list
 
-
 def main():
-
     # Use paths relative to this file's location
     script_dir = Path(__file__).parent
     persist_directory = str(script_dir / "chroma_db")

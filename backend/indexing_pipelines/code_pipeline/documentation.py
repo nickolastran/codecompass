@@ -52,12 +52,10 @@ def print_phase_header(phase_num: int, phase_name: str):
     print(f"PHASE {phase_num}: {phase_name}")
     print("=" * 70)
 
-
 def print_section(title: str):
     """Print a formatted section header."""
     print(f"\n{title}")
     print("-" * len(title))
-
 
 async def build_knowledge_graph(
     repo_path: str, graph_cache_path: str, rebuild: bool, verbose: bool
@@ -118,7 +116,6 @@ async def build_knowledge_graph(
         print(f"\nSaved graph cache to {graph_cache_path}")
 
     return graph
-
 
 async def generate_summaries(
     graph: Graph,
@@ -219,7 +216,6 @@ async def generate_summaries(
 
     return all_stats
 
-
 async def generate_wiki_ia(
     graph: Graph,
     provider: OpenAIProvider,
@@ -299,7 +295,6 @@ async def generate_wiki_ia(
     print(f"  Saved to: {ia_path}")
 
     return ia
-
 
 async def generate_wiki_content(
     graph: Graph,
@@ -391,7 +386,6 @@ async def generate_wiki_content(
 
     return {"succeeded": succeeded, "failed": failed}
 
-
 def main():
     """Main entry point for documentation generation pipeline."""
     load_dotenv(find_dotenv(usecwd=True))
@@ -482,7 +476,6 @@ def main():
 
     # Run async pipeline
     asyncio.run(run_pipeline())
-
 
 if __name__ == "__main__":
     main()

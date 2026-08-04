@@ -32,8 +32,6 @@ from typing import List
 # Load the .env file
 load_dotenv()
 
-
-
 class RAG_Agent:
     """
         An orchestrator agent for selecting the appropriate retrieval tool

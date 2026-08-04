@@ -26,7 +26,6 @@ from indexing_pipelines.code_pipeline.core.graph_model import EdgeType, Graph, N
 from indexing_pipelines.code_pipeline.docs.llm.async_executor import async_batch_process_with_tracking
 from indexing_pipelines.code_pipeline.docs.llm.providers import LLMProvider
 
-
 def _get_folder_files(folder_node: Node, graph: Graph) -> List[Node]:
     """
     Collect all FILE nodes contained by a folder.
@@ -46,9 +45,7 @@ def _get_folder_files(folder_node: Node, graph: Graph) -> List[Node]:
             child_node = graph.nodes.get(edge.dst)
             if child_node and child_node.label == NodeLabel.FILE:
                 file_nodes.append(child_node)
-
     return file_nodes
-
 
 def _get_folder_submodules(
     folder_node: Node, graph: Graph, module_summaries: Dict[str, Dict[str, Any]]
@@ -81,7 +78,6 @@ def _get_folder_submodules(
                     )
 
     return submodules
-
 
 def _build_module_representation(
     folder_node: Node,
@@ -411,11 +407,9 @@ def summarize_modules(
 
     return stats
 
-
 # ============================================================================
 # Async provider-based functions (NEW - concurrent execution)
 # ============================================================================
-
 
 async def async_summarize_modules(
     graph: Graph,
@@ -589,7 +583,6 @@ async def async_summarize_modules(
 
     if verbose:
         print(f"\nSaved {len(stats['summaries'])} module summaries to {output_path}")
-
     return stats
 
 

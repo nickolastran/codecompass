@@ -39,7 +39,6 @@ CPP_KEYWORDS = {
     "size_t", "nullptr_t", "string", "vector", "map", "set", "list",
 }
 
-
 class CppHandler(LanguageHandler):
     """Handler for C++ language (.cpp, .hpp, .cc, .cxx, .h files)"""
 
@@ -173,7 +172,6 @@ class CppHandler(LanguageHandler):
 
             for child in node.children:
                 collect_classes(child)
-
         collect_classes(root)
 
         # Second pass: collect functions and methods
@@ -230,7 +228,6 @@ class CppHandler(LanguageHandler):
 
             for child in node.children:
                 collect_functions(child, in_class)
-
         collect_functions(root)
         return nodes
 
@@ -281,7 +278,6 @@ class CppHandler(LanguageHandler):
                 result = self._get_function_name(child, code_bytes)
                 if result[0]:
                     return result
-
         return (None, None)
 
     def get_lsp_server_command(self) -> List[str]:
@@ -352,7 +348,6 @@ class CppHandler(LanguageHandler):
 
             for child in node.children:
                 traverse(child)
-
         traverse(root)
         return out
 
@@ -477,5 +472,4 @@ class CppHandler(LanguageHandler):
                 if result:
                     return result
             return None
-
         return traverse(root)

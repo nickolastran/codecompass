@@ -61,7 +61,6 @@ def ensure_jsconfig(repo_root: str) -> Optional[Path]:
 
     return jsconfig_path
 
-
 def has_js_ts_files(repo_root: str) -> bool:
     """
     Check if repository contains JavaScript or TypeScript files.
@@ -83,7 +82,6 @@ def has_js_ts_files(repo_root: str) -> bool:
 
     return False
 
-
 def cleanup_generated_config(config_path: Optional[Path]) -> None:
     """
     Remove a generated config file.
@@ -97,7 +95,6 @@ def cleanup_generated_config(config_path: Optional[Path]) -> None:
         config_path.unlink()
         print(f"  [LSP Config] Cleaned up generated {config_path.name}")
 
-
 # =============================================================================
 # C/C++ compile_commands.json Generation
 # =============================================================================
@@ -110,7 +107,6 @@ SKIP_DIRS = {
     "test", "tests", "testing", "benchmark", "benchmarks",
     "__pycache__", ".pytest_cache", ".tox",
 }
-
 
 def ensure_compile_commands(repo_root: str) -> Dict[str, str]:
     """
@@ -159,9 +155,7 @@ def ensure_compile_commands(repo_root: str) -> Dict[str, str]:
             "path": str(generated_path),
             "warning": "Generated with heuristics - external dependencies won't resolve",
         }
-
     return {"status": "failed", "source": "none"}
-
 
 def _generate_compile_commands_cmake(repo_root: str) -> bool:
     """
@@ -208,9 +202,7 @@ def _generate_compile_commands_cmake(repo_root: str) -> bool:
         # Clean up build directory
         if build_dir.exists():
             shutil.rmtree(build_dir, ignore_errors=True)
-
     return False
-
 
 def _generate_compile_commands_bear(repo_root: str) -> bool:
     """
@@ -244,9 +236,7 @@ def _generate_compile_commands_bear(repo_root: str) -> bool:
         print(f"  [LSP Config] Bear timed out")
     except Exception as e:
         print(f"  [LSP Config] Bear failed: {e}")
-
     return False
-
 
 def _generate_compile_commands_heuristic(repo_root: str) -> Optional[Path]:
     """
@@ -325,9 +315,7 @@ def has_c_cpp_files(repo_root: str) -> bool:
             # Skip excluded directories
             if not any(skip_dir in f.parts for skip_dir in SKIP_DIRS):
                 return True
-
     return False
-
 
 def cleanup_compile_commands(repo_root: str, was_generated: bool) -> None:
     """

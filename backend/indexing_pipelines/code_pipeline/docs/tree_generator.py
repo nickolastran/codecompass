@@ -13,7 +13,6 @@ from collections import defaultdict
 
 from ..core.graph_model import Graph, Node, NodeLabel, EdgeType
 
-
 class TreeNode:
     """Represents a node in the tree structure."""
 
@@ -34,7 +33,6 @@ class TreeNode:
         ))
         for child in self.children:
             child.sort_children()
-
 
 def count_definitions_per_file(G: Graph) -> Dict[str, Dict[str, int]]:
     """
@@ -73,7 +71,6 @@ def count_definitions_per_file(G: Graph) -> Dict[str, Dict[str, int]]:
                 file_def_counts[edge.src]["method"] += 1
 
     return dict(file_def_counts)
-
 
 def build_tree_structure(G: Graph, root_path: str) -> Optional[TreeNode]:
     """
@@ -135,7 +132,6 @@ def build_tree_structure(G: Graph, root_path: str) -> Optional[TreeNode]:
         return tree_node
 
     return build_subtree(root_node.id, 0)
-
 
 def format_tree(
     tree_root: TreeNode,
@@ -215,9 +211,7 @@ def format_tree(
             prefix=child_prefix,
             is_last=is_last_child
         ))
-
     return lines
-
 
 def generate_tree_from_graph(
     G: Graph,
@@ -280,9 +274,7 @@ def generate_tree_from_graph(
         lines.append(f"  Functions: {total_functions}")
         lines.append(f"  Methods: {total_methods}")
         lines.append(f"  Total definitions: {total_classes + total_functions + total_methods}")
-
     return "\n".join(lines)
-
 
 def save_tree_to_file(
     G: Graph,

@@ -29,7 +29,6 @@
 import os
 
 from .documentation_pipeline.document_indexing_script import Document_Indexing 
-
 from .code_pipeline.code_indexing_script import Code_Indexing
 
 #####################################
@@ -92,9 +91,7 @@ class Indexing_Pipeline_Head:
         """
 
         code_indexer = Code_Indexing(self.dir_path, self.repo_id, self.user_id)
-        
         code_indexer.index_entire_repo()
-
         return
 
     def Call_Document_Indexing_Pipeline(self, filepath: str):
@@ -103,19 +100,13 @@ class Indexing_Pipeline_Head:
             - The single .txt/.md/.pdf file is parsed, chunked and stored as an embedding in a Chroma Vector DB
         """
         doc_indexer = Document_Indexing(self.user_id, self.repo_id)
-
         doc_indexer.Index_File(filepath)
-
         return
-
-
 
 # This main is only for testing purposes
 def main():
     obj = Indexing_Pipeline_Head("/home/mann/CodeCompass-RAG", "Mann","Repo-Test3")
-
     obj.dispatch_files()
-
     return
 
 if __name__ == "__main__":

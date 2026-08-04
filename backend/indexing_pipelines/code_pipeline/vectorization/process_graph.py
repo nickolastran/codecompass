@@ -13,7 +13,6 @@ from indexing_pipelines.code_pipeline.vectorization.embeddings_config import DEF
 
 from config import CODE_CHROMA_DB_PATH, KG_GRAPH_STORE_PATH
 
-
 def _to_fs_path(p: str) -> str:
     """Accept absolute path or any 'file:' URI (even with backslashes) and return a filesystem path."""
     if not p.startswith("file:"):
@@ -28,7 +27,6 @@ def _to_fs_path(p: str) -> str:
     # Convert to OS separators
     return fs
 
-
 def node_text(n) -> str:
     fs_path = _to_fs_path(n.path)
     text = Path(fs_path).read_text(encoding="utf-8")
@@ -37,7 +35,6 @@ def node_text(n) -> str:
     e = int(n.end_line or s)
     return "".join(lines[s : e + 1])
 
-
 def _get_handler_for_file(path: str, handlers: List[LanguageHandler]) -> Optional[LanguageHandler]:
     """Get the appropriate language handler for a file based on extension."""
     ext = Path(path).suffix.lower()
@@ -45,7 +42,6 @@ def _get_handler_for_file(path: str, handlers: List[LanguageHandler]) -> Optiona
         if ext in handler.get_file_extensions():
             return handler
     return None
-
 
 def nodes_to_documents(nodes: Iterable, G, handlers: Optional[List[LanguageHandler]] = None) -> List[Document]:
     # Use provided handlers or default to ENABLED_LANGUAGES
@@ -145,7 +141,6 @@ def nodes_to_documents(nodes: Iterable, G, handlers: Optional[List[LanguageHandl
                 print(f"  ... and {len(class_failures) - 5} more")
 
     return docs
-
 
 def index_graph_into_vectors(
     G, collection_name: str, repo_id: str, persist_dir=CODE_CHROMA_DB_PATH 

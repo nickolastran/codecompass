@@ -6,12 +6,10 @@ import os
 import json
 
 from indexing_pipelines.code_pipeline.retrieval import graphrag_context
-
 from indexing_pipelines.code_pipeline.vectorization.embeddings_config import DEFAULT_EMBEDDINGS
 
 
 from config import CODE_CHROMA_DB_PATH, KG_GRAPH_STORE_PATH
-
 from langchain_chroma import Chroma
 
 from indexing_pipelines.code_pipeline.core.graph_model import Graph
@@ -38,7 +36,6 @@ class Code_Retreival:
         KG = Graph.load(f"{KG_GRAPH_STORE_PATH}/graph_{self.user_id}_{self.repo_id}.json")
 
         # make the chroma client with correct collection name
-
         vs = Chroma(
             collection_name=self.user_id,
             embedding_function=DEFAULT_EMBEDDINGS,
@@ -47,5 +44,4 @@ class Code_Retreival:
         )
 
         context, chunks_list, filepaths_list, linenums_list = graphrag_context(KG, vs, query, repo_id=self.repo_id, user_id=self.user_id)
-
         return context, chunks_list, filepaths_list

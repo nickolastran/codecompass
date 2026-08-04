@@ -1,6 +1,5 @@
 """
 Wiki structure generator using LLM analysis.
-
 Analyzes a codebase (file tree + README) and generates a logical
 wiki structure with sections and pages.
 """
@@ -14,7 +13,6 @@ from ..core.code_indexing import CodeIndexer
 from ..languages.language_config import ENABLED_LANGUAGES
 from .tree_generator import generate_tree_from_graph
 from .wiki_structure import WikiStructure
-
 
 def read_readme(repo_path: str) -> Optional[str]:
     """
@@ -37,9 +35,7 @@ def read_readme(repo_path: str) -> Optional[str]:
             except Exception as e:
                 print(f"Warning: Could not read {readme_path}: {e}")
                 return None
-
     return None
-
 
 def build_structure_prompt(
     repo_name: str,
@@ -182,9 +178,7 @@ IMPORTANT:
    - Look at the file tree to find actual .py, .js, .ts files, NOT directory names
 4. Return ONLY valid XML with the structure specified above, with no markdown code block delimiters
 """
-
     return prompt
-
 
 def generate_wiki_structure(
     repo_path: str,
@@ -256,9 +250,7 @@ def generate_wiki_structure(
             print(f"    - {error}")
 
     print(f"  Generated {wiki_structure.get_page_count()} pages in {wiki_structure.get_section_count()} sections")
-
     return wiki_structure
-
 
 def call_llm(prompt: str, provider: str, model: str, api_key: Optional[str]) -> str:
     """
@@ -284,7 +276,6 @@ def call_llm(prompt: str, provider: str, model: str, api_key: Optional[str]) -> 
     else:
         raise ValueError(f"Unsupported LLM provider: {provider}")
 
-
 def call_openai(prompt: str, model: str, api_key: Optional[str]) -> str:
     """Call OpenAI API."""
     try:
@@ -306,9 +297,7 @@ def call_openai(prompt: str, model: str, api_key: Optional[str]) -> str:
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,  # Lower temperature for more consistent structure
     )
-
     return response.choices[0].message.content
-
 
 def call_anthropic(prompt: str, model: str, api_key: Optional[str]) -> str:
     """Call Anthropic API."""
@@ -331,9 +320,7 @@ def call_anthropic(prompt: str, model: str, api_key: Optional[str]) -> str:
         temperature=0.3,
         messages=[{"role": "user", "content": prompt}]
     )
-
     return response.content[0].text
-
 
 def parse_xml_response(response: str) -> WikiStructure:
     """

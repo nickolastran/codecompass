@@ -1,6 +1,5 @@
 """
 TypeScript/JavaScript Language Handler
-
 Implements language-specific operations for TypeScript and JavaScript code
 using Tree-sitter and typescript-language-server LSP.
 
@@ -85,7 +84,6 @@ JS_TS_KEYWORDS = {
 }
 
 IDENT = re.compile(r"[A-Za-z_$][A-Za-z0-9_$]*")
-
 
 class TypeScriptHandler(LanguageHandler):
     """Handler for TypeScript and JavaScript (.ts, .tsx, .js, .jsx files)"""
@@ -342,7 +340,6 @@ class TypeScriptHandler(LanguageHandler):
                     )
                 )
                 have_function.add(func_id)
-
         return nodes
 
     def get_lsp_server_command(self) -> List[str]:
@@ -551,5 +548,4 @@ class TypeScriptHandler(LanguageHandler):
                 if result:
                     return result
             return None
-
         return traverse(root)
