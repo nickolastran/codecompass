@@ -2,8 +2,8 @@
 
 Interactive documentation with RAG-enabled chat over your codebase.
 
-- `web/` — Next.js frontend + API routes (was [vinngo/codecompass](https://github.com/vinngo/codecompass))
-- `backend/` — FastAPI GraphRAG indexing/retrieval service (was [cse115a-CodeCompass/CodeCompass-RAG](https://github.com/cse115a-CodeCompass/CodeCompass-RAG))
+- `web/` — Next.js frontend + API routes
+- `backend/` — FastAPI GraphRAG indexing/retrieval service
 
 The frontend calls the backend over HTTP via `BACKEND_URL` (`/chat/stream`, `/repos/index`).
 Backend CORS allows `http://localhost:3000`.
