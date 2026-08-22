@@ -4,12 +4,20 @@ import { login } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Github, Gitlab } from "@geist-ui/icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signInWithProvider } from "../client";
 import Image from "next/image";
 import Link from "next/link";
+import LoginLoading from "./loading";
 
 export default function LoginPage() {
+  // Brief skeleton on mount so the form doesn't pop in instantly
+  const [mounting, setMounting] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setMounting(false), 600);
+    return () => clearTimeout(t);
+  }, []);
+
   const [status, setStatus] = useState<{
     type: "idle" | "loading" | "success" | "error";
     message?: string;
@@ -34,6 +42,8 @@ export default function LoginPage() {
       });
     }
   }
+
+  if (mounting) return <LoginLoading />;
 
   // Show login form
   return (
