@@ -117,15 +117,15 @@ export default function CTA({ isAuthenticated }: CTAProps) {
               transition={{ duration: 0.6, delay: 0.8, ease: "easeOut" }}
             >
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-teal-400" />
+                <div className="h-2 w-2 rounded-full bg-accent" />
                 <span>Open source</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-teal-400" />
+                <div className="h-2 w-2 rounded-full bg-accent" />
                 <span>Self-hosted</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-teal-400" />
+                <div className="h-2 w-2 rounded-full bg-accent" />
                 <span>Free forever</span>
               </div>
             </motion.div>

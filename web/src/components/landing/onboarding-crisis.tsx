@@ -27,7 +27,7 @@ export default function OnboardingCrisis() {
         <div className="space-y-6">
           {/* Large Card - Full Width */}
           <motion.div
-            className="border border-border rounded-xl p-8 bg-card transition-colors"
+            className="border border-border rounded-xl p-8 bg-card dark:bg-[oklch(0.235_0_0)] transition-colors"
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
@@ -41,7 +41,7 @@ export default function OnboardingCrisis() {
             <div className="flex flex-col md:flex-row gap-8">
               <div className="flex-1">
                 <div className="flex items-start gap-3 mb-4">
-                  <Clock className="w-8 h-8 text-teal-400 mt-1" />
+                  <Clock className="w-8 h-8 text-accent mt-1" />
                   <div>
                     <h3 className="text-3xl font-semibold mb-3">3-6 months</h3>
                     <p className="text-muted-foreground text-base">
@@ -71,7 +71,7 @@ export default function OnboardingCrisis() {
                   <div className="space-y-3">
                     <div className="h-3 bg-background rounded overflow-hidden border border-border">
                       <motion.div
-                        className="h-full bg-teal-500/50"
+                        className="h-full bg-accent/50"
                         initial={{ width: 0 }}
                         whileInView={{ width: "16.666%" }}
                         viewport={{ once: true }}
@@ -84,7 +84,7 @@ export default function OnboardingCrisis() {
                     </div>
                     <div className="h-3 bg-background rounded overflow-hidden border border-border">
                       <motion.div
-                        className="h-full bg-teal-500/50"
+                        className="h-full bg-accent/50"
                         initial={{ width: 0 }}
                         whileInView={{ width: "33.333%" }}
                         viewport={{ once: true }}
@@ -97,7 +97,7 @@ export default function OnboardingCrisis() {
                     </div>
                     <div className="h-3 bg-background rounded overflow-hidden border border-border">
                       <motion.div
-                        className="h-full bg-teal-400/50"
+                        className="h-full bg-accent/50"
                         initial={{ width: 0 }}
                         whileInView={{ width: "50%" }}
                         viewport={{ once: true }}
@@ -110,7 +110,7 @@ export default function OnboardingCrisis() {
                     </div>
                     <div className="h-3 bg-background rounded overflow-hidden border border-border">
                       <motion.div
-                        className="h-full bg-teal-300/50"
+                        className="h-full bg-accent/50"
                         initial={{ width: 0 }}
                         whileInView={{ width: "83.333%" }}
                         viewport={{ once: true }}
@@ -135,7 +135,7 @@ export default function OnboardingCrisis() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Card 2 - Outdated Docs */}
             <motion.div
-              className="border border-border rounded-xl p-6 bg-card transition-colors"
+              className="border border-border rounded-xl p-6 bg-card dark:bg-[oklch(0.235_0_0)] transition-colors"
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
@@ -147,7 +147,7 @@ export default function OnboardingCrisis() {
               }}
             >
               <div className="flex items-start gap-3 mb-4">
-                <FileWarning className="w-6 h-6 text-teal-400 mt-1" />
+                <FileWarning className="w-6 h-6 text-accent mt-1" />
                 <div>
                   <h3 className="text-xl font-semibold mb-2">Outdated docs</h3>
                   <p className="text-muted-foreground text-sm mb-6">
@@ -191,7 +191,7 @@ export default function OnboardingCrisis() {
 
             {/* Card 3 - Team Bottlenecks */}
             <motion.div
-              className="border border-border rounded-xl p-6 bg-card transition-colors"
+              className="border border-border rounded-xl p-6 bg-card dark:bg-[oklch(0.235_0_0)] transition-colors"
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
@@ -203,7 +203,7 @@ export default function OnboardingCrisis() {
               }}
             >
               <div className="flex items-start gap-3 mb-4">
-                <Users className="w-6 h-6 text-teal-400 mt-1" />
+                <Users className="w-6 h-6 text-accent mt-1" />
                 <div>
                   <h3 className="text-xl font-semibold mb-2">
                     Team bottlenecks
@@ -219,8 +219,8 @@ export default function OnboardingCrisis() {
               <div className="mt-6 p-4 bg-muted rounded-lg border border-border">
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <div className="flex flex-col items-center gap-1">
-                    <div className="w-8 h-8 rounded-full bg-teal-500/20 border-2 border-teal-400 flex items-center justify-center">
-                      <span className="text-xs font-mono text-teal-400">
+                    <div className="w-8 h-8 rounded-full bg-accent/20 border-2 border-accent flex items-center justify-center">
+                      <span className="text-xs font-mono text-accent">
                         Sr
                       </span>
                     </div>

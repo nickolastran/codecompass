@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { GridPattern } from "@/components/ui/shadcn-io/grid-pattern";
 import { cn } from "@/lib/utils";
 import { SectionContainer } from "./section-container";
@@ -71,21 +72,19 @@ export default function Hero({ isAuthenticated }: HeroProps) {
             </span>
           </motion.p>
           <motion.div
-            className="relative z-10 flex flex-row gap-4"
+            className="relative z-10 flex flex-row justify-center gap-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.8, ease: "easeOut" }}
           >
-            {isAuthenticated ? (
-              <Button asChild>
-                <Link href="/dashboard/organizations">Go to Dashboard</Link>
-              </Button>
-            ) : (
-              <Button asChild>
-                <Link href="/login">Get started</Link>
-              </Button>
-            )}
-            <Button variant="outline">Our Features</Button>
+            <Button className="group" asChild>
+              <Link
+                href={isAuthenticated ? "/dashboard/organizations" : "/login"}
+              >
+                {isAuthenticated ? "Go to Dashboard" : "Get started"}
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Button>
           </motion.div>
         </div>
       </SectionContainer>

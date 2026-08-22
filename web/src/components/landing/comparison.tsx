@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { SectionContainer } from "./section-container";
 
 export default function Comparison() {
@@ -53,48 +54,52 @@ export default function Comparison() {
             </div>
 
             {/* CodeCompass - Center Highlighted Card */}
-            <div className="border-2 border-teal-500 rounded-xl p-4 sm:p-6 bg-background relative">
+            <div className="border-2 border-accent rounded-xl p-4 sm:p-6 bg-background relative">
               <div className="flex items-center gap-2 mb-4 sm:mb-6">
-                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-teal-500 flex items-center justify-center text-xs">
-                  ✓
-                </div>
+                <Image
+                  src="/codecompass.png"
+                  alt="CodeCompass Logo"
+                  width={24}
+                  height={24}
+                  className="w-5 h-5 sm:w-6 sm:h-6"
+                />
                 <h3 className="text-lg sm:text-xl font-semibold">
                   CodeCompass
                 </h3>
               </div>
               <ul className="space-y-3">
                 <li className="flex items-center gap-2">
-                  <span className="text-teal-500 text-lg">✓</span>
+                  <span className="text-accent text-lg">✓</span>
                   <span className="text-foreground text-sm font-medium">
                     AI-powered exploration
                   </span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-teal-500 text-lg">✓</span>
+                  <span className="text-accent text-lg">✓</span>
                   <span className="text-foreground text-sm font-medium">
                     Auto-generated docs
                   </span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-teal-500 text-lg">✓</span>
+                  <span className="text-accent text-lg">✓</span>
                   <span className="text-foreground text-sm font-medium">
                     Interactive chat interface
                   </span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-teal-500 text-lg">✓</span>
+                  <span className="text-accent text-lg">✓</span>
                   <span className="text-foreground text-sm font-medium">
                     Multi-platform support
                   </span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-teal-500 text-lg">✓</span>
+                  <span className="text-accent text-lg">✓</span>
                   <span className="text-foreground text-sm font-medium">
                     Local & cloud deployment
                   </span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-teal-500 text-lg">✓</span>
+                  <span className="text-accent text-lg">✓</span>
                   <span className="text-foreground text-sm font-medium">
                     Open source
                   </span>

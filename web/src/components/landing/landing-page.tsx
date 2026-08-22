@@ -3,6 +3,7 @@ import dynamic from "next/dynamic";
 import Hero from "./hero";
 import CTA from "./cta";
 import OnboardingCrisis from "./onboarding-crisis";
+import Footer from "./footer";
 const Features = dynamic(() => import("./features").then((mod) => mod.default));
 const Comparison = dynamic(() =>
   import("./comparison").then((mod) => mod.default),
@@ -20,6 +21,7 @@ export default function LandingPage({ isAuthenticated }: LandingPageProps) {
       <Features />
       <Comparison />
       <CTA isAuthenticated={isAuthenticated} />
+      <Footer />
     </div>
   );
 }
