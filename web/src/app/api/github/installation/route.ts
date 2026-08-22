@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
   if (setup_action === "install" && installation_id) {
     // Fetch installation details from GitHub
     try {
-      const octokit = githubApp.octokit;
+      const octokit = githubApp().octokit;
       const { data: installation } = await octokit.request(
         "GET /app/installations/{installation_id}",
         {

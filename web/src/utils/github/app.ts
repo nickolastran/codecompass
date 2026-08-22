@@ -2,19 +2,21 @@
 import { App } from "@octokit/app";
 import fs from "fs";
 
-// Initialize GitHub App
-const privateKey = process.env.GITHUB_APP_PRIVATE_KEY_PATH
-  ? fs.readFileSync(process.env.GITHUB_APP_PRIVATE_KEY_PATH, "utf8")
-  : process.env.GITHUB_APP_PRIVATE_KEY?.replace(/\\n/g, "\n") || "";
+let app: App | undefined;
 
-export const githubApp = new App({
-  appId: process.env.NEXT_PUBLIC_GITHUB_APP_CLIENT_ID!,
-  privateKey,
-  oauth: {
-    clientId: process.env.GITHUB_APP_CLIENT_ID!,
-    clientSecret: process.env.GITHUB_APP_CLIENT_SECRET!,
-  },
-});
+/** Lazily built so a missing GITHUB_APP_* env can't break `next build`. */
+export function githubApp(): App {
+  return (app ??= new App({
+    appId: process.env.NEXT_PUBLIC_GITHUB_APP_CLIENT_ID!,
+    privateKey: process.env.GITHUB_APP_PRIVATE_KEY_PATH
+      ? fs.readFileSync(process.env.GITHUB_APP_PRIVATE_KEY_PATH, "utf8")
+      : process.env.GITHUB_APP_PRIVATE_KEY?.replace(/\\n/g, "\n") || "",
+    oauth: {
+      clientId: process.env.GITHUB_APP_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_APP_CLIENT_SECRET!,
+    },
+  }));
+}
 
 /**
  * Generate an installation access token (valid for 1 hour)
@@ -22,7 +24,7 @@ export const githubApp = new App({
 export async function getInstallationToken(
   installationId: number,
 ): Promise<string> {
-  const octokit = await githubApp.getInstallationOctokit(installationId);
+  const octokit = await githubApp().getInstallationOctokit(installationId);
 
   const { data } = await octokit.request(
     "POST /app/installations/{installation_id}/access_tokens",
@@ -39,7 +41,7 @@ export async function getInstallationToken(
  */
 export async function getInstallationByAccount(accountLogin: string) {
   try {
-    const octokit = await githubApp.octokit;
+    const octokit = await githubApp().octokit;
     const { data: installation } = await octokit.request(
       "GET /users/{username}/installation",
       {
@@ -61,7 +63,7 @@ export async function checkRepoAccess(
   repo: string,
 ): Promise<boolean> {
   try {
-    const octokit = await githubApp.getInstallationOctokit(installationId);
+    const octokit = await githubApp().getInstallationOctokit(installationId);
     await octokit.request("GET /repos/{owner}/{repo}", {
       owner,
       repo,

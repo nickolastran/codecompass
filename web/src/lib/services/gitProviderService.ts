@@ -14,7 +14,7 @@ export async function verifyGithubRepoAccess(
   try {
     //convert installation_id to number
     const installationId = parseInt(installation_id, 10);
-    const octokit = await githubApp.getInstallationOctokit(installationId);
+    const octokit = await githubApp().getInstallationOctokit(installationId);
 
     await octokit.request("GET /repos/{owner}/{repo}", {
       owner,
