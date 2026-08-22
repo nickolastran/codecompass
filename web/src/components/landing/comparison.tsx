@@ -4,7 +4,7 @@ import { SectionContainer } from "./section-container";
 export default function Comparison() {
   return (
     <div className="flex flex-col w-full border-t border-border">
-      <SectionContainer className="bg-white dark:bg-gray-900 !max-w-7xl">
+      <SectionContainer className="bg-background !max-w-7xl">
         <div
           id="comparison"
           className="mx-auto"
@@ -21,7 +21,7 @@ export default function Comparison() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             {/* Traditional Documentation */}
-            <div className="border border-gray-800 rounded-xl p-4 sm:p-6 bg-background">
+            <div className="border border-border rounded-xl p-4 sm:p-6 bg-background">
               <h3 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">
                 Traditional Documentation
               </h3>
@@ -108,7 +108,7 @@ export default function Comparison() {
             </div>
 
             {/* Other Such Tools */}
-            <div className="border border-gray-800 rounded-xl p-4 sm:p-6 bg-background">
+            <div className="border border-border rounded-xl p-4 sm:p-6 bg-background">
               <h3 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">
                 Other Such Tools
               </h3>

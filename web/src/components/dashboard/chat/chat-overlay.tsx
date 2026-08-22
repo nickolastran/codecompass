@@ -20,7 +20,7 @@ export default function ChatOverlay() {
               borderRadius: 12,
             }}
             layout
-            className="relative flex h-full w-full overflow-y-auto transform-gpu will-change-transform bg-white dark:bg-background border border-border shadow-2xl"
+            className="relative flex h-full w-full overflow-y-auto transform-gpu will-change-transform bg-background border border-border shadow-2xl"
           >
             <motion.div
               initial={{ opacity: 0 }}

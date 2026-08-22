@@ -43,7 +43,7 @@ export default function ChatEmptyState({ onSendMessage }: ChatEmptyStateProps) {
             <button
               key={index}
               onClick={() => handleSuggestionClick(suggestion)}
-              className="px-4 py-3 bg-background border dark:border-gray-700 rounded-lg
+              className="px-4 py-3 bg-background border border-border rounded-lg
                        text-left text-sm dark:text-gray-200 hover:bg-gray-750
                        hover:border-teal-500/50 transition-all duration-200
                        hover:shadow-[0_0_10px_rgba(20,184,166,0.2)]"

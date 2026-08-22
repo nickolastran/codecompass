@@ -15,7 +15,7 @@ type LandingPageProps = {
 
 export default function LandingPage({ isAuthenticated }: LandingPageProps) {
   return (
-    <div className="dark:bg-gray-900 flex flex-col items-center justify-center">
+    <div className="bg-background flex flex-col items-center justify-center">
       <Hero isAuthenticated={isAuthenticated} />
       <OnboardingCrisis />
       <Features />

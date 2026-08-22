@@ -2,7 +2,7 @@ import { NewOrganizationForm } from "@/components/dashboard/organizations/new-or
 
 export default function NewOrganizationPage() {
   return (
-    <div className="container mx-auto py-8 px-4 max-w-2xl">
+    <div className="flex min-h-full items-center justify-center p-4">
       <NewOrganizationForm />
     </div>
   );

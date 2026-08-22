@@ -54,13 +54,13 @@ function MessageListSkeleton() {
       {/* Assistant message skeleton */}
       <div className="mb-8">
         <div className="mt-6">
-          <div className="bg-elevated rounded-lg border border-gray-800 p-6">
+          <div className="bg-elevated rounded-lg border border-border p-6">
             <div className="space-y-3">
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-3/4" />
             </div>
-            <div className="flex gap-2 mt-4 pt-4 border-t border-gray-800">
+            <div className="flex gap-2 mt-4 pt-4 border-t border-border">
               <Skeleton className="h-8 w-8 rounded-md" />
               <Skeleton className="h-8 w-8 rounded-md" />
             </div>
@@ -559,9 +559,9 @@ export default function ChatInterface() {
   const showMessagesLoading = messagesLoading && !!conversation;
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-white dark:bg-background text-gray-900 dark:text-gray-300">
+    <div className="flex h-[calc(100vh-64px)] bg-background text-gray-900 dark:text-gray-300">
       {/* Chat Column */}
-      <div className="flex flex-col w-1/2 border-r border-gray-200 dark:border-gray-800">
+      <div className="flex flex-col w-1/2 border-r border-border">
         {/* Header with Model and Version Selectors */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">

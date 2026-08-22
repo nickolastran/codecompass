@@ -1,13 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import {
-  Field,
-  FieldLabel,
-  FieldDescription,
-  FieldError,
-} from "@/components/ui/field";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createOrg } from "@/lib/services/orgService";
@@ -49,22 +42,30 @@ export function NewOrganizationForm() {
   };
 
   return (
-    <div className="flex flex-col bg-elevated">
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-6 px-5 py-5 border rounded-md"
-      >
-        <div className="flex flex-col gap-1">
-          <span className="text-foreground">Create a new Organization</span>
-          <span className="text-muted-foreground text-xs">
-            Organizations are a way to group repositories together. Each
-            organization can be accessed by different team members.
-          </span>
-        </div>
-        <Separator />
+    <form
+      onSubmit={handleSubmit}
+      className="w-full max-w-2xl overflow-hidden rounded-lg border border-border bg-card"
+    >
+      {/* Header */}
+      <div className="px-6 py-5">
+        <h1 className="text-base font-semibold text-foreground">
+          Create a new organization
+        </h1>
+        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+          Organizations are a way to group repositories together. Each
+          organization can be accessed by different team members.
+        </p>
+      </div>
 
-        <Field>
-          <FieldLabel htmlFor="name">Name</FieldLabel>
+      {/* Name */}
+      <div className="grid grid-cols-1 gap-3 border-t border-border px-6 py-6 sm:grid-cols-4 sm:gap-6">
+        <label
+          htmlFor="name"
+          className="text-sm font-medium text-foreground sm:pt-2"
+        >
+          Name
+        </label>
+        <div className="sm:col-span-3">
           <input
             id="name"
             name="name"
@@ -73,31 +74,36 @@ export function NewOrganizationForm() {
             onChange={(e) => setName(e.target.value)}
             placeholder="Organization name"
             required
-            className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+            aria-invalid={!!error}
+            aria-describedby="name-description"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring"
           />
-          <FieldDescription>
-            Choose a unique name for your organization
-          </FieldDescription>
-          <FieldError>{error}</FieldError>
-        </Field>
-
-        <Separator />
-
-        <div className="flex gap-3">
-          <Button type="submit" size="sm" disabled={isLoading || !name.trim()}>
-            {isLoading ? "Creating..." : "Create Organization"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => router.back()}
-            disabled={isLoading}
+          <p
+            id="name-description"
+            className="mt-2 text-sm leading-relaxed text-muted-foreground"
           >
-            Cancel
-          </Button>
+            What&apos;s the name of your company or team? You can change this
+            later.
+          </p>
+          {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
         </div>
-      </form>
-    </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center justify-between border-t border-border px-6 py-4">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => router.back()}
+          disabled={isLoading}
+        >
+          Cancel
+        </Button>
+        <Button type="submit" size="sm" disabled={isLoading || !name.trim()}>
+          {isLoading ? "Creating..." : "Create organization"}
+        </Button>
+      </div>
+    </form>
   );
 }

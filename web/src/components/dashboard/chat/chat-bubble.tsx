@@ -45,7 +45,7 @@ export default function ChatBubble() {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             rows={2}
-            className="w-full bg-white dark:bg-background backdrop-blur-md text-gray-900 dark:text-gray-100 px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-border focus:outline-none
+            className="w-full bg-background backdrop-blur-md text-gray-900 dark:text-gray-100 px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-border focus:outline-none
                       focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 focus:shadow-[0_0_15px_rgba(20,184,166,0.3)]
                       placeholder-gray-400 dark:placeholder-gray-500 resize-none disabled:cursor-not-allowed
                       transition-shadow duration-200 opacity-90"

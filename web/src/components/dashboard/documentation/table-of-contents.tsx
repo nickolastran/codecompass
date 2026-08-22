@@ -182,7 +182,7 @@ export function TableOfContentsSidebar({
           <div className="absolute bottom-4 right-4 shrink-0">
             <button
               onClick={scrollToTop}
-              className="w-8 h-8 bg-gray-800 hover:bg-teal-600 border border-gray-700 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
+              className="w-8 h-8 bg-elevated hover:bg-accent border border-border rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
               title="Back to top"
             >
               <ArrowUp className="w-4 h-4 text-gray-300" />

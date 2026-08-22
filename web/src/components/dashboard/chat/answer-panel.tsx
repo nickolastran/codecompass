@@ -22,7 +22,7 @@ interface AnswerPanelProps {
 
 export default function AnswerPanel({ conversationTurns }: AnswerPanelProps) {
   return (
-    <div className="flex-1 border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-background overflow-y-auto">
+    <div className="flex-1 border-l border-border bg-background overflow-y-auto">
       <div className="px-6 py-4">
         {conversationTurns.length === 0 ? (
           <div className="text-center text-gray-500 mt-12">
@@ -35,7 +35,7 @@ export default function AnswerPanel({ conversationTurns }: AnswerPanelProps) {
             {conversationTurns.map((turn) => (
               <div key={turn.id} className="space-y-3">
                 {/* Question Header */}
-                <div className="sticky top-0 bg-white dark:bg-background py-2 border-b border-gray-200 dark:border-gray-800">
+                <div className="sticky top-0 bg-background py-2 border-b border-border">
                   <p className="text-sm text-gray-700 dark:text-gray-400 font-medium">
                     {turn.userQuestion}
                   </p>

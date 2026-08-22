@@ -13,7 +13,7 @@ export default async function Home() {
 
   // Show landing page for both authenticated and unauthenticated users
   return (
-    <div className="bg-gray-50 dark:bg-gray-900">
+    <div className="bg-background">
       <Navbar isAuthenticated={isAuthenticated} />
       <LandingPage isAuthenticated={isAuthenticated} />
     </div>

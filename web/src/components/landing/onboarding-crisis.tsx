@@ -13,8 +13,8 @@ import { SectionContainer } from "./section-container";
 
 export default function OnboardingCrisis() {
   return (
-    <div className="dark:bg-gray-900 flex flex-col w-full border-t border-border">
-      <SectionContainer className="bg-white dark:bg-gray-900 !max-w-7xl">
+    <div className="bg-background flex flex-col w-full border-t border-border">
+      <SectionContainer className="bg-background !max-w-7xl">
         <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
           The Developer Onboarding Crisis
         </h2>
@@ -27,7 +27,7 @@ export default function OnboardingCrisis() {
         <div className="space-y-6">
           {/* Large Card - Full Width */}
           <motion.div
-            className="border border-border rounded-xl p-8 bg-card dark:bg-[oklch(0.235_0_0)] transition-colors"
+            className="border border-border rounded-xl p-8 bg-card transition-colors"
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
@@ -135,7 +135,7 @@ export default function OnboardingCrisis() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Card 2 - Outdated Docs */}
             <motion.div
-              className="border border-border rounded-xl p-6 bg-card dark:bg-[oklch(0.235_0_0)] transition-colors"
+              className="border border-border rounded-xl p-6 bg-card transition-colors"
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
@@ -191,7 +191,7 @@ export default function OnboardingCrisis() {
 
             {/* Card 3 - Team Bottlenecks */}
             <motion.div
-              className="border border-border rounded-xl p-6 bg-card dark:bg-[oklch(0.235_0_0)] transition-colors"
+              className="border border-border rounded-xl p-6 bg-card transition-colors"
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
@@ -220,9 +220,7 @@ export default function OnboardingCrisis() {
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <div className="flex flex-col items-center gap-1">
                     <div className="w-8 h-8 rounded-full bg-accent/20 border-2 border-accent flex items-center justify-center">
-                      <span className="text-xs font-mono text-accent">
-                        Sr
-                      </span>
+                      <span className="text-xs font-mono text-accent">Sr</span>
                     </div>
                   </div>
                 </div>

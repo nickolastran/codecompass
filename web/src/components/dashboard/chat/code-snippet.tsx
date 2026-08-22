@@ -50,7 +50,7 @@ export default function CodeSnippet({
           style={vscDarkPlus}
           showLineNumbers={true}
           customStyle={{
-            background: "#1e1e1e",
+            background: "var(--card)",
             padding: "1rem",
             fontSize: "11px",
           }}
@@ -91,7 +91,7 @@ export default function CodeSnippet({
               style={vscDarkPlus}
               showLineNumbers={true}
               customStyle={{
-                background: "#1e1e1e",
+                background: "var(--card)",
                 padding: "1rem",
                 fontSize: "12px",
                 margin: 0,

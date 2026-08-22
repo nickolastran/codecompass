@@ -43,7 +43,9 @@ export function DashboardProvider({
   });
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, error: error as Error | null }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, error: error as Error | null }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -158,7 +158,7 @@ export function DocsTableOfContents({
                 className={`block text-sm py-1.5 transition-colors text-left w-full rounded px-2 ${
                   activeHeading === heading.id
                     ? "text-teal-400 font-medium bg-teal-400/10"
-                    : "text-gray-400 hover:text-gray-300 hover:bg-gray-800/50"
+                    : "text-gray-400 hover:text-gray-300 hover:bg-elevated/50"
                 }`}
                 style={{ paddingLeft: `${(heading.level - 1) * 12 + 8}px` }}
               >
@@ -173,7 +173,7 @@ export function DocsTableOfContents({
           <div className="p-6 pt-0">
             <button
               onClick={scrollToTop}
-              className="w-full py-2 bg-gray-800 hover:bg-teal-600 border border-gray-700 rounded flex items-center justify-center gap-2 transition-all duration-200 text-sm text-gray-300 hover:text-white"
+              className="w-full py-2 bg-elevated hover:bg-accent border border-border rounded flex items-center justify-center gap-2 transition-all duration-200 text-sm text-gray-300 hover:text-white"
               title="Back to top"
             >
               <ArrowUp className="w-4 h-4" />

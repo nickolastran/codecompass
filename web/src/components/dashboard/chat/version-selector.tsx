@@ -75,8 +75,7 @@ export default function VersionSelector() {
                     <span className="text-sm font-medium">
                       Version {version.version}
                     </span>
-                    {version.version ===
-                      availableVersions[0]?.version && (
+                    {version.version === availableVersions[0]?.version && (
                       <span className="text-xs px-1.5 py-0.5 rounded bg-accent text-accent-foreground">
                         Latest
                       </span>

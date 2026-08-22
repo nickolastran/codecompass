@@ -14,7 +14,7 @@ type HeroProps = {
 
 export default function Hero({ isAuthenticated }: HeroProps) {
   return (
-    <div className="dark:bg-gray-900 flex flex-col w-full items-center justify-center">
+    <div className="bg-background flex flex-col w-full items-center justify-center">
       <SectionContainer noPadding className="!max-w-7xl">
         {/* Hero Section - Full Screen */}
         <div className="relative min-h-screen w-full flex flex-col items-center justify-center gap-4 px-4 sm:px-6">

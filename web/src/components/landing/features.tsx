@@ -30,7 +30,7 @@ export default function Features() {
 
   return (
     <div className="flex flex-col w-full border-t border-border">
-      <SectionContainer className="bg-white dark:bg-gray-900 !max-w-7xl">
+      <SectionContainer className="bg-background !max-w-7xl">
         {/* Video Demo Section */}
         <div className="mb-12 sm:mb-16 md:mb-24 mx-auto">
           <motion.div
@@ -163,7 +163,7 @@ export default function Features() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* RAG-Powered Chat */}
             <motion.div
-              className="border border-gray-800 rounded-xl p-6 sm:p-8 bg-background transition-colors"
+              className="border border-border rounded-xl p-6 sm:p-8 bg-background transition-colors"
               initial={{ opacity: 0, y: 30, rotate: -5 }}
               whileInView={{ opacity: 1, y: 0, rotate: 0 }}
               viewport={{ once: true, margin: "-100px" }}
@@ -214,7 +214,7 @@ export default function Features() {
 
             {/* Auto Documentation */}
             <motion.div
-              className="border border-gray-800 rounded-xl p-6 sm:p-8 bg-background transition-colors"
+              className="border border-border rounded-xl p-6 sm:p-8 bg-background transition-colors"
               initial={{ opacity: 0, y: 30, rotate: -5 }}
               whileInView={{ opacity: 1, y: 0, rotate: 0 }}
               viewport={{ once: true, margin: "-100px" }}
@@ -265,7 +265,7 @@ export default function Features() {
 
             {/* Component Trees */}
             <motion.div
-              className="border border-gray-800 rounded-xl p-6 sm:p-8 bg-background transition-colors"
+              className="border border-border rounded-xl p-6 sm:p-8 bg-background transition-colors"
               initial={{ opacity: 0, y: 30, rotate: -5 }}
               whileInView={{ opacity: 1, y: 0, rotate: 0 }}
               viewport={{ once: true, margin: "-100px" }}
@@ -316,7 +316,7 @@ export default function Features() {
 
             {/* Enterprise Ready */}
             <motion.div
-              className="border border-gray-800 rounded-xl p-6 sm:p-8 bg-background transition-colors"
+              className="border border-border rounded-xl p-6 sm:p-8 bg-background transition-colors"
               initial={{ opacity: 0, y: 30, rotate: -5 }}
               whileInView={{ opacity: 1, y: 0, rotate: 0 }}
               viewport={{ once: true, margin: "-100px" }}

@@ -35,7 +35,7 @@ export default function MessageBubble({ text, sender }: MessageBubbleProps) {
   return (
     <div className="mb-8">
       <div className="mt-6">
-        <div className="bg-elevated rounded-lg border border-gray-800 p-6">
+        <div className="bg-elevated rounded-lg border border-border p-6">
           <div className="prose prose-invert max-w-none">
             <ReactMarkdown
               components={{
@@ -109,7 +109,7 @@ export default function MessageBubble({ text, sender }: MessageBubbleProps) {
 
                   return isInline ? (
                     <code
-                      className="bg-gray-800 text-teal-400 px-1.5 py-0.5 rounded text-sm font-mono"
+                      className="bg-elevated text-teal-400 px-1.5 py-0.5 rounded text-sm font-mono"
                       {...props}
                     >
                       {children}
@@ -120,7 +120,7 @@ export default function MessageBubble({ text, sender }: MessageBubbleProps) {
                       style={vscDarkPlus}
                       showLineNumbers={true}
                       customStyle={{
-                        background: "#1e1e1e",
+                        background: "var(--card)",
                         padding: "1rem",
                         fontSize: "12px",
                         borderRadius: "0.375rem",
@@ -145,11 +145,11 @@ export default function MessageBubble({ text, sender }: MessageBubbleProps) {
               {text}
             </ReactMarkdown>
           </div>
-          <div className="flex gap-2 mt-4 pt-4 border-t border-gray-800">
-            <button className="p-2 hover:bg-gray-800 rounded-md transition-colors">
+          <div className="flex gap-2 mt-4 pt-4 border-t border-border">
+            <button className="p-2 hover:bg-elevated rounded-md transition-colors">
               <Copy size={16} className="text-gray-400" />
             </button>
-            <button className="p-2 hover:bg-gray-800 rounded-md transition-colors">
+            <button className="p-2 hover:bg-elevated rounded-md transition-colors">
               <Share2 size={16} className="text-gray-400" />
             </button>
           </div>
