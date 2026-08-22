@@ -5,6 +5,7 @@ This guide covers deploying CodeCompass on your own infrastructure. Self-hosting
 ## Overview
 
 CodeCompass consists of four main components:
+
 - **Frontend**: Next.js application
 - **Backend**: FastAPI server
 - **Database**: Supabase (PostgreSQL + Auth + Storage)
@@ -19,11 +20,13 @@ All components run within your infrastructure, ensuring code never leaves your n
 ### Hardware Requirements
 
 **Minimum**:
+
 - 16GB RAM (8GB for Ollama, 8GB for other services)
 - 4 CPU cores
 - 50GB disk space (models + vector storage)
 
 **Recommended**:
+
 - 32GB+ RAM
 - 8+ CPU cores
 - 100GB+ SSD storage
@@ -119,12 +122,45 @@ CodeCompass requires a GitHub App to clone repositories:
 3. Generate a private key and save as `github-app-key.pem`
 4. Copy App ID, Client ID, and Client Secret to `.env`
 
+### Sign-in Providers (GitHub / GitLab Login)
+
+The "Continue with GitHub" and "Continue with GitLab" buttons go through **Supabase
+Auth**, not the GitHub App above — they are separate credentials. If a provider is
+not enabled in Supabase you get:
+
+```json
+{
+  "code": 400,
+  "error_code": "validation_failed",
+  "msg": "Unsupported provider: provider is not enabled"
+}
+```
+
+To enable GitHub login:
+
+1. Create an **OAuth App** (not a GitHub App) at
+   **Settings → Developer settings → OAuth Apps → New OAuth App**.
+   - **Homepage URL**: `http://localhost:3000`
+   - **Authorization callback URL**: `https://<your-project-ref>.supabase.co/auth/v1/callback`
+     (self-hosted Supabase: `http://localhost:54321/auth/v1/callback`)
+2. In the Supabase dashboard, go to **Authentication → Providers → GitHub**, toggle it
+   on, and paste the OAuth App's Client ID and Client Secret. Save.
+3. Under **Authentication → URL Configuration**, set **Site URL** to
+   `http://localhost:3000` and add `http://localhost:3000/api/auth/callback` to
+   **Redirect URLs**. This must match `NEXT_PUBLIC_APP_URL` in `web/.env.local`.
+
+GitLab is the same flow: create an application at **GitLab → Preferences →
+Applications** with scopes `read_user` + `openid`, redirect URI pointing at the same
+Supabase `/auth/v1/callback`, then enable the GitLab provider in Supabase.
+
+These credentials live in Supabase only — no `.env` entry in this repo.
+
 ### Supabase Configuration
 
 The Docker Compose setup includes a self-hosted Supabase instance. On first run:
 
 1. Access Supabase Studio at `http://localhost:54323`
-2. Default credentials: 
+2. Default credentials:
    - Email: `admin@codecompass.local`
    - Password: `password` (change this in `.env`)
 3. Run database migrations:
@@ -139,7 +175,7 @@ The Docker Compose setup includes a self-hosted Supabase instance. On first run:
 The `docker-compose.yml` orchestrates all services:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   # Next.js Frontend
@@ -159,8 +195,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./chroma_db:/app/chroma_db          # Vector store persistence
-      - ./cloned_repos:/app/cloned_repos    # Temporary repo storage
+      - ./chroma_db:/app/chroma_db # Vector store persistence
+      - ./cloned_repos:/app/cloned_repos # Temporary repo storage
       - ./github-app-key.pem:/app/github-app-key.pem:ro
     environment:
       - DATABASE_URL=${DATABASE_URL}
@@ -177,7 +213,7 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - ollama_models:/root/.ollama    # Persist models between restarts
+      - ollama_models:/root/.ollama # Persist models between restarts
     # Uncomment for GPU support:
     # deploy:
     #   resources:
@@ -242,7 +278,7 @@ docker-compose logs -f
 
 View specific service logs
 docker-compose logs -f backend
-`````
+```
 
 ### Stopping Services
 
@@ -275,12 +311,12 @@ docker-compose up -d
 
 CodeCompass supports any Ollama-compatible model. Recommended options:
 
-| Model | Size | RAM Required | Speed | Quality |
-|-------|------|--------------|-------|---------|
-| deepseek-r1:7b | 7B | 8GB | Fast | Good |
-| llama3.2:7b | 7B | 8GB | Fast | Good |
-| codellama:13b | 13B | 16GB | Medium | Better |
-| deepseek-coder:33b | 33B | 32GB | Slow | Best |
+| Model              | Size | RAM Required | Speed  | Quality |
+| ------------------ | ---- | ------------ | ------ | ------- |
+| deepseek-r1:7b     | 7B   | 8GB          | Fast   | Good    |
+| llama3.2:7b        | 7B   | 8GB          | Fast   | Good    |
+| codellama:13b      | 13B  | 16GB         | Medium | Better  |
+| deepseek-coder:33b | 33B  | 32GB         | Slow   | Best    |
 
 ### Changing Models
 
@@ -320,7 +356,8 @@ Once deployed:
 5. Click "Index Repository"
 6. Monitor progress in the dashboard
 
-**Indexing Time**: 
+**Indexing Time**:
+
 - Small repo (<100 files): 2-5 minutes
 - Medium repo (100-500 files): 10-20 minutes
 - Large repo (500+ files): 30-60 minutes
@@ -336,6 +373,7 @@ Times assume CPU-only inference. GPU reduces time by 50-70%.
 **Error**: `Model 'deepseek-r1' not found`
 
 **Solution**:
+
 ```bash
 docker-compose exec ollama ollama pull deepseek-r1
 ```
@@ -345,6 +383,7 @@ docker-compose exec ollama ollama pull deepseek-r1
 **Error**: Container crashes or system becomes unresponsive
 
 **Solution**:
+
 - Use a smaller model (7B instead of 13B)
 - Increase Docker memory limit in Docker Desktop settings
 - Add swap space to host system
@@ -354,6 +393,7 @@ docker-compose exec ollama ollama pull deepseek-r1
 **Error**: `Invalid GitHub App credentials`
 
 **Solution**:
+
 1. Verify `GITHUB_APP_ID` matches your GitHub App
 2. Ensure `github-app-key.pem` is mounted correctly
 3. Check GitHub App permissions include "Contents" and "Metadata"
@@ -364,6 +404,7 @@ docker-compose exec ollama ollama pull deepseek-r1
 **Error**: `Could not connect to PostgreSQL`
 
 **Solution**:
+
 ```bash
 Check if Supabase DB is running
 docker-compose ps supabase-db
@@ -381,6 +422,7 @@ docker-compose restart supabase-db
 
 **Solution**:
 Ensure `chroma_db` volume is mounted in `docker-compose.yml`:
+
 ```yaml
 volumes:
   - ./chroma_db:/app/chroma_db
@@ -395,6 +437,7 @@ volumes:
 If you have an NVIDIA GPU:
 
 1. Install NVIDIA Container Toolkit:
+
    ```bash
    Ubuntu/Debian
    distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
@@ -405,6 +448,7 @@ If you have an NVIDIA GPU:
    ```
 
 2. Uncomment GPU section in `docker-compose.yml`:
+
    ```yaml
    ollama:
      deploy:
@@ -425,6 +469,7 @@ If you have an NVIDIA GPU:
 By default, the backend processes one repo at a time. To index multiple repos concurrently:
 
 In `.env`:
+
 ```bash
 MAX_CONCURRENT_INDEXING_JOBS=3
 ```
@@ -436,6 +481,7 @@ Increases memory usage proportionally.
 To skip AI summarization (faster but lower quality):
 
 In `.env`:
+
 ```bash
 SKIP_AI_SUMMARIES=true
 ```
@@ -455,6 +501,7 @@ For production deployments:
 3. **Use internal Docker networks** for service communication
 
 Example `docker-compose.yml` addition:
+
 ```yaml
 networks:
   public:
@@ -476,6 +523,7 @@ services:
 **Don't commit** `.env` or `github-app-key.pem` to version control.
 
 For production:
+
 - Use Docker secrets or Kubernetes secrets
 - Rotate keys regularly
 - Use separate GitHub Apps for dev/staging/prod
@@ -505,14 +553,14 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '4'
+          cpus: "4"
           memory: 8G
 
   ollama:
     deploy:
       resources:
         limits:
-          cpus: '4'
+          cpus: "4"
           memory: 16G
 ```
 
@@ -545,6 +593,7 @@ docker-compose logs backend --tail=50
 ### Metrics (Optional)
 
 For production, consider adding:
+
 - Prometheus for metrics collection
 - Grafana for visualization
 - Node exporter for system metrics
@@ -554,6 +603,7 @@ For production, consider adding:
 ## Support
 
 For issues or questions:
+
 - **GitHub Issues**: https://github.com/your-org/codecompass/issues
 - **Documentation**: https://docs.codecompass.dev
 - **Enterprise Support**: enterprise@codecompass.dev

@@ -14,6 +14,7 @@ export async function signInWithProvider(provider: "github" | "gitlab") {
 
   if (error) {
     console.error(`Error signing in with ${provider}:`, error.message);
+    return error.message;
   } else if (data?.url) {
     window.location.href = data.url; // Redirect to the provider’s OAuth page
   }

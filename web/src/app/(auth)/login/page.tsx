@@ -78,7 +78,10 @@ export default function LoginPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => signInWithProvider("github")}
+                onClick={async () => {
+                  const error = await signInWithProvider("github");
+                  if (error) setStatus({ type: "error", message: error });
+                }}
               >
                 <div className="flex flex-row gap-3">
                   <Github />
@@ -88,7 +91,10 @@ export default function LoginPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => signInWithProvider("gitlab")}
+                onClick={async () => {
+                  const error = await signInWithProvider("gitlab");
+                  if (error) setStatus({ type: "error", message: error });
+                }}
               >
                 <div className="flex flex-row gap-3">
                   <Gitlab />
