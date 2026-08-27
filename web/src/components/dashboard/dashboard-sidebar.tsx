@@ -10,6 +10,7 @@ import {
   BookOpen,
   MessageSquare,
   MessageSquarePlus,
+  CircleUser,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
@@ -138,9 +139,9 @@ export function DashboardSidebar() {
               action={() => router.push("/dashboard/organizations")}
             />
             <SidebarItem
-              icon={<Settings className="h-4.5 w-4.5" />}
-              label="Settings"
-              action={() => router.push("/dashboard/organizations")}
+              icon={<CircleUser className="h-4.5 w-4.5" />}
+              label="Profile"
+              action={() => router.push("/dashboard/profile")}
             />
           </>
         );

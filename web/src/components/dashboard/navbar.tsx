@@ -34,10 +34,14 @@ export function DashboardNavbar() {
           <NavContext />
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" onClick={signOut}>
+          <Button variant="outline" size="sm" onClick={() => signOut()}>
             Sign Out
           </Button>
-          <Button variant="default" size="sm">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => router.push("/dashboard/profile")}
+          >
             Profile
           </Button>
         </div>

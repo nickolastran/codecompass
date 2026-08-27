@@ -2,6 +2,13 @@ export type User = {
   id: string;
   created_at: string;
   email: string;
+  user_metadata?: {
+    display_name?: string;
+    full_name?: string;
+    user_name?: string;
+    preferred_username?: string;
+  };
+  app_metadata?: { provider?: string };
 };
 
 export type Organization = {

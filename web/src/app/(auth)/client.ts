@@ -20,9 +20,9 @@ export async function signInWithProvider(provider: "github" | "gitlab") {
   }
 }
 
-export async function signOut() {
+export async function signOut(scope: "local" | "global" = "local") {
   const supabase = createClient();
-  const { error } = await supabase.auth.signOut();
+  const { error } = await supabase.auth.signOut({ scope });
 
   if (error) {
     console.error("Error signing out:", error.message);
