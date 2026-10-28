@@ -1,0 +1,23 @@
+# Repo-wide rules. web/.gitignore and backend/.gitignore cover the
+# Next.js and Python specifics; these apply to every folder.
+
+# dependencies
+node_modules/
+
+# env files and secrets
+.env*
+!.env.example
+*.pem
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
+
+# logs
+*.log
+
+# dev / AI tooling
+CLAUDE.md
+.claude/
+.superpowers/
