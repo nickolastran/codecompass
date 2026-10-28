@@ -13,7 +13,7 @@ export default async function InstallGithubAppPage({
   const { org_id } = await searchParams;
 
   const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/github/installation${org_id ? `?org_id=${org_id}` : ""}`;
-  const githubInstallUrl = `https://github.com/apps/codecompass-app/installations/new?state=${encodeURIComponent(redirectUrl)}`;
+  const githubInstallUrl = `https://github.com/apps/codecompass-docs/installations/new?state=${encodeURIComponent(redirectUrl)}`;
 
   return (
     <div className="container mx-auto py-16 px-4 max-w-2xl">

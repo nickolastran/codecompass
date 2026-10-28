@@ -30,8 +30,8 @@ export type Repo = {
   provider: string;
   repo_url: string | null;
   last_indexed_at: string | null;
-  metadata: JSON | null;
-  index_status: "not indexed" | "indexed" | "indexing";
+  metadata: { index_error?: string } | null;
+  index_status: "not indexed" | "indexed" | "indexing" | "failed";
   object_url: string | null;
   name: string;
 };

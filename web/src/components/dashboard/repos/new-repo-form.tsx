@@ -141,6 +141,7 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
     <div className="flex flex-col bg-elevated">
       <form
         onSubmit={handleSubmit}
+        autoComplete="off"
         className="space-y-6 px-5 py-5 border rounded-md"
       >
         {/* Hidden input to ensure type value is submitted */}
@@ -164,7 +165,7 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Organization name"
+              placeholder="Repository name"
               required
               className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
             />
@@ -270,7 +271,7 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => router.back()}
+            onClick={() => router.push(`/dashboard/org/${orgId}`)}
             disabled={isLoading}
           >
             Cancel

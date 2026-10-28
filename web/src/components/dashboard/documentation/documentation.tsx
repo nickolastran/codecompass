@@ -42,6 +42,7 @@ export default function DocumentationViewer({ repoId }: { repoId: string }) {
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [isTocOpen, setIsTocOpen] = useState(false);
   const [error, setError] = useState("");
+  const [indexError, setIndexError] = useState("");
   const mainContentScrollRef = useRef<HTMLDivElement>(null);
   const setHasDocumentation = useChatUIStore(
     (state) => state.setHasDocumentation,
@@ -68,6 +69,13 @@ export default function DocumentationViewer({ repoId }: { repoId: string }) {
     fetchVersions();
   }, []);
 
+  // Poll while indexing so completion or failure shows up without a refresh
+  useEffect(() => {
+    if (!isIndexing) return;
+    const interval = setInterval(fetchVersions, 5000);
+    return () => clearInterval(interval);
+  }, [isIndexing]);
+
   useEffect(() => {
     if (selectedVersion !== null) {
       // Sync the selected version to the chat store
@@ -92,6 +100,12 @@ export default function DocumentationViewer({ repoId }: { repoId: string }) {
         console.error("Error fetching repo status:", repoResult.error);
         return;
       }
+
+      setIndexError(
+        repoResult.data.index_status === "failed"
+          ? repoResult.data.metadata?.index_error || "Indexing failed."
+          : "",
+      );
 
       // Don't fetch documentation if still indexing
       if (repoResult.data.index_status === "indexing") {
@@ -315,12 +329,21 @@ export default function DocumentationViewer({ repoId }: { repoId: string }) {
       <>
         <div className="flex h-full items-center justify-center bg-background">
           <Empty
-            title="No documentation available"
-            description="Index your codebase to generate documentation and enable AI insights."
+            title={indexError ? "Indexing failed" : "No documentation available"}
+            description={
+              indexError
+                ? "Something went wrong while indexing this repository."
+                : "Index your codebase to generate documentation and enable AI insights."
+            }
             icon={<FileText className="h-8 w-8" />}
           >
+            {indexError && (
+              <div className="w-full max-w-md p-3 bg-destructive/10 text-destructive text-sm rounded-md text-center break-words">
+                {indexError}
+              </div>
+            )}
             <Button onClick={() => setShowGenerateModal(true)}>
-              Index Codebase
+              {indexError ? "Try Again" : "Index Codebase"}
             </Button>
           </Empty>
         </div>

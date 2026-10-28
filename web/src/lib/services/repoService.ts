@@ -1196,10 +1196,18 @@ export async function indexRepository(
   // Increment version (start at 1 if no previous versions)
   const nextVersion = (latestDoc?.version ?? 0) + 1;
 
-  //mark the repository as indexing in supabase first
+  // The backend only clones from GitHub
+  if (!repoUrl?.includes("github.com")) {
+    return {
+      success: false,
+      error: "Only GitHub repositories can be indexed right now.",
+    };
+  }
+
+  //mark the repository as indexing in supabase first (clearing any previous error)
   const { error: updateError } = await client
     .from("repositories")
-    .update({ index_status: "indexing" })
+    .update({ index_status: "indexing", metadata: null })
     .eq("id", repoId);
 
   if (updateError) {
@@ -1208,8 +1216,8 @@ export async function indexRepository(
   }
 
   // Call the backend to start indexing (fire-and-forget)
-  // Don't await or throw errors since this is a long-running operation
-  fetch(`${process.env.BACKEND_URL}/repos/index`, {
+  // Don't await the run itself since this is a long-running operation
+  const request = fetch(`${process.env.BACKEND_URL}/repos/index`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -1222,12 +1230,31 @@ export async function indexRepository(
       branch: "main",
       version: nextVersion,
     }),
-  }).catch((error) => {
-    // Log the error but don't fail the request
-    console.error("Indexing request failed:", error);
-    // The backend should handle updating the repo status on failure
   });
 
-  // Return success immediately - the indexing will happen in the background
+  // An unreachable backend rejects within milliseconds; failures after that
+  // are recorded on the repo by the backend itself.
+  const unreachable = await Promise.race([
+    request.then(
+      () => false,
+      (error) => {
+        console.error("Indexing request failed:", error);
+        return true;
+      },
+    ),
+    new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 2000)),
+  ]);
+
+  if (unreachable) {
+    const message =
+      "Could not reach the indexing service. Make sure the backend is running.";
+    await client
+      .from("repositories")
+      .update({ index_status: "failed", metadata: { index_error: message } })
+      .eq("id", repoId);
+    return { success: false, error: message };
+  }
+
+  // Return success - the indexing will happen in the background
   return { success: true, data: undefined };
 }

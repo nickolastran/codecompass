@@ -60,6 +60,18 @@ NO_SUBPAGES = False  # Skip generating detailed subpages in IA
 VERBOSE = True  # Print detailed progress
 
 
+def _mark_failed(repo_id, message: str):
+    """Record a failed run so the UI shows an error instead of spinning forever."""
+    if not repo_id:
+        return
+    try:
+        supabase.table("repositories").update(
+            {"index_status": "failed", "metadata": {"index_error": message}}
+        ).eq("id", repo_id).execute()
+    except Exception as e:
+        print(f"Failed to mark repo {repo_id} as failed: {e}")
+
+
 class IndexRequest(BaseModel):
     repo_url: str
     installation_id: str
@@ -82,6 +94,7 @@ async def index_repo(request: Request):
     6. Vectorize knowledge graph into ChromaDB for semantic search
     """
     provider = None
+    repo_id = None
 
     try:
         body = await request.json()
@@ -95,6 +108,13 @@ async def index_repo(request: Request):
 
         if not url or not user_id or not installation_id or not branch:
             raise HTTPException(status_code=400, detail="Missing required fields")
+
+        # Fail before cloning if the LLM provider can't run
+        if not os.getenv("OPENAI_API_KEY") and DEFAULT_PROVIDER == "openai":
+            raise HTTPException(
+                status_code=500,
+                detail="OPENAI_API_KEY is not set. Add it to backend/.env and restart the backend.",
+            )
 
         # Parse owner and repo from url
         owner, repo = url.split("/")[-2:]
@@ -171,12 +191,6 @@ async def index_repo(request: Request):
         print("RUNNING DOCUMENTATION PIPELINE")
 
         # Initialize LLM provider
-        if not os.getenv("OPENAI_API_KEY") and DEFAULT_PROVIDER == "openai":
-            raise HTTPException(
-                status_code=500,
-                detail="OPENAI_API_KEY environment variable not set. Please configure it in .env file.",
-            )
-
         if DEFAULT_PROVIDER == "openai":
             provider = OpenAIProvider(
                 model=DEFAULT_MODEL, max_concurrent=MAX_CONCURRENT
@@ -528,8 +542,8 @@ async def index_repo(request: Request):
         # - wiki/*.md files (generated wiki pages)
         # After database storage is implemented, add cleanup: shutil.rmtree(temp_dir)
 
-    except HTTPException:
-        # Re-raise HTTP exceptions as-is
+    except HTTPException as e:
+        _mark_failed(repo_id, str(e.detail))
         raise
 
     except Exception as e:
@@ -540,6 +554,7 @@ async def index_repo(request: Request):
         import traceback
 
         error_detail = f"Indexing pipeline failed: {str(e)}\n{traceback.format_exc()}"
+        _mark_failed(repo_id, f"Indexing pipeline failed: {e}")
         raise HTTPException(status_code=500, detail=error_detail)
 
     finally:
