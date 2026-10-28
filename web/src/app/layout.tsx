@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CodeCompass",
+  title: "CodeCompass | AI Generated Documentation",
   description: "Onboard in minutes, not months.",
 };
 
