@@ -685,7 +685,7 @@ export async function getDocPageById(
   }
 
   const { data: page, error } = await client
-    .from("doc_pages")
+    .from("pages")
     .select("*")
     .eq("id", pageId)
     .single();
@@ -728,7 +728,7 @@ export async function getDocPagesHierarchical(
   }
 
   const { data: pages, error } = await client
-    .from("doc_pages")
+    .from("pages")
     .select("*")
     .eq("documentation_id", documentation.id)
     .order("order_index", { ascending: true });

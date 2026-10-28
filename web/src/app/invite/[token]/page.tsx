@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { AcceptInviteForm } from "@/components/invite/accept-invite-form";
 
@@ -16,7 +16,8 @@ export default async function InvitePage({
   } = await supabase.auth.getUser();
 
   // 1. Validate token and fetch invite with organization details
-  const { data: invite, error: inviteError } = await supabase
+  // (admin client: invitee isn't a member yet, so RLS hides the invite)
+  const { data: invite, error: inviteError } = await createAdminClient()
     .from("organization_invites")
     .select("*, organizations(name)")
     .eq("token", token)

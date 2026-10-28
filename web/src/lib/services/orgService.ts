@@ -267,8 +267,11 @@ export async function acceptInvite(
     };
   }
 
+  // Invitee isn't a member yet, so RLS blocks these reads/writes; use the admin client
+  const adminClient = createAdminClient();
+
   // 2. Fetch and validate invite (with locking to prevent race conditions)
-  const { data: invite, error: inviteError } = await supabase
+  const { data: invite, error: inviteError } = await adminClient
     .from("organization_invites")
     .select("*")
     .eq("token", token)
@@ -302,7 +305,7 @@ export async function acceptInvite(
   }
 
   // 5. Add user to organization
-  const { error: membershipError } = await supabase
+  const { error: membershipError } = await adminClient
     .from("user_organizations")
     .insert({
       user_id: user.id,
@@ -315,8 +318,7 @@ export async function acceptInvite(
     return { success: false, error: "Failed to join organization" };
   }
 
-  // 6. Mark invite as used (using admin client with secret key to bypass RLS)
-  const adminClient = createAdminClient();
+  // 6. Mark invite as used
   const { error: updateError } = await adminClient
     .from("organization_invites")
     .update({
