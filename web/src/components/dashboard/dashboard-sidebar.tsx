@@ -45,17 +45,6 @@ export function DashboardSidebar() {
   // Render different sidebar items based on context
   const renderContextualItems = () => {
     switch (currentContext.type) {
-      case "organizations":
-        return (
-          <>
-            <SidebarItem
-              icon={<Building2 className="h-4.5 w-4.5" />}
-              label="Organizations"
-              action={() => router.push(`/dashboard/organizations`)}
-            />
-          </>
-        );
-
       case "org":
         return (
           <>
@@ -147,6 +136,9 @@ export function DashboardSidebar() {
         );
     }
   };
+
+  // Only nav item here would be the current page
+  if (currentContext.type === "organizations") return null;
 
   return <Sidebar>{renderContextualItems()}</Sidebar>;
 }
