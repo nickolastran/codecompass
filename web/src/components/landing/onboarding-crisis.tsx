@@ -1,10 +1,5 @@
 import { Clock, FileWarning, Users } from "lucide-react";
-import {
-  SectionContainer,
-  SectionHeading,
-  landingCard,
-  sectionPadding,
-} from "./section-container";
+import { LandingSection, SectionHeading, landingCard } from "./section-container";
 
 const staleDocs = [
   { file: "auth.md", updated: "2019" },
@@ -22,8 +17,7 @@ const interruptions = [
 
 export default function OnboardingCrisis() {
   return (
-    <div className="bg-background flex flex-col w-full border-t border-border">
-      <SectionContainer className={`!max-w-7xl ${sectionPadding}`}>
+    <LandingSection>
         <SectionHeading label="The problem" title="Onboarding is broken.">
           New hires spend months learning a codebase before they ship anything
           meaningful.
@@ -97,7 +91,6 @@ export default function OnboardingCrisis() {
             </div>
           </div>
         </div>
-      </SectionContainer>
-    </div>
+    </LandingSection>
   );
 }

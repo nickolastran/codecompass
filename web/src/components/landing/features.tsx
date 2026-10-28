@@ -2,12 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Check, FileText, MessageSquare, Network, Server } from "lucide-react";
-import {
-  SectionContainer,
-  SectionHeading,
-  landingCard,
-  sectionPadding,
-} from "./section-container";
+import { LandingSection, SectionHeading, landingCard } from "./section-container";
+import Demo from "./demo";
 
 const highlights = [
   "Instant answers to codebase questions",
@@ -41,7 +37,6 @@ const features = [
 
 export default function Features() {
   const [videoUrl, setVideoUrl] = useState<string>("");
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchVideo() {
@@ -55,8 +50,6 @@ export default function Features() {
         }
       } catch (error) {
         console.error("Error fetching video:", error);
-      } finally {
-        setLoading(false);
       }
     }
 
@@ -64,70 +57,63 @@ export default function Features() {
   }, []);
 
   return (
-    <div className="flex flex-col w-full border-t border-border">
-      <SectionContainer className={`bg-background !max-w-7xl ${sectionPadding}`}>
-        {/* Video Demo Section */}
+    <>
+      <LandingSection>
         <SectionHeading label="The solution" title="Ask your codebase.">
           CodeCompass indexes your repository, answers questions about it, and
           writes docs that stay current.
         </SectionHeading>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-10 items-center">
-          <ul className="space-y-4">
-            {highlights.map((item) => (
-              <li key={item} className="flex items-center gap-3">
-                <Check className="h-4 w-4 text-accent shrink-0" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
+        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-3 text-sm">
+          {highlights.map((item) => (
+            <li key={item} className="flex items-center gap-2.5">
+              <Check className="h-4 w-4 text-accent shrink-0" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
 
-          <div className="rounded-md overflow-hidden border border-border bg-card">
-            {loading ? (
-              <div className="w-full aspect-video flex items-center justify-center bg-muted">
-                <p className="text-sm text-muted-foreground">Loading video...</p>
-              </div>
-            ) : videoUrl ? (
-              <video
-                className="w-full h-auto"
-                autoPlay
-                muted
-                playsInline
-                preload="metadata"
-                loop
-                src={videoUrl}
-              >
-                Your browser does not support the video tag.
-              </video>
-            ) : (
-              <div className="w-full aspect-video flex items-center justify-center bg-muted">
-                <p className="text-sm text-muted-foreground">No video available</p>
-              </div>
-            )}
+        {/* Only takes up space once there's a video to show */}
+        {videoUrl && (
+          <div className="mt-10 rounded-md overflow-hidden border border-border bg-card">
+            <video
+              className="w-full h-auto"
+              autoPlay
+              muted
+              playsInline
+              preload="metadata"
+              loop
+              src={videoUrl}
+            >
+              Your browser does not support the video tag.
+            </video>
           </div>
-        </div>
+        )}
+      </LandingSection>
 
-        {/* Feature Cards Section */}
-        <div
-          id="features"
-          className="pt-24 sm:pt-32"
-          style={{ scrollMarginTop: "100px" }}
-        >
-          <SectionHeading label="Features" title="Everything a new hire needs.">
-            Understand, navigate, and contribute to any codebase from day one.
-          </SectionHeading>
+      <LandingSection id="demo">
+        <SectionHeading label="Try it" title="Ask a question, see the code.">
+          Every answer comes with the lines it&apos;s talking about. Pick a
+          question below.
+        </SectionHeading>
+        <Demo />
+      </LandingSection>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {features.map(({ icon: Icon, title, body }) => (
-              <div key={title} className={landingCard}>
-                <Icon className="h-5 w-5 text-muted-foreground" />
-                <h3 className="mt-6 font-medium">{title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{body}</p>
-              </div>
-            ))}
-          </div>
+      <LandingSection id="features">
+        <SectionHeading label="Features" title="Everything a new hire needs.">
+          Understand, navigate, and contribute to any codebase from day one.
+        </SectionHeading>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {features.map(({ icon: Icon, title, body }) => (
+            <div key={title} className={landingCard}>
+              <Icon className="h-5 w-5 text-muted-foreground" />
+              <h3 className="mt-6 font-medium">{title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{body}</p>
+            </div>
+          ))}
         </div>
-      </SectionContainer>
-    </div>
+      </LandingSection>
+    </>
   );
 }

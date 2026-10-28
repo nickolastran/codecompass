@@ -32,9 +32,26 @@ export function SectionContainer({
 }
 
 // Shared styles for the sections below the hero
-export const sectionPadding = "!py-16 sm:!py-24";
 export const landingCard =
   "rounded-md border border-border bg-card/40 p-6 sm:p-7 flex flex-col";
+
+interface LandingSectionProps {
+  children: ReactNode;
+  id?: string;
+}
+
+// Every section below the hero uses this, so the gaps between them match
+export function LandingSection({ children, id }: LandingSectionProps) {
+  return (
+    <div className="bg-background flex flex-col w-full border-t border-border">
+      <SectionContainer className="!max-w-7xl !py-12 sm:!py-16">
+        <div id={id} style={{ scrollMarginTop: "100px" }}>
+          {children}
+        </div>
+      </SectionContainer>
+    </div>
+  );
+}
 
 interface SectionHeadingProps {
   label: string;
@@ -45,7 +62,7 @@ interface SectionHeadingProps {
 // Two-tone heading: a short statement, then a muted follow-up sentence
 export function SectionHeading({ label, title, children }: SectionHeadingProps) {
   return (
-    <div className="max-w-3xl mb-10 sm:mb-14">
+    <div className="max-w-3xl mb-8 sm:mb-10">
       <p className="text-sm font-medium text-accent mb-3">{label}</p>
       <h2 className="text-3xl sm:text-4xl font-normal tracking-tight leading-[1.15]">
         {title} <span className="text-muted-foreground">{children}</span>
