@@ -30,3 +30,26 @@ export function SectionContainer({
     </div>
   );
 }
+
+// Shared styles for the sections below the hero
+export const sectionPadding = "!py-16 sm:!py-24";
+export const landingCard =
+  "rounded-md border border-border bg-card/40 p-6 sm:p-7 flex flex-col";
+
+interface SectionHeadingProps {
+  label: string;
+  title: string;
+  children: ReactNode;
+}
+
+// Two-tone heading: a short statement, then a muted follow-up sentence
+export function SectionHeading({ label, title, children }: SectionHeadingProps) {
+  return (
+    <div className="max-w-3xl mb-10 sm:mb-14">
+      <p className="text-sm font-medium text-accent mb-3">{label}</p>
+      <h2 className="text-3xl sm:text-4xl font-normal tracking-tight leading-[1.15]">
+        {title} <span className="text-muted-foreground">{children}</span>
+      </h2>
+    </div>
+  );
+}

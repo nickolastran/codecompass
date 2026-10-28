@@ -145,7 +145,8 @@
         @apply border-border outline-ring/50;
     }
     body {
-        @apply bg-background text-foreground;
+        /* font-sans here, not on html: the Geist variable is defined on body */
+        @apply bg-background text-foreground font-sans;
     }
 }
 

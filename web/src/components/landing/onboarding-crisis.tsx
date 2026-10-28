@@ -1,249 +1,100 @@
-"use client";
-
-import { motion } from "framer-motion";
+import { Clock, FileWarning, Users } from "lucide-react";
 import {
-  Clock,
-  FileWarning,
-  Users,
-  AlertCircle,
-  AlertTriangle,
-  Minus,
-} from "lucide-react";
-import { SectionContainer } from "./section-container";
+  SectionContainer,
+  SectionHeading,
+  landingCard,
+  sectionPadding,
+} from "./section-container";
+
+const staleDocs = [
+  { file: "auth.md", updated: "2019" },
+  { file: "api.md", updated: "2021" },
+  { file: "deploy.md", updated: null },
+  { file: "setup.md", updated: "2020" },
+];
+
+const interruptions = [
+  { week: "Week 1", pct: 85 },
+  { week: "Week 2", pct: 65 },
+  { week: "Week 3", pct: 50 },
+  { week: "Week 4", pct: 40 },
+];
 
 export default function OnboardingCrisis() {
   return (
     <div className="bg-background flex flex-col w-full border-t border-border">
-      <SectionContainer className="bg-background !max-w-7xl">
-        <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
-          The Developer Onboarding Crisis
-        </h2>
-        <p className="text-gray-400 text-center text-base sm:text-lg mb-8 sm:mb-12 md:mb-16 max-w-3xl mx-auto">
-          New employees spend months familiarizing themselves with complex
-          company codebases before making meaningful contributions
-        </p>
+      <SectionContainer className={`!max-w-7xl ${sectionPadding}`}>
+        <SectionHeading label="The problem" title="Onboarding is broken.">
+          New hires spend months learning a codebase before they ship anything
+          meaningful.
+        </SectionHeading>
 
-        {/* Asymmetric Grid Layout */}
-        <div className="space-y-6">
-          {/* Large Card - Full Width */}
-          <motion.div
-            className="border border-border rounded-xl p-8 bg-card transition-colors"
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            whileHover={{
-              y: -8,
-              scale: 1.02,
-              borderColor: "hsl(var(--accent) / 0.5)",
-            }}
-          >
-            <div className="flex flex-col md:flex-row gap-8">
-              <div className="flex-1">
-                <div className="flex items-start gap-3 mb-4">
-                  <Clock className="w-8 h-8 text-accent mt-1" />
-                  <div>
-                    <h3 className="text-3xl font-semibold mb-3">3-6 months</h3>
-                    <p className="text-muted-foreground text-base">
-                      Average time for developers to become productive in a new
-                      codebase
-                    </p>
-                  </div>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className={landingCard}>
+            <h3 className="flex items-center gap-2 font-medium">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              Slow ramp-up
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Average time for a developer to become productive in a new
+              codebase.
+            </p>
+            <p className="mt-auto pt-10 text-5xl font-normal tracking-tight">
+              3–6
+              <span className="ml-2 text-base tracking-normal text-muted-foreground">
+                months
+              </span>
+            </p>
+          </div>
 
-                <div className="mt-4 flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 text-red-400" />
-                  <span className="text-sm text-muted-foreground">
-                    Slow ramp-up time costs companies thousands in lost
-                    productivity
+          <div className={landingCard}>
+            <h3 className="flex items-center gap-2 font-medium">
+              <FileWarning className="h-4 w-4 text-muted-foreground" />
+              Outdated docs
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Documentation that&apos;s incomplete, stale, or doesn&apos;t
+              exist at all.
+            </p>
+            <ul className="mt-auto pt-10 space-y-2 font-mono text-xs">
+              {staleDocs.map(({ file, updated }) => (
+                <li key={file} className="flex justify-between">
+                  <span className="text-muted-foreground">{file}</span>
+                  <span
+                    className={updated ? "text-muted-foreground/60" : "text-red-400"}
+                  >
+                    {updated ? `last edited ${updated}` : "missing"}
                   </span>
-                </div>
-              </div>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-              {/* Visual representation */}
-              <div className="flex-1">
-                <div className="p-6 bg-muted rounded-lg border border-border">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm text-muted-foreground font-mono">
-                      Productivity Timeline
-                    </span>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="h-3 bg-background rounded overflow-hidden border border-border">
-                      <motion.div
-                        className="h-full bg-accent/50"
-                        initial={{ width: 0 }}
-                        whileInView={{ width: "16.666%" }}
-                        viewport={{ once: true }}
-                        transition={{
-                          duration: 0.5,
-                          delay: 0.2,
-                          ease: "easeOut",
-                        }}
-                      />
-                    </div>
-                    <div className="h-3 bg-background rounded overflow-hidden border border-border">
-                      <motion.div
-                        className="h-full bg-accent/50"
-                        initial={{ width: 0 }}
-                        whileInView={{ width: "33.333%" }}
-                        viewport={{ once: true }}
-                        transition={{
-                          duration: 0.5,
-                          delay: 0.3,
-                          ease: "easeOut",
-                        }}
-                      />
-                    </div>
-                    <div className="h-3 bg-background rounded overflow-hidden border border-border">
-                      <motion.div
-                        className="h-full bg-accent/50"
-                        initial={{ width: 0 }}
-                        whileInView={{ width: "50%" }}
-                        viewport={{ once: true }}
-                        transition={{
-                          duration: 0.5,
-                          delay: 0.4,
-                          ease: "easeOut",
-                        }}
-                      />
-                    </div>
-                    <div className="h-3 bg-background rounded overflow-hidden border border-border">
-                      <motion.div
-                        className="h-full bg-accent/50"
-                        initial={{ width: 0 }}
-                        whileInView={{ width: "83.333%" }}
-                        viewport={{ once: true }}
-                        transition={{
-                          duration: 0.5,
-                          delay: 0.5,
-                          ease: "easeOut",
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex justify-between mt-3 text-sm text-muted-foreground">
-                    <span>Month 1</span>
-                    <span>Month 6</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Two Smaller Cards - Side by Side */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Card 2 - Outdated Docs */}
-            <motion.div
-              className="border border-border rounded-xl p-6 bg-card transition-colors"
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
-              whileHover={{
-                y: -8,
-                scale: 1.02,
-                borderColor: "hsl(var(--accent) / 0.5)",
-              }}
-            >
-              <div className="flex items-start gap-3 mb-4">
-                <FileWarning className="w-6 h-6 text-accent mt-1" />
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">Outdated docs</h3>
-                  <p className="text-muted-foreground text-sm mb-6">
-                    Documentation that is incomplete, outdated, or does not
-                    exist at all
-                  </p>
-                </div>
-              </div>
-
-              {/* Visual representation */}
-              <div className="mt-6 p-4 bg-muted rounded-lg border border-border space-y-2">
-                <div className="flex items-center gap-2 opacity-40">
-                  <div className="w-3 h-3 rounded bg-muted-foreground/50"></div>
-                  <div className="h-2 bg-muted-foreground/30 rounded flex-1"></div>
-                  <span className="text-xs text-muted-foreground">2019</span>
-                </div>
-                <div className="flex items-center gap-2 opacity-50">
-                  <div className="w-3 h-3 rounded bg-muted-foreground/50"></div>
-                  <div className="h-2 bg-muted-foreground/30 rounded flex-1"></div>
-                  <span className="text-xs text-muted-foreground">2021</span>
-                </div>
-                <div className="flex items-center gap-2 opacity-30">
-                  <div className="w-3 h-3 rounded bg-muted-foreground/50"></div>
-                  <div className="h-2 bg-muted-foreground/30 rounded flex-1 line-through"></div>
-                  <span className="text-xs text-red-500">Missing</span>
-                </div>
-                <div className="flex items-center gap-2 opacity-60">
-                  <div className="w-3 h-3 rounded bg-muted-foreground/50"></div>
-                  <div className="h-2 bg-muted-foreground/30 rounded flex-1"></div>
-                  <span className="text-xs text-muted-foreground">2020</span>
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-red-400" />
-                <span className="text-xs text-muted-foreground">
-                  Knowledge gaps
-                </span>
-              </div>
-            </motion.div>
-
-            {/* Card 3 - Team Bottlenecks */}
-            <motion.div
-              className="border border-border rounded-xl p-6 bg-card transition-colors"
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
-              whileHover={{
-                y: -8,
-                scale: 1.02,
-                borderColor: "hsl(var(--accent) / 0.5)",
-              }}
-            >
-              <div className="flex items-start gap-3 mb-4">
-                <Users className="w-6 h-6 text-accent mt-1" />
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">
-                    Team bottlenecks
-                  </h3>
-                  <p className="text-muted-foreground text-sm mb-6">
-                    Senior developers constantly interrupted to explain code
-                    architecture
-                  </p>
-                </div>
-              </div>
-
-              {/* Visual representation */}
-              <div className="mt-6 p-4 bg-muted rounded-lg border border-border">
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="w-8 h-8 rounded-full bg-accent/20 border-2 border-accent flex items-center justify-center">
-                      <span className="text-xs font-mono text-accent">Sr</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-center gap-2 flex-wrap">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <AlertCircle
-                      key={i}
-                      className="w-6 h-6 text-muted-foreground/50"
+          <div className={landingCard}>
+            <h3 className="flex items-center gap-2 font-medium">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              Team bottlenecks
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Senior developers keep getting pulled away to explain the
+              architecture.
+            </p>
+            <div className="mt-auto pt-10 space-y-2">
+              {interruptions.map(({ week, pct }) => (
+                <div key={week} className="flex items-center gap-3 text-xs">
+                  <span className="w-12 text-muted-foreground">{week}</span>
+                  <div className="h-1.5 flex-1 bg-muted">
+                    <div
+                      className="h-full bg-accent/70"
+                      style={{ width: `${pct}%` }}
                     />
-                  ))}
+                  </div>
                 </div>
-                <div className="mt-3 text-center text-xs text-muted-foreground">
-                  Constant interruptions
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center gap-2">
-                <Minus className="w-4 h-4 text-red-400" />
-                <span className="text-xs text-muted-foreground">
-                  Reduced productivity
-                </span>
-              </div>
-            </motion.div>
+              ))}
+              <p className="pt-1 text-xs text-muted-foreground">
+                Time seniors spend answering questions
+              </p>
+            </div>
           </div>
         </div>
       </SectionContainer>

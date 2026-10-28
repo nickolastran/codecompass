@@ -1,138 +1,91 @@
 import Image from "next/image";
-import { SectionContainer } from "./section-container";
+import { Check, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  SectionContainer,
+  SectionHeading,
+  landingCard,
+  sectionPadding,
+} from "./section-container";
+
+const columns = [
+  {
+    name: "Traditional documentation",
+    good: false,
+    items: [
+      "Manual updates required",
+      "Quickly becomes outdated",
+      "Static, non-interactive",
+      "No contextual answers",
+    ],
+  },
+  {
+    name: "CodeCompass",
+    good: true,
+    items: [
+      "AI-powered exploration",
+      "Auto-generated docs",
+      "Interactive chat interface",
+      "GitHub, GitLab, and local repos",
+      "Local & cloud deployment",
+      "Open source",
+    ],
+  },
+  {
+    name: "Other tools",
+    good: false,
+    items: [
+      "GitHub only",
+      "Cloud only, no self-hosting",
+      "Proprietary, not open source",
+    ],
+  },
+];
 
 export default function Comparison() {
   return (
     <div className="flex flex-col w-full border-t border-border">
-      <SectionContainer className="bg-background !max-w-7xl">
-        <div
-          id="comparison"
-          className="mx-auto"
-          style={{ scrollMarginTop: "100px" }}
-        >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-4">
-            How CodeCompass will stand apart
-          </h2>
-          <p className="text-gray-400 text-center text-base sm:text-lg mb-8 sm:mb-12 md:mb-16 max-w-3xl mx-auto">
-            Unlike other solutions, CodeCompass combines AI-powered exploration
-            with automatic documentation and enterprise-grade deployment
-            options.
-          </p>
+      <SectionContainer className={`bg-background !max-w-7xl ${sectionPadding}`}>
+        <div id="comparison" style={{ scrollMarginTop: "100px" }}>
+          <SectionHeading label="Compare" title="How CodeCompass is different.">
+            Chat, generated docs, and the option to self-host, in one open
+            source tool.
+          </SectionHeading>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-            {/* Traditional Documentation */}
-            <div className="border border-border rounded-xl p-4 sm:p-6 bg-background">
-              <h3 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">
-                Traditional Documentation
-              </h3>
-              <ul className="space-y-3">
-                <li className="flex items-center gap-2">
-                  <span className="text-red-500 text-lg">✗</span>
-                  <span className="text-gray-400 text-sm">
-                    Manual updates required
-                  </span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-red-500 text-lg">✗</span>
-                  <span className="text-gray-400 text-sm">
-                    Quickly becomes outdated
-                  </span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-red-500 text-lg">✗</span>
-                  <span className="text-gray-400 text-sm">
-                    Static, non-interactive
-                  </span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-red-500 text-lg">✗</span>
-                  <span className="text-gray-400 text-sm">
-                    No contextual answers
-                  </span>
-                </li>
-              </ul>
-            </div>
-
-            {/* CodeCompass - Center Highlighted Card */}
-            <div className="border-2 border-accent rounded-xl p-4 sm:p-6 bg-background relative">
-              <div className="flex items-center gap-2 mb-4 sm:mb-6">
-                <Image
-                  src="/codecompass.png"
-                  alt="CodeCompass Logo"
-                  width={24}
-                  height={24}
-                  className="w-5 h-5 sm:w-6 sm:h-6"
-                />
-                <h3 className="text-lg sm:text-xl font-semibold">
-                  CodeCompass
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {columns.map(({ name, good, items }) => (
+              <div
+                key={name}
+                className={cn(landingCard, good && "border-accent/60 bg-accent/5")}
+              >
+                <h3 className="flex items-center gap-2 font-medium">
+                  {good && (
+                    <Image
+                      src="/codecompass.png"
+                      alt=""
+                      width={20}
+                      height={20}
+                      className="h-5 w-5"
+                    />
+                  )}
+                  {name}
                 </h3>
+                <ul className="mt-6 space-y-3 text-sm">
+                  {items.map((item) => (
+                    <li key={item} className="flex items-center gap-2.5">
+                      {good ? (
+                        <Check className="h-4 w-4 shrink-0 text-accent" />
+                      ) : (
+                        <X className="h-4 w-4 shrink-0 text-muted-foreground/60" />
+                      )}
+                      <span className={good ? "text-foreground" : "text-muted-foreground"}>
+                        {item}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className="space-y-3">
-                <li className="flex items-center gap-2">
-                  <span className="text-accent text-lg">✓</span>
-                  <span className="text-foreground text-sm font-medium">
-                    AI-powered exploration
-                  </span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-accent text-lg">✓</span>
-                  <span className="text-foreground text-sm font-medium">
-                    Auto-generated docs
-                  </span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-accent text-lg">✓</span>
-                  <span className="text-foreground text-sm font-medium">
-                    Interactive chat interface
-                  </span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-accent text-lg">✓</span>
-                  <span className="text-foreground text-sm font-medium">
-                    Multi-platform support
-                  </span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-accent text-lg">✓</span>
-                  <span className="text-foreground text-sm font-medium">
-                    Local & cloud deployment
-                  </span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-accent text-lg">✓</span>
-                  <span className="text-foreground text-sm font-medium">
-                    Open source
-                  </span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Other Such Tools */}
-            <div className="border border-border rounded-xl p-4 sm:p-6 bg-background">
-              <h3 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6">
-                Other Such Tools
-              </h3>
-              <ul className="space-y-3">
-                <li className="flex items-center gap-2">
-                  <span className="text-orange-500 text-lg">✗</span>
-                  <span className="text-gray-400 text-sm">
-                    Limited platform support (only GitHub)
-                  </span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-orange-500 text-lg">✗</span>
-                  <span className="text-gray-400 text-sm">
-                    Cloud-only solutions (No self-hosting option)
-                  </span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-orange-500 text-lg">✗</span>
-                  <span className="text-gray-400 text-sm">
-                    Proprietary systems (Not Open Source)
-                  </span>
-                </li>
-              </ul>
-            </div>
+            ))}
           </div>
         </div>
       </SectionContainer>
