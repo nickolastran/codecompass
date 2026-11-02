@@ -46,7 +46,18 @@ class OpenAIProvider(LLMProvider):
             api_key=api_key or os.getenv("LLM_API_KEY"),
             base_url=os.getenv("LLM_BASE_URL") or None,  # None = api.openai.com
         )
-        self.model = model or os.getenv("LLM_MODEL", "gpt-4o-mini")
+        # LLM_MODEL may be a comma-separated list: when one model hits its daily
+        # quota (free tiers count per model), switch to the next.
+        self.models = [
+            m.strip()
+            for m in (model or os.getenv("LLM_MODEL", "gpt-4o-mini")).split(",")
+            if m.strip()
+        ]
+        self.model = self.models[0]
+        self.quota_exhausted = False  # True once every model hit its daily quota
+        # e.g. "none" stops Gemini Flash "thinking" from eating max_tokens; unset = provider default
+        effort = os.getenv("LLM_REASONING_EFFORT")
+        self.extra = {"reasoning_effort": effort} if effort else {}
 
         # Space calls out to stay under free-tier requests-per-minute limits (0 = no pacing)
         # ponytail: fixed spacing, not a token bucket; add one if bursty traffic matters
@@ -65,50 +76,77 @@ class OpenAIProvider(LLMProvider):
         max_retries: int = 5,
     ) -> Optional[str]:
         """
-        Call OpenAI API with retry logic and rate limiting.
+        Call the LLM with pacing, rate-limit retries and daily-quota model fallback.
 
         Args:
             system_prompt: System message
             user_prompt: User message
             max_tokens: Maximum tokens in response
-            max_retries: Maximum retry attempts for rate limit errors
+            max_retries: Maximum retry attempts for per-minute rate limit errors
 
         Returns:
             Response content or None on failure
         """
         async with self.semaphore:
-            for attempt in range(max_retries):
-                await self._pace()
-                try:
-                    response = await self.client.chat.completions.create(
-                        model=self.model,
-                        messages=[
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": user_prompt},
-                        ],
-                        temperature=self.temperature,
-                        max_tokens=max_tokens,
-                    )
+            return await self._create(
+                [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                self.temperature,
+                max_tokens,
+                max_retries,
+            )
 
-                    content = response.choices[0].message.content
-                    return content.strip() if content else None
+    async def _create(
+        self, messages: list, temperature: float, max_tokens: int, max_retries: int = 5
+    ) -> Optional[str]:
+        """One chat completion. Returns None on failure (and instantly once all quota is gone)."""
+        attempt = 0
+        while not self.quota_exhausted:
+            model = self.model
+            await self._pace()
+            try:
+                response = await self.client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    **self.extra,
+                )
+                content = response.choices[0].message.content
+                return content.strip() if content else None
 
-                except Exception as e:
-                    error_str = str(e)
+            except Exception as e:
+                error_str = str(e)
 
-                    # Retry on rate limit errors (429)
-                    if "rate_limit" in error_str.lower() or "429" in error_str:
-                        if attempt < max_retries - 1:
-                            # Backoff 5s, 10s, 20s, 40s: free tiers reset per minute
-                            wait_time = 5 * 2**attempt
-                            await asyncio.sleep(wait_time)
-                            continue
+                # Daily quota (e.g. Gemini "...RequestsPerDay..."): retrying won't help today
+                if "PerDay" in error_str:
+                    self._drop_model(model)
+                    continue
 
-                    # Don't retry other errors
-                    print(f"[LLM] {self.model} call failed: {error_str[:200]}")
-                    return None
+                # Per-minute rate limit: back off 5s, 10s, 20s, 40s
+                if ("rate_limit" in error_str.lower() or "429" in error_str) and attempt < max_retries - 1:
+                    await asyncio.sleep(5 * 2**attempt)
+                    attempt += 1
+                    continue
 
-            return None
+                print(f"[LLM] {model} call failed: {error_str[:200]}")
+                return None
+
+        return None
+
+    def _drop_model(self, model: str):
+        """Move past a model that hit its daily quota (once, even with concurrent calls)."""
+        if model != self.model:
+            return  # another call already switched
+        i = self.models.index(model)
+        if i + 1 < len(self.models):
+            self.model = self.models[i + 1]
+            print(f"[LLM] {model} hit its daily quota; switching to {self.model}")
+        else:
+            self.quota_exhausted = True
+            print(f"[LLM] {model} hit its daily quota; no models left in LLM_MODEL")
 
     async def _pace(self):
         """Wait for the next free slot so calls stay under LLM_RPM."""
@@ -361,23 +399,17 @@ Guidelines:
             Tuple of (success, response_text, error_message)
         """
         async with self.semaphore:
-            try:
-                response = await self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                    temperature=temperature,
-                    max_tokens=2000,  # Larger for IA generation (JSON output)
-                )
-                content = response.choices[0].message.content
-                if content:
-                    return (True, content.strip(), None)
-                else:
-                    return (False, None, "Empty response from API")
-            except Exception as e:
-                return (False, None, str(e))
+            content = await self._create(
+                [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature,
+                2000,  # Larger for IA generation (JSON output)
+            )
+        if content:
+            return (True, content, None)
+        return (False, None, "LLM call failed or returned nothing (see [LLM] log lines)")
 
     async def close(self):
         """Close the HTTP client."""

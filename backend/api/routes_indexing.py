@@ -131,6 +131,10 @@ async def index_repo(request: Request):
         # Create a unique directory for this repo
         temp_dir = os.path.join(clone_base_dir, f"{owner}_{repo}_{branch}")
 
+        # A previous run (successful, or killed mid-way) leaves the clone behind; git won't clone into it
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
+
         # ====================================================================
         # STEP 1: Clone Repository
         # ====================================================================
@@ -254,6 +258,13 @@ async def index_repo(request: Request):
                 fast_mode=FAST_MODE,
                 verbose=VERBOSE,
             )
+
+            # Don't build a wiki out of mostly-failed summaries
+            if getattr(provider, "quota_exhausted", False):
+                raise RuntimeError(
+                    "Every model in LLM_MODEL hit its daily free-tier quota. "
+                    "Try again after it resets (midnight Pacific) or add more models to LLM_MODEL."
+                )
 
             # Phase 3: Generate wiki IA
             ia = await generate_wiki_ia(
