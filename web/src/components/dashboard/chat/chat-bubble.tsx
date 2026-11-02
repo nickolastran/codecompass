@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Send } from "lucide-react";
 import { useChatUIStore } from "@/lib/stores/useChatUIStore";
@@ -10,6 +10,19 @@ export default function ChatBubble() {
   const expand = useChatUIStore((state) => state.expand);
   const isExpanded = useChatUIStore((state) => state.isExpanded);
   const hasDocumentation = useChatUIStore((state) => state.hasDocumentation);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Cmd/Ctrl+K focuses the chat input
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const handleSend = () => {
     if (inputValue.trim()) {
@@ -20,7 +33,7 @@ export default function ChatBubble() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       handleSend();
     }
@@ -40,7 +53,8 @@ export default function ChatBubble() {
       >
         <div className="relative">
           <textarea
-            placeholder="Ask about this codebase"
+            ref={inputRef}
+            placeholder={`Ask about this codebase (${/Mac|iPhone|iPad/.test(navigator.userAgent) ? "⌘K" : "Ctrl+K"})`}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
