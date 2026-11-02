@@ -2,7 +2,7 @@
 Embeddings Configuration
 
 Centralized configuration for code embeddings.
-Switch between Voyage API (remote) and local models here.
+Set CODE_EMBEDDING_MODEL in .env for a local model; unset uses Voyage API.
 """
 
 import os
@@ -40,7 +40,7 @@ class SimpleEmbeddings:
             batch_size=1,
             show_progress_bar=False,
             normalize_embeddings=True,
-            prompt_name="query",
+            prompt_name="query" if "query" in self.model.prompts else None,
         )
         return embedding[0].tolist()
 
@@ -81,40 +81,29 @@ class VoyageEmbeddings:
         embeddings = result.embeddings
         return embeddings[0]
 
-def get_embeddings(use_local: bool = True):
+def get_embeddings():
     """
-    Get the configured embeddings model.
+    Get the configured code embeddings model.
 
-    Args:
-        use_local: If True, use local nomic-embed-code model.
-                   If False, use Voyage AI's voyage-code-3 (requires VOYAGE_API_KEY in .env).
+    CODE_EMBEDDING_MODEL set (Hugging Face id or local path) -> local SentenceTransformer, free.
+    Otherwise -> Voyage AI voyage-code-3 (requires VOYAGE_API_KEY).
 
-    Returns:
-        Embeddings instance compatible with Chroma
+    Changing the model changes vector dimensions: re-index repos indexed with the old one.
     """
-    if use_local:
-        # Local nomic-embed-code model (optimized for code)
-        model_path = str(Path(__file__).parent / "models" / "nomic-embed-code")
+    load_dotenv()  # main.py imports routes (and this module) before it loads .env
+    model_name = os.getenv("CODE_EMBEDDING_MODEL")
 
-        # Auto-detect best available device
-        device = 'cpu' if not torch.cuda.is_available() else 'cuda'
-
-        print(f"[Embeddings] Loading nomic-embed-code model on: {device.upper()}")
-
-        # Load SentenceTransformer model
-        model = SentenceTransformer(model_path, device=device, trust_remote_code=True)
-
-        print(f"[Embeddings] Model loaded successfully")
-
-        # Use smaller batch size for GPU to avoid OOM errors
-        batch_size = 4
-
-        # Wrap with our lightweight custom class
-        return SimpleEmbeddings(model=model, batch_size=batch_size)
-    else:
-        # Voyage AI voyage-code-3 (requires VOYAGE_API_KEY in environment)
+    if not model_name:
         print("[Embeddings] Using Voyage AI voyage-code-3")
         return VoyageEmbeddings()
 
-# Default embedder - change use_local to switch models
-DEFAULT_EMBEDDINGS = get_embeddings(use_local=False)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"[Embeddings] Loading {model_name} on {device.upper()}")
+    model = SentenceTransformer(model_name, device=device)
+    # ponytail: truncate long definitions to keep CPU embedding fast; chunk them if recall on huge functions matters
+    model.max_seq_length = min(model.max_seq_length or 512, 512)
+    return SimpleEmbeddings(model=model, batch_size=8)
+
+
+# Built once at import; shared by indexing (process_graph) and chat (code_retreival_script)
+DEFAULT_EMBEDDINGS = get_embeddings()

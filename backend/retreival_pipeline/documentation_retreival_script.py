@@ -29,7 +29,8 @@ class Documentation_Retreival:
         """
         
         # Get the collection
-        collection = self.client.get_collection(name=self.user_id)
+        # get_or_create: a user with no indexed docs yet gets empty results, not a crash
+        collection = self.client.get_or_create_collection(name=self.user_id, metadata={"hnsw:space": "cosine"})
 
         # Generate query embedding
         query_embedding = self.model.encode(query, normalize_embeddings=True).tolist()
