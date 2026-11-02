@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useState } from "react";
 import {
   createRepoViaGithub,
@@ -74,6 +75,7 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
 
         // Invalidate repositories query to refetch fresh data
         queryClient.invalidateQueries({ queryKey: ["repositories", orgId] });
+        toast.success("Repository added");
 
         router.push(`/dashboard/org/${orgId}`);
       } else if (type === "github") {
@@ -97,6 +99,7 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
 
         // Invalidate repositories query to refetch fresh data
         queryClient.invalidateQueries({ queryKey: ["repositories", orgId] });
+        toast.success("Repository added");
 
         router.push(`/dashboard/org/${orgId}`);
       } else if (type === "gitlab") {
@@ -126,6 +129,7 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
 
         // Invalidate repositories query to refetch fresh data
         queryClient.invalidateQueries({ queryKey: ["repositories", orgId] });
+        toast.success("Repository added");
 
         router.push(`/dashboard/org/${orgId}`);
       }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { acceptInvite } from "@/lib/services/orgService";
 
@@ -35,7 +36,7 @@ export function AcceptInviteForm({
         return;
       }
 
-      // Redirect to organization page
+      toast.success("Invite accepted");
       router.push(`/dashboard/org/${result.data.organizationId}`);
     } catch (err) {
       console.error("Failed to accept invite:", err);

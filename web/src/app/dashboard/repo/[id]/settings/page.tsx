@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useRouter, useParams } from "next/navigation";
+import { toast } from "sonner";
 import {
   updateRepoSettings,
   deleteRepo,
@@ -104,6 +105,7 @@ export default function RepoSettings() {
     }
 
     setIsSaving(false);
+    toast.success("Repository settings saved");
     router.push(`/dashboard/repo/${repoId}`);
   };
 
@@ -125,6 +127,7 @@ export default function RepoSettings() {
       return;
     }
 
+    toast.success("Repository deleted");
     router.push(`/dashboard/org/${result.data.organizationId}`);
   };
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -68,9 +69,11 @@ export function GitLabRepoSelector({
         return;
       }
 
-      // Redirect back to organization page
       const importCount = result.data.length;
-      router.push(`/dashboard/org/${orgId}?gitlab_imported=${importCount}`);
+      toast.success(
+        `Imported ${importCount} ${importCount === 1 ? "repository" : "repositories"}`,
+      );
+      router.push(`/dashboard/org/${orgId}`);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to import repositories",

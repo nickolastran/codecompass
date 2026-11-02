@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createOrg } from "@/lib/services/orgService";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -30,7 +31,7 @@ export function NewOrganizationForm() {
       // Invalidate organizations query to refetch fresh data
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
 
-      // Redirect to organizations page after creation
+      toast.success("Organization created");
       router.push("/dashboard/organizations");
     } catch (err) {
       setError(

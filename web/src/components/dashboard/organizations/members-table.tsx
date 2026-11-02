@@ -11,6 +11,7 @@ import {
   leaveOrganization,
 } from "@/lib/services/orgService";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -184,7 +185,7 @@ export function MembersTable({ organizationId }: MembersTableProps) {
         queryKey: ["members", organizationId],
       });
 
-      // Close dialog and reset state
+      toast.success("Member removed");
       setRemovingMember(null);
     } catch (error) {
       console.error("Failed to remove member:", error);
@@ -217,7 +218,7 @@ export function MembersTable({ organizationId }: MembersTableProps) {
         queryKey: ["members", organizationId],
       });
 
-      // Close dialog and reset state
+      toast.success("Role updated");
       setManagingMember(null);
     } catch (error) {
       console.error("Failed to update member role:", error);
@@ -245,7 +246,7 @@ export function MembersTable({ organizationId }: MembersTableProps) {
         return;
       }
 
-      // Redirect to organizations list after leaving
+      toast.success("You left the organization");
       router.push("/dashboard/organizations");
     } catch (error) {
       console.error("Failed to leave organization:", error);

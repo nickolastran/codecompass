@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter, useParams } from "next/navigation";
+import { toast } from "sonner";
 
 export default function OrganizationSettings() {
   const [orgName, setOrgName] = useState("");
@@ -93,6 +94,7 @@ export default function OrganizationSettings() {
       return;
     }
 
+    toast.success("Organization updated");
     router.push(`/dashboard/org/${orgId}`);
   };
 
@@ -119,6 +121,7 @@ export default function OrganizationSettings() {
       return;
     }
 
+    toast.success("Organization deleted");
     router.push("/dashboard/organizations");
   };
 
