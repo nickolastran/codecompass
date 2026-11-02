@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { fetchGitLabProjects } from "@/lib/services/gitProviderService";
 import { GitLabRepoSelector } from "@/components/dashboard/gitlab/repo-selector";
+
+export const metadata: Metadata = { title: "Select GitLab Repositories" };
 
 type SelectReposPageProps = {
   params: Promise<{ id: string }>;

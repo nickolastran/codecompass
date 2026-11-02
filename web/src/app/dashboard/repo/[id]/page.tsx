@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { cache } from "react";
 import DocumentationViewer from "@/components/dashboard/documentation/documentation";
 import ChatBubble from "@/components/dashboard/chat/chat-bubble";
 import ChatOverlay from "@/components/dashboard/chat/chat-overlay";
@@ -16,6 +18,19 @@ import {
   QueryClient,
 } from "@tanstack/react-query";
 
+// Dedupes the repo fetch between generateMetadata and the page
+const getRepo = cache(getRepoWithStatus);
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const repo = await getRepo(id);
+  return { title: repo.success ? repo.data.name : "Repository" };
+}
+
 export default async function RepoPage({
   params,
 }: {
@@ -25,7 +40,7 @@ export default async function RepoPage({
   const supabase = await createClient();
 
   // Fetch repository details
-  const repoResult = await getRepoWithStatus(id);
+  const repoResult = await getRepo(id);
 
   if (!repoResult.success) {
     console.error("Repository not found:", repoResult.error);

@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { AcceptInviteForm } from "@/components/invite/accept-invite-form";
+
+export const metadata: Metadata = { title: "Join Organization" };
 
 export default async function InvitePage({
   params,

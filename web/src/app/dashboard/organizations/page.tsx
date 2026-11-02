@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { Plus } from "@geist-ui/icons";
 import { QueryClient } from "@tanstack/react-query";
@@ -6,6 +7,8 @@ import { OrganizationList } from "@/components/dashboard/organizations/list";
 import Link from "next/link";
 import { getOrgs } from "@/lib/services/orgService";
 import { NavbarContextSetter } from "@/components/dashboard/navbar-context-setter";
+
+export const metadata: Metadata = { title: "Organizations" };
 
 export default async function OrganizationsPage() {
   const queryClient = new QueryClient();

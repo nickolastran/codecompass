@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Gitlab } from "@geist-ui/icons";
 import Link from "next/link";
+
+export const metadata: Metadata = { title: "Install GitLab App" };
 
 type InstallGitlabAppPageProps = {
   searchParams: Promise<{ org_id?: string }>;

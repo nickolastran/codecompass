@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { NewProjectForm } from "@/components/dashboard/repos/new-repo-form";
+
+export const metadata: Metadata = { title: "New Repository" };
 
 type NewPageProps = {
   params: Promise<{ id: string }>;

@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { NewOrganizationForm } from "@/components/dashboard/organizations/new-organization-form";
+
+export const metadata: Metadata = { title: "New Organization" };
 
 export default function NewOrganizationPage() {
   return (

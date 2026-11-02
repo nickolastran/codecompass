@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import {
@@ -12,6 +13,8 @@ import { MembersTable } from "@/components/dashboard/organizations/members-table
 import { NavbarContextSetter } from "@/components/dashboard/navbar-context-setter";
 import { InviteMemberDialog } from "@/components/dashboard/organizations/invite-member-dialog";
 import { prefetchOrgData } from "@/lib/services/orgCache";
+
+export const metadata: Metadata = { title: "Team" };
 
 export default async function TeamPage({
   params,

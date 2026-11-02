@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Plus } from "lucide-react";
@@ -12,7 +13,17 @@ import { notFound } from "next/navigation";
 import { RepoList } from "@/components/dashboard/repos/list";
 import OrgHeader from "@/components/dashboard/repos/org-header";
 import { NavbarContextSetter } from "@/components/dashboard/navbar-context-setter";
-import { prefetchOrgData } from "@/lib/services/orgCache";
+import { getOrgDetails, prefetchOrgData } from "@/lib/services/orgCache";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const org = await getOrgDetails(id);
+  return { title: org.success ? org.data.name : "Organization" };
+}
 
 export default async function OrgPage({
   params,

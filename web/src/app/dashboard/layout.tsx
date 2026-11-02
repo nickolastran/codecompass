@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { DashboardNavbar } from "@/components/dashboard/navbar";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
@@ -5,6 +6,8 @@ import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { DashboardProvider } from "./dashboard-provider";
 import { User } from "@/app/types/supabase";
 import { ScrollArea } from "@/components/dashboard/scroll-area";
+
+export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function DashboardLayout({
   children,

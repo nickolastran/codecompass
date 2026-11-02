@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Github } from "lucide-react";
 import Link from "next/link";
+
+export const metadata: Metadata = { title: "Install GitHub App" };
 
 type InstallGithubAppPageProps = {
   searchParams: Promise<{ org_id?: string }>;
