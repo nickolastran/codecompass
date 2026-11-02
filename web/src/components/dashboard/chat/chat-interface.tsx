@@ -18,6 +18,8 @@ import {
 } from "@/lib/services/repoService";
 import { CodeSnippet as DBCodeSnippet } from "@/app/types/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 interface Message {
   id: string;
@@ -95,6 +97,7 @@ export default function ChatInterface() {
   const setConversation = useChatUIStore((state) => state.setConversation);
   const repoId = useChatUIStore((state) => state.repoId);
   const selectedVersion = useChatUIStore((state) => state.selectedVersion);
+  const minimize = useChatUIStore((state) => state.minimize);
   const hasSentInitialMessage = useRef(false);
 
   // Fetch messages for selected conversation
@@ -571,6 +574,10 @@ export default function ChatInterface() {
             />
             <VersionSelector />
           </div>
+          <Button variant="ghost" size="sm" onClick={minimize}>
+            <ArrowLeft className="h-4 w-4" />
+            Back to documentation
+          </Button>
         </div>
 
         {showEmptyState ? (
