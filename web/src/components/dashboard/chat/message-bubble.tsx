@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowLeft, Copy, Share2 } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChatUIStore } from "@/lib/stores/useChatUIStore";
 import ReactMarkdown from "react-markdown";
@@ -16,6 +17,17 @@ interface MessageBubbleProps {
 
 export default function MessageBubble({ text, sender }: MessageBubbleProps) {
   const { minimize } = useChatUIStore();
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
 
   if (sender === "user") {
     return (
@@ -146,11 +158,17 @@ export default function MessageBubble({ text, sender }: MessageBubbleProps) {
             </ReactMarkdown>
           </div>
           <div className="flex gap-2 mt-4 pt-4 border-t border-border">
-            <button className="p-2 hover:bg-elevated rounded-md transition-colors">
-              <Copy size={16} className="text-gray-400" />
-            </button>
-            <button className="p-2 hover:bg-elevated rounded-md transition-colors">
-              <Share2 size={16} className="text-gray-400" />
+            <button
+              onClick={handleCopy}
+              aria-label={copied ? "Copied" : "Copy answer"}
+              title={copied ? "Copied" : "Copy answer"}
+              className="p-2 hover:bg-elevated rounded-md transition-colors"
+            >
+              {copied ? (
+                <Check size={16} className="text-teal-500" />
+              ) : (
+                <Copy size={16} className="text-gray-400" />
+              )}
             </button>
           </div>
         </div>
