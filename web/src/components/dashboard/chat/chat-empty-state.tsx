@@ -12,6 +12,8 @@ export default function ChatEmptyState({ onSendMessage }: ChatEmptyStateProps) {
   const suggestions = [
     "Explain this codebase structure",
     "How does authentication work?",
+    "Where is the main entry point?",
+    "How is data stored and accessed?",
   ];
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -44,7 +46,7 @@ export default function ChatEmptyState({ onSendMessage }: ChatEmptyStateProps) {
               key={index}
               onClick={() => handleSuggestionClick(suggestion)}
               className="px-4 py-3 bg-background border border-border rounded-lg
-                       text-left text-sm dark:text-gray-200 hover:bg-gray-750
+                       text-left text-sm dark:text-gray-200 hover:bg-elevated
                        hover:border-teal-500/50 transition-all duration-200
                        hover:shadow-[0_0_10px_rgba(20,184,166,0.2)]"
             >
