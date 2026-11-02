@@ -50,6 +50,9 @@ class LSPManager:
         # Create one LSP client per language
         for handler in handlers:
             lang_id = handler.get_lsp_language_id()
+            # Don't require clangd for repos with no C/C++ files
+            if lang_id in ("c", "cpp") and not _has_c_cpp:
+                continue
             cmd = handler.get_lsp_server_command()
 
             # For TypeScript/JavaScript: ensure config exists for proper cross-file resolution
