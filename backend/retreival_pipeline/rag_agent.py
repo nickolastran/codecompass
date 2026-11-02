@@ -78,9 +78,12 @@ class RAG_Agent:
             ],
         )
 
-        #print("AGENT CHOSE TOOL=",agent_response["message"]["content"])
-
-        return agent_response["message"]["content"]
+        # Small models wrap the answer in quotes or extra words; pick out the tool name.
+        reply = agent_response["message"]["content"].lower()
+        for tool in ("conversation_history", "docs_rag", "code_rag"):
+            if tool in reply:
+                return tool
+        return "code_rag"
 
     def dispatch_to_tool(self, tool_name, query):
         """

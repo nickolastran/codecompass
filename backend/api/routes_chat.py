@@ -1,6 +1,7 @@
 
 import asyncio
 import json
+import os
 import time
 
 import ollama
@@ -175,6 +176,10 @@ async def handle_rag_request_stream(request: Request):
             raise HTTPException(
                 status_code=400, detail="conversationHistory must be a list"
             )
+
+        # The frontend's model picker is cosmetic (sends names like "Claude 4.5 Sonnet");
+        # chat always runs on the local Ollama model from .env.
+        selected_model = os.getenv("OLLAMA_CHAT_MODEL") or selected_model
 
         print(
             f"[/chat/stream] user_id={user_id}, repo_id={repo_id}, model={selected_model}, query={user_query[:50]}..."
