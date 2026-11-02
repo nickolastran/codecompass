@@ -17,8 +17,8 @@ export default function ChatInput({
 }: ChatInputProps) {
   const { initialMessage } = useChatUIStore();
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey && !disabled) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && !disabled) {
       e.preventDefault();
       onSend();
     }
@@ -31,15 +31,15 @@ export default function ChatInput({
           <textarea
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             placeholder={
               initialMessage ? "Ask a follow-up question" : "Ask CodeCompass"
             }
             rows={2}
             disabled={disabled}
-            className="w-full bg-background text-gray-100 px-4 py-3 pr-12 rounded-lg border border-border focus:outline-none
+            className="w-full bg-background text-foreground px-4 py-3 pr-12 rounded-lg border border-border focus:outline-none
                     focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 focus:shadow-[0_0_15px_rgba(20,184,166,0.3)]
-                    placeholder-gray-500 resize-none disabled:opacity-50 disabled:cursor-not-allowed
+                    placeholder:text-muted-foreground resize-none disabled:opacity-50 disabled:cursor-not-allowed
                     transition-shadow duration-200"
           />
           <button
