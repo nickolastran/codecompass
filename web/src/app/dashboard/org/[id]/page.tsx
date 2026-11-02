@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { getReposByOrganizationId } from "@/lib/services/repoService";
 import { Repo } from "@/app/types/supabase";
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { RepoList } from "@/components/dashboard/repos/list";
 import OrgHeader from "@/components/dashboard/repos/org-header";
 import { NavbarContextSetter } from "@/components/dashboard/navbar-context-setter";
@@ -28,7 +28,7 @@ export default async function OrgPage({
 
   if (!orgData.access) {
     console.error("Organization not found or access denied");
-    redirect("/dashboard/organizations");
+    notFound();
   }
 
   // Prefetch repositories

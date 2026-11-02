@@ -9,7 +9,7 @@ import {
   getLatestDocumentation,
 } from "@/lib/services/repoService";
 import { createClient } from "@/utils/supabase/server";
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import {
   dehydrate,
   HydrationBoundary,
@@ -29,7 +29,7 @@ export default async function RepoPage({
 
   if (!repoResult.success) {
     console.error("Repository not found:", repoResult.error);
-    redirect("/dashboard/organizations");
+    notFound();
   }
 
   const repo = repoResult.data;

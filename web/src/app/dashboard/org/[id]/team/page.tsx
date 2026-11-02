@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-query";
 import { getOrgMembers } from "@/lib/services/orgService";
 import { OrganizationMember } from "@/app/types/supabase";
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { MembersTable } from "@/components/dashboard/organizations/members-table";
 import { NavbarContextSetter } from "@/components/dashboard/navbar-context-setter";
 import { InviteMemberDialog } from "@/components/dashboard/organizations/invite-member-dialog";
@@ -27,7 +27,7 @@ export default async function TeamPage({
 
   if (!orgData.access) {
     console.error("Organization not found or access denied");
-    redirect("/dashboard/organizations");
+    notFound();
   }
 
   // Prefetch members data for React Query
