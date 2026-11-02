@@ -11,7 +11,7 @@ Usage:
     python documentation.py
 
 Requirements:
-    - OPENAI_API_KEY environment variable (in .env file)
+    - LLM_API_KEY (+ optional LLM_BASE_URL, LLM_MODEL, LLM_RPM) in .env
     - Target repository with Python code
 """
 
@@ -404,9 +404,7 @@ def main():
     graph_cache_path = ".codecompass/graph.json"
 
     # OpenAI configuration
-    model = (
-        "gpt-4o-mini"  # Model to use (gpt-4o-mini is cheaper, gpt-4o is higher quality)
-    )
+    model = os.getenv("LLM_MODEL", "gpt-4o-mini")
     max_concurrent = 10  # Max concurrent LLM requests
 
     # Pipeline options
@@ -431,8 +429,8 @@ def main():
     )
 
     # Validate environment
-    if not os.getenv("OPENAI_API_KEY"):
-        print("\nERROR: OPENAI_API_KEY environment variable not set")
+    if not os.getenv("LLM_API_KEY"):
+        print("\nERROR: LLM_API_KEY environment variable not set")
         print("Please set it in your .env file or environment")
         sys.exit(1)
 

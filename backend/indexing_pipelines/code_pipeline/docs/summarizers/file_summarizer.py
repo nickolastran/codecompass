@@ -117,7 +117,7 @@ def summarize_file(
     Args:
         file_node: FILE node to summarize
         graph: Graph containing the file and its definitions
-        api_key: OpenAI API key (defaults to OPENAI_API_KEY env var)
+        api_key: OpenAI API key (defaults to LLM_API_KEY env var)
         model: OpenAI model to use (default: gpt-4o-mini)
 
     Returns:
@@ -138,7 +138,7 @@ def summarize_file(
     file_repr = _build_file_representation(file_node, classes, functions)
 
     # Initialize OpenAI client
-    client = OpenAI(api_key=api_key or os.getenv("OPENAI_API_KEY"))
+    client = OpenAI(api_key=api_key or os.getenv("LLM_API_KEY"), base_url=os.getenv("LLM_BASE_URL") or None)
 
     # Build prompt
     prompt = f"""Analyze this file's contents and describe what this file is responsible for and how it fits into the system.
@@ -194,7 +194,7 @@ def summarize_files(
 
     Args:
         graph: Graph containing file nodes with summarized definitions
-        api_key: OpenAI API key (defaults to OPENAI_API_KEY env var)
+        api_key: OpenAI API key (defaults to LLM_API_KEY env var)
         model: OpenAI model to use
         verbose: Print progress updates
 

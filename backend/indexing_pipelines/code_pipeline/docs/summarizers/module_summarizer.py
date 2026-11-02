@@ -205,7 +205,7 @@ def summarize_module(
     Args:
         folder_node: FOLDER node to summarize
         graph: Graph containing the folder and its files
-        api_key: OpenAI API key (defaults to OPENAI_API_KEY env var)
+        api_key: OpenAI API key (defaults to LLM_API_KEY env var)
         model: OpenAI model to use (default: gpt-4o-mini)
 
     Returns:
@@ -226,7 +226,7 @@ def summarize_module(
     module_repr = _build_module_representation(folder_node, files, graph)
 
     # Initialize OpenAI client
-    client = OpenAI(api_key=api_key or os.getenv("OPENAI_API_KEY"))
+    client = OpenAI(api_key=api_key or os.getenv("LLM_API_KEY"), base_url=os.getenv("LLM_BASE_URL") or None)
 
     # Build prompt
     prompt = f"""Analyze this module's contents and describe this module's role in the project.
@@ -284,7 +284,7 @@ def summarize_modules(
 
     Args:
         graph: Graph containing folder nodes with summarized files
-        api_key: OpenAI API key (defaults to OPENAI_API_KEY env var)
+        api_key: OpenAI API key (defaults to LLM_API_KEY env var)
         model: OpenAI model to use
         verbose: Print progress updates
         output_path: Path to save module summaries JSON

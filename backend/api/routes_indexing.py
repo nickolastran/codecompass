@@ -49,7 +49,7 @@ router = APIRouter()
 
 # LLM Provider configuration
 DEFAULT_PROVIDER = "openai"  # Options: "openai", "ollama"
-DEFAULT_MODEL = "gpt-4o-mini"  # For OpenAI
+DEFAULT_MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini")  # Any OpenAI-compatible model
 DEFAULT_OLLAMA_MODEL = "deepseek-r1"  # For Ollama
 MAX_CONCURRENT = 10  # For OpenAI (lower due to rate limits)
 OLLAMA_CONCURRENT = 50  # For Ollama (higher, no rate limits)
@@ -110,10 +110,10 @@ async def index_repo(request: Request):
             raise HTTPException(status_code=400, detail="Missing required fields")
 
         # Fail before cloning if the LLM provider can't run
-        if not os.getenv("OPENAI_API_KEY") and DEFAULT_PROVIDER == "openai":
+        if not os.getenv("LLM_API_KEY") and DEFAULT_PROVIDER == "openai":
             raise HTTPException(
                 status_code=500,
-                detail="OPENAI_API_KEY is not set. Add it to backend/.env and restart the backend.",
+                detail="LLM_API_KEY is not set. Add it to backend/.env and restart the backend.",
             )
 
         # Parse owner and repo from url

@@ -285,12 +285,12 @@ def call_openai(prompt: str, model: str, api_key: Optional[str]) -> str:
 
     if api_key is None:
         load_dotenv()
-        api_key = os.getenv("OPENAI_API_KEY")
+        api_key = os.getenv("LLM_API_KEY")
 
     if not api_key:
-        raise ValueError("OpenAI API key not found. Set OPENAI_API_KEY environment variable or pass api_key parameter")
+        raise ValueError("OpenAI API key not found. Set LLM_API_KEY environment variable or pass api_key parameter")
 
-    client = OpenAI(api_key=api_key)
+    client = OpenAI(api_key=api_key, base_url=os.getenv("LLM_BASE_URL") or None)
 
     response = client.chat.completions.create(
         model=model,

@@ -1,9 +1,11 @@
 """
-OpenAI provider implementation with async support and rate limiting.
+OpenAI-compatible provider (OpenAI, Gemini, Groq, ...) with async support and rate limiting.
+Configured via LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_RPM in .env.
 """
 
 import asyncio
 import os
+import time
 from typing import Optional
 
 from dotenv import load_dotenv
@@ -22,7 +24,7 @@ class OpenAIProvider(LLMProvider):
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model: str = "gpt-4o-mini",
+        model: Optional[str] = None,
         max_concurrent: int = 10,
         temperature: float = 0.3,
     ):
@@ -30,8 +32,8 @@ class OpenAIProvider(LLMProvider):
         Initialize OpenAI provider.
 
         Args:
-            api_key: OpenAI API key (defaults to OPENAI_API_KEY env var)
-            model: Model to use (default: gpt-4o-mini for cost efficiency)
+            api_key: API key (defaults to LLM_API_KEY env var)
+            model: Model to use (defaults to LLM_MODEL env var)
             max_concurrent: Maximum concurrent requests (default: 10 for Tier 1)
                            Tier 1: 500 RPM → use 10
                            Tier 2: 5000 RPM → use 50
@@ -40,8 +42,18 @@ class OpenAIProvider(LLMProvider):
         # Load environment variables from .env file
         load_dotenv()
 
-        self.client = AsyncOpenAI(api_key=api_key or os.getenv("OPENAI_API_KEY"))
-        self.model = model
+        self.client = AsyncOpenAI(
+            api_key=api_key or os.getenv("LLM_API_KEY"),
+            base_url=os.getenv("LLM_BASE_URL") or None,  # None = api.openai.com
+        )
+        self.model = model or os.getenv("LLM_MODEL", "gpt-4o-mini")
+
+        # Space calls out to stay under free-tier requests-per-minute limits (0 = no pacing)
+        # ponytail: fixed spacing, not a token bucket; add one if bursty traffic matters
+        rpm = int(os.getenv("LLM_RPM", "0"))
+        self.min_interval = 60 / rpm if rpm else 0.0
+        self._pace_lock = asyncio.Lock()
+        self._next_slot = 0.0
         self.temperature = temperature
         self.semaphore = asyncio.Semaphore(max_concurrent)
 
@@ -50,7 +62,7 @@ class OpenAIProvider(LLMProvider):
         system_prompt: str,
         user_prompt: str,
         max_tokens: int = 300,
-        max_retries: int = 3,
+        max_retries: int = 5,
     ) -> Optional[str]:
         """
         Call OpenAI API with retry logic and rate limiting.
@@ -66,6 +78,7 @@ class OpenAIProvider(LLMProvider):
         """
         async with self.semaphore:
             for attempt in range(max_retries):
+                await self._pace()
                 try:
                     response = await self.client.chat.completions.create(
                         model=self.model,
@@ -86,15 +99,27 @@ class OpenAIProvider(LLMProvider):
                     # Retry on rate limit errors (429)
                     if "rate_limit" in error_str.lower() or "429" in error_str:
                         if attempt < max_retries - 1:
-                            # Exponential backoff: 1s, 2s, 4s
-                            wait_time = 2**attempt
+                            # Backoff 5s, 10s, 20s, 40s: free tiers reset per minute
+                            wait_time = 5 * 2**attempt
                             await asyncio.sleep(wait_time)
                             continue
 
                     # Don't retry other errors
+                    print(f"[LLM] {self.model} call failed: {error_str[:200]}")
                     return None
 
             return None
+
+    async def _pace(self):
+        """Wait for the next free slot so calls stay under LLM_RPM."""
+        if not self.min_interval:
+            return
+        async with self._pace_lock:
+            now = time.monotonic()
+            wait = self._next_slot - now
+            self._next_slot = max(now, self._next_slot) + self.min_interval
+        if wait > 0:
+            await asyncio.sleep(wait)
 
     async def summarize_definition(
         self, code: str, definition_type: str, name: str, include_detailed: bool = False

@@ -80,7 +80,7 @@ def summarize_definition(
 
     Args:
         node: Definition node (function/method only, not class)
-        api_key: OpenAI API key (defaults to OPENAI_API_KEY env var)
+        api_key: OpenAI API key (defaults to LLM_API_KEY env var)
         model: OpenAI model to use (default: gpt-4o-mini for cost efficiency)
 
     Returns:
@@ -103,7 +103,7 @@ def summarize_definition(
         return True
 
     # Initialize OpenAI client
-    client = OpenAI(api_key=api_key or os.getenv("OPENAI_API_KEY"))
+    client = OpenAI(api_key=api_key or os.getenv("LLM_API_KEY"), base_url=os.getenv("LLM_BASE_URL") or None)
 
     # Determine node type for prompt
     node_type = node.label.value  # "class", "function", or "method"
@@ -187,7 +187,7 @@ def summarize_definitions(
 
     Args:
         graph: Graph containing definition nodes
-        api_key: OpenAI API key (defaults to OPENAI_API_KEY env var)
+        api_key: OpenAI API key (defaults to LLM_API_KEY env var)
         model: OpenAI model to use
         verbose: Print progress updates
 

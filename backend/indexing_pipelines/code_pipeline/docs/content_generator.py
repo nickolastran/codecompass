@@ -154,7 +154,7 @@ class ContentGenerator:
         # Get API key from environment if not provided
         if self.api_key is None:
             if llm_provider == "openai":
-                self.api_key = os.getenv("OPENAI_API_KEY")
+                self.api_key = os.getenv("LLM_API_KEY")
             elif llm_provider == "anthropic":
                 self.api_key = os.getenv("ANTHROPIC_API_KEY")
 
@@ -240,7 +240,7 @@ class ContentGenerator:
         except ImportError:
             raise ImportError("OpenAI package not installed. Run: pip install openai")
 
-        client = OpenAI(api_key=self.api_key)
+        client = OpenAI(api_key=self.api_key, base_url=os.getenv("LLM_BASE_URL") or None)
 
         response = client.chat.completions.create(
             model=self.model,
