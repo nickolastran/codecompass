@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "CodeCompass | AI Generated Documentation",
-    template: "CodeCompass | %s",
+    default: "AI Generated Documentation | CodeCompass",
+    template: "%s | CodeCompass",
   },
   description: "Onboard in minutes, not months.",
 };

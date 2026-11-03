@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/dashboard/scroll-area";
 
 export const metadata: Metadata = {
   // A plain string title would drop the root template for every dashboard page
-  title: { default: "Dashboard", template: "CodeCompass | %s" },
+  title: { default: "Dashboard", template: "%s | CodeCompass" },
 };
 
 export default async function DashboardLayout({
