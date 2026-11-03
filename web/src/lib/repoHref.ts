@@ -1,5 +1,3 @@
-// Pretty repo URLs: /dashboard/<github-owner>/<repo>, like DeepWiki.
-// Repos without a GitHub URL keep /dashboard/repo/<id>.
 
 // Owners that collide with static /dashboard routes keep the id URL
 const RESERVED = new Set([

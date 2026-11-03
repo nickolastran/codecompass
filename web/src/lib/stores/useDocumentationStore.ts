@@ -12,7 +12,6 @@ interface DocumentationState {
   isLoading: boolean;
   isIndexing: boolean;
 
-  // Actions
   selectVersion: (version: number) => void;
   setAvailableVersions: (versions: VersionInfo[]) => void;
   setIsLoading: (loading: boolean) => void;

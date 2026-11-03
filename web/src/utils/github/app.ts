@@ -4,7 +4,9 @@ import fs from "fs";
 
 let app: App | undefined;
 
-/** Lazily built so a missing GITHUB_APP_* env can't break `next build`. */
+/** 
+ * Lazily built so a missing GITHUB_APP_* env can't break `next build`. 
+ */
 export function githubApp(): App {
   return (app ??= new App({
     appId: process.env.NEXT_PUBLIC_GITHUB_APP_CLIENT_ID!,

@@ -24,7 +24,7 @@ export function suggestPrompts(pages: DocPage[]): string[] {
         : (p.referenced_files ?? [])
     ) as string[];
     const name = refs
-      .map((f) => f.split("/").slice(-2).join("/")) // "sudoku/backdrop.tsx", not just "backdrop.tsx"
+      .map((f) => f.split("/").slice(-2).join("/")) 
       .find((n) => CODE_FILE.test(n) && !files.includes(n));
     if (name) files.push(name);
   }

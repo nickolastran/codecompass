@@ -1,4 +1,3 @@
-// components/ui/empty.tsx
 import { ReactNode } from "react";
 
 interface EmptyProps {
