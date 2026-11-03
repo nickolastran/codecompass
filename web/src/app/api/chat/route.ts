@@ -13,8 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    //TODO: use the model parameter when the official list of models comes out
-    const { query, repoId, conversation, model } = await request.json();
+    const { query, repoId, conversation } = await request.json();
 
     // Simple proxy to backend - just forward the request
     const response = await fetch(`${process.env.BACKEND_URL}/chat/stream`, {
@@ -25,6 +24,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         userQuery: query,
         conversationHistory: conversation,
+        // Backend uses OLLAMA_CHAT_MODEL; this is only its fallback
         selectedModel: "phi3:latest",
         user_id: user.id,
         repo_id: repoId,

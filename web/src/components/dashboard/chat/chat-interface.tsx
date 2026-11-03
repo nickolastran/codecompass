@@ -6,7 +6,6 @@ import MessageList from "./message-list";
 import ChatInput from "./chat-input";
 import AnswerPanel from "./answer-panel";
 import ChatEmptyState from "./chat-empty-state";
-import ModelSelector, { AVAILABLE_MODELS } from "./model-selector";
 import VersionSelector from "./version-selector";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -91,8 +90,6 @@ export default function ChatInterface() {
   const [chatInputDisabled, setChatInputDisabled] = useState<boolean>(false);
   const [inputValue, setInputValue] = useState("");
   const initialMessage = useChatUIStore((state) => state.initialMessage);
-  const selectedModel = useChatUIStore((state) => state.selectedModel);
-  const setSelectedModel = useChatUIStore((state) => state.setSelectedModel);
   const conversation = useChatUIStore((state) => state.conversation);
   const setConversation = useChatUIStore((state) => state.setConversation);
   const repoId = useChatUIStore((state) => state.repoId);
@@ -214,7 +211,6 @@ export default function ChatInterface() {
         },
         body: JSON.stringify({
           query: userQuestion,
-          model: selectedModel.name,
           conversation: conversationMessages
             ? conversationMessages
             : new_conversation,
@@ -565,15 +561,9 @@ export default function ChatInterface() {
     <div className="flex h-[calc(100vh-64px)] bg-background text-gray-900 dark:text-gray-300">
       {/* Chat Column */}
       <div className="flex flex-col w-1/2 border-r border-border">
-        {/* Header with Model and Version Selectors */}
+        {/* Header with Version Selector */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <div className="flex items-center gap-3">
-            <ModelSelector
-              selectedModel={selectedModel}
-              onSelectModel={setSelectedModel}
-            />
-            <VersionSelector />
-          </div>
+          <VersionSelector />
           <Button variant="ghost" size="sm" onClick={minimize}>
             <ArrowLeft className="h-4 w-4" />
             Back to documentation

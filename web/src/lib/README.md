@@ -328,7 +328,7 @@ All stores are located in `src/lib/stores/`. See `src/hooks/README.md` for detai
 
 | Store | Purpose | Key State |
 |-------|---------|-----------|
-| `useChatUIStore` | Chat interface UI | `isExpanded`, `selectedModel`, `conversation` |
+| `useChatUIStore` | Chat interface UI | `isExpanded`, `conversation` |
 | `useNavbarStore` | Navigation breadcrumbs | `contextText`, `breadcrumbs` |
 | `useDocumentationStore` | Documentation viewer | `selectedVersion`, `isLoading`, `isIndexing` |
 | `useDashboardStore` | Dashboard state | Empty (placeholder) |

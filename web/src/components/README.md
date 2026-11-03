@@ -189,7 +189,6 @@ interface Heading {
 - `chat-bubble.tsx` - Floating minimized chat input
 - `chat-overlay.tsx` - Full-screen chat interface
 - `chat-empty-state.tsx` - Welcome message for new conversations
-- `model-selector.tsx` - LLM model dropdown
 - `version-selector.tsx` - Documentation version filter
 - `animated-skeleton.tsx` - Streaming response loader
 

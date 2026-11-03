@@ -88,7 +88,7 @@ All Zustand stores are located in `src/lib/stores/` and follow React Hook naming
 
 **Location**: `src/lib/stores/useChatUIStore.ts`
 
-**Purpose**: Manages chat interface UI state (expansion, model selection, conversations).
+**Purpose**: Manages chat interface UI state (expansion, conversations).
 
 **State**:
 
@@ -96,7 +96,6 @@ All Zustand stores are located in `src/lib/stores/` and follow React Hook naming
 {
   isExpanded: boolean;
   initialMessage: string;
-  selectedModel: LLMModel;
   conversation: Conversation | null;
   hasDocumentation: boolean;
   repoId: string | null;
@@ -111,7 +110,6 @@ All Zustand stores are located in `src/lib/stores/` and follow React Hook naming
 | `expand(message)` | Open chat overlay with initial message |
 | `minimize()` | Close chat overlay |
 | `toggle()` | Toggle expanded state |
-| `setSelectedModel(model)` | Change LLM model |
 | `setConversation(conversation)` | Set active conversation |
 | `startNewConversation()` | Reset for new chat |
 | `setHasDocumentation(bool)` | Update docs availability |
@@ -350,9 +348,9 @@ export function UserProfile() {
 ### 1. Zustand Selector Pattern (Recommended)
 
 ```tsx
-// Good - Only re-renders when selectedModel changes
-const selectedModel = useChatUIStore((state) => state.selectedModel);
-const setModel = useChatUIStore((state) => state.setSelectedModel);
+// Good - Only re-renders when isExpanded changes
+const isExpanded = useChatUIStore((state) => state.isExpanded);
+const expand = useChatUIStore((state) => state.expand);
 ```
 
 ### 2. Zustand Destructuring (Less Optimal)
@@ -421,13 +419,6 @@ export function useCustomHook() {
 ## Type Definitions
 
 ```typescript
-// LLM Model
-interface LLMModel {
-  id: string;
-  name: string;
-  provider: string;
-}
-
 // Conversation
 interface Conversation {
   id: string;
