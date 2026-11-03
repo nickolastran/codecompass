@@ -59,7 +59,7 @@ export default function CodeSnippet({
           {code}
         </SyntaxHighlighter>
 
-        <DialogContent className="max-w-[90vw] max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-[90vw] sm:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -70,7 +70,7 @@ export default function CodeSnippet({
                 variant="outline"
                 size="sm"
                 onClick={handleCopy}
-                className="gap-2"
+                className="gap-2 mr-6"
               >
                 {copied ? (
                   <>

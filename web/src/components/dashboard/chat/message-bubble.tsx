@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy } from "lucide-react";
+import { Clipboard, ClipboardCheck } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -149,18 +149,18 @@ export default function MessageBubble({ text, sender }: MessageBubbleProps) {
               {text}
             </ReactMarkdown>
           </div>
-          <div className="flex gap-2 mt-4 pt-4 border-t border-border">
+          <div className="flex mt-3">
             <button
               onClick={handleCopy}
               aria-label={copied ? "Copied" : "Copy answer"}
-              title={copied ? "Copied" : "Copy answer"}
-              className="p-2 hover:bg-elevated rounded-md transition-colors"
+              className="-ml-2 flex items-center gap-1.5 px-2 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-elevated transition-colors"
             >
               {copied ? (
-                <Check size={16} className="text-teal-500" />
+                <ClipboardCheck size={18} className="text-teal-500" />
               ) : (
-                <Copy size={16} className="text-gray-400" />
+                <Clipboard size={18} />
               )}
+              {copied ? "Copied" : "Copy"}
             </button>
           </div>
         </div>
