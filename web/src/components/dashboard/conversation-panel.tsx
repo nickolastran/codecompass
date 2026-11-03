@@ -86,13 +86,13 @@ export default function ConversationPanel() {
               onClick={() => handleClick(conversation.id)}
               className={`flex items-center mb-0.5 px-2 py-2 rounded-md cursor-pointer transition-colors w-full ${
                 isSelected
-                  ? "bg-accent/10 border-l-2 border-accent"
-                  : "hover:bg-muted border-l-2 border-transparent"
+                  ? "bg-muted text-foreground"
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               }`}
             >
               {sideBarExpanded && (
                 <div
-                  className={`text-xs truncate ${isSelected ? "text-accent font-medium" : ""}`}
+                  className="text-xs truncate"
                 >
                   {conversation.title}
                 </div>
