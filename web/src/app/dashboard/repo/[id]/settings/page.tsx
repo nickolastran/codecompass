@@ -162,11 +162,11 @@ export default function RepoSettings() {
         </div>
       )}
 
-      <Card className="border-border/50">
-        <CardHeader className="pb-4">
+      <Card className="border-border/50 gap-5">
+        <CardHeader>
           <CardTitle className="text-xl">Repository Details</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-5">
           {/* Repository Name */}
           <div className="space-y-2">
             <Label htmlFor="repoName" className="text-sm font-medium">
@@ -230,27 +230,25 @@ export default function RepoSettings() {
             </div>
           )}
 
-          <div className="pt-2">
-            <Button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="w-full sm:w-auto"
-            >
-              {isSaving ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
+          <Button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="w-full sm:w-auto"
+          >
+            {isSaving ? "Saving..." : "Save Changes"}
+          </Button>
         </CardContent>
       </Card>
 
       {/* Danger Zone */}
-      <Card className="border-destructive/50">
-        <CardHeader className="pb-4">
+      <Card className="border-destructive/50 gap-5">
+        <CardHeader>
           <CardTitle className="text-xl text-destructive">
             Danger Zone
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
+        <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
             <Label className="text-sm font-medium">Delete Repository</Label>
             <p className="text-sm text-muted-foreground">
               Once you delete a repository, there is no going back. Please be
@@ -261,7 +259,7 @@ export default function RepoSettings() {
             variant="destructive"
             onClick={handleDeleteClick}
             disabled={isDeleting}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto shrink-0"
           >
             Delete Repository
           </Button>

@@ -23,7 +23,7 @@ export function DashboardSidebar() {
   const router = useRouter();
   const { hasDocumentation } = useChatUIStore();
 
-  const { toggle, isExpanded: chatExpanded } = useChatUIStore();
+  const { toggle, expand, isExpanded: chatExpanded } = useChatUIStore();
 
   // Access dynamic route parameters
   const id = params.id as string | undefined;
@@ -71,31 +71,46 @@ export function DashboardSidebar() {
         );
 
       case "repository":
+        if (pathname.includes("/settings")) {
+          const repoPath = `/dashboard/repo/${currentContext.id}`;
+          return (
+            <>
+              <SidebarItem
+                icon={<BookOpen className="h-4.5 w-4.5" />}
+                label="Documentation"
+                action={() => router.push(repoPath)}
+              />
+              <SidebarItem
+                icon={<MessageSquare className="h-4.5 w-4.5" />}
+                label="Chat"
+                action={() => {
+                  router.push(repoPath);
+                  expand("");
+                }}
+              />
+              <SidebarItem
+                icon={<Settings className="h-4.5 w-4.5" />}
+                label="Settings"
+                action={() => router.push(`${repoPath}/settings`)}
+              />
+            </>
+          );
+        }
         return (
           <>
             <SidebarItem
               icon={
-                chatExpanded || pathname.includes("/settings") ? (
+                chatExpanded ? (
                   <BookOpen className="h-4.5 w-4.5" />
                 ) : (
                   <MessageSquare className="h-4.5 w-4.5" />
                 )
               }
-              label={
-                chatExpanded || pathname.includes("/settings")
-                  ? "Documentation"
-                  : "Chat"
-              }
-              action={() => {
-                // Navigate to repo page if not already there
-                if (pathname !== `/dashboard/repo/${currentContext.id}`) {
-                  router.push(`/dashboard/repo/${currentContext.id}`);
-                }
-                toggle();
-              }}
-              disabled={!hasDocumentation && !pathname.includes("/settings")}
+              label={chatExpanded ? "Documentation" : "Chat"}
+              action={toggle}
+              disabled={!hasDocumentation}
             />
-            {!pathname.includes("/settings") && chatExpanded && (
+            {chatExpanded && (
               <SidebarItem
                 icon={<MessageSquarePlus className="h-4.5 w-4.5" />}
                 label="New Message"
@@ -106,9 +121,7 @@ export function DashboardSidebar() {
               />
             )}
 
-            {!pathname.includes("/settings") && chatExpanded && (
-              <ConversationPanel />
-            )}
+            {chatExpanded && <ConversationPanel />}
             <SidebarItem
               icon={<Settings className="h-4.5 w-4.5" />}
               label="Settings"
