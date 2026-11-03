@@ -4,8 +4,8 @@ export function FileTreeSkeleton() {
   return (
     <div className="w-64 border-r border-border flex flex-col bg-background h-full hidden lg:flex">
       {/* Last indexed section */}
-      <div className="p-3 border-b border-border">
-        <Skeleton className="h-4 w-32" />
+      <div className="h-14 shrink-0 px-3 flex items-center justify-center border-b border-border">
+        <Skeleton className="h-4 w-32 mx-auto" />
       </div>
 
       {/* Search bar */}

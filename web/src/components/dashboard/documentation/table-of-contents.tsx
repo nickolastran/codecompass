@@ -136,7 +136,7 @@ export function TableOfContentsSidebar({
         )}
 
         {/* Header section */}
-        <div className="p-4 border-b border-border flex items-center justify-between shrink-0">
+        <div className="h-14 px-4 border-b border-border flex items-center justify-between shrink-0">
           <button
             onClick={onRefreshClick}
             className="text-xs text-gray-400 hover:text-teal-400 flex items-center gap-1"

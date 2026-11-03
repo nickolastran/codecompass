@@ -4,7 +4,7 @@ export function TableOfContentsSkeleton() {
   return (
     <div className="w-64 border-l border-border flex flex-col bg-background hidden xl:flex">
       {/* Refresh button section */}
-      <div className="p-4 border-b border-border flex items-center justify-between shrink-0">
+      <div className="h-14 px-4 border-b border-border flex items-center justify-between shrink-0">
         <Skeleton className="h-4 w-32" />
       </div>
 

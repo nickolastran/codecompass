@@ -4,7 +4,7 @@ export function MainContentSkeleton() {
   return (
     <div className="flex-1 flex flex-col">
       {/* Header */}
-      <div className="border-b border-grey-800 px-6 py-3 flex items-center justify-between">
+      <div className="h-14 shrink-0 border-b border-border px-6 flex items-center justify-between">
         <Skeleton className="h-7 w-64" />
         <Skeleton className="h-8 w-40" />
       </div>

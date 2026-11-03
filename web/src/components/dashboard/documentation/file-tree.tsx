@@ -169,8 +169,8 @@ export function FileTreeSidebar({
           </div>
         )}
 
-        <div className="p-3 border-b border-border">
-          <div className="text-xs text-gray-500 mb-2">
+        <div className="h-14 shrink-0 px-3 flex items-center justify-center border-b border-border">
+          <div className="text-xs text-gray-500 text-center">
             Last indexed: {formatRelativeTime(lastIndexed)}
           </div>
         </div>
