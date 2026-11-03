@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { useChatUIStore } from "@/lib/stores/useChatUIStore";
 import MessageList from "./message-list";
 import ChatInput from "./chat-input";
-import AnswerPanel from "./answer-panel";
 import ChatEmptyState from "./chat-empty-state";
 import VersionSelector from "./version-selector";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -559,8 +558,7 @@ export default function ChatInterface() {
 
   return (
     <div className="flex h-[calc(100vh-64px)] bg-background text-gray-900 dark:text-gray-300">
-      {/* Chat Column */}
-      <div className="flex flex-col w-1/2 border-r border-border">
+      <div className="flex flex-col flex-1 min-w-0">
         {/* Header with Version Selector */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <VersionSelector />
@@ -575,7 +573,11 @@ export default function ChatInterface() {
         ) : showMessagesLoading ? (
           <MessageListSkeleton />
         ) : (
-          <MessageList messages={messages} loading={responseLoading} />
+          <MessageList
+            messages={messages}
+            turns={conversationTurns}
+            loading={responseLoading}
+          />
         )}
         <ChatInput
           value={inputValue}
@@ -584,9 +586,6 @@ export default function ChatInterface() {
           disabled={chatInputDisabled}
         />
       </div>
-
-      {/* Answers Column */}
-      <AnswerPanel conversationTurns={conversationTurns} />
     </div>
   );
 }

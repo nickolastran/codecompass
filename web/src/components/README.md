@@ -179,10 +179,9 @@ interface Heading {
 | Component | Type | Purpose |
 |-----------|------|---------|
 | `chat-interface.tsx` | Client | Main chat container with streaming |
-| `message-list.tsx` | Client | Scrollable message history |
+| `message-list.tsx` | Client | One row per question: answer + its code snippets |
 | `message-bubble.tsx` | Client | Individual message rendering |
 | `chat-input.tsx` | Client | Message input with send button |
-| `answer-panel.tsx` | Client | Code snippets sidebar |
 | `code-snippet.tsx` | Client | Syntax-highlighted code in modal |
 
 **Supporting Components**:
@@ -203,10 +202,10 @@ interface Heading {
 **Architecture Flow**:
 ```
 ChatInterface
-├── MessageList
-│   └── MessageBubble (renders markdown + code)
-├── ChatInput (user input)
-└── AnswerPanel (code snippets sidebar)
+├── MessageList (row per question)
+│   ├── MessageBubble (renders markdown + code)
+│   └── CodeSnippet (snippets for that question)
+└── ChatInput (user input)
 
 ChatBubble (minimized) → ChatOverlay (expanded)
 ```

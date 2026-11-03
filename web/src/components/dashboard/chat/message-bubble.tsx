@@ -6,14 +6,7 @@ import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
-interface MessageBubbleProps {
-  id: string;
-  text: string;
-  sender: "user" | "assistant";
-  timestamp: string;
-}
-
-export default function MessageBubble({ text, sender }: MessageBubbleProps) {
+export default function MessageBubble({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -26,19 +19,9 @@ export default function MessageBubble({ text, sender }: MessageBubbleProps) {
     }
   };
 
-  if (sender === "user") {
-    return (
-      <div className="mb-8 px-5">
-        <div className="text-gray-700 dark:text-gray-300 tracking-wide text-2xl leading-relaxed">
-          {text}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="mb-8">
-      <div className="mt-6">
+    <div>
+      <div className="mt-4">
         <div className="bg-elevated rounded-lg border border-border p-6">
           <div className="prose prose-invert max-w-none">
             <ReactMarkdown
