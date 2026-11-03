@@ -8,6 +8,7 @@ import { TableOfContentsSidebar } from "./table-of-contents";
 import { FileTreeSkeleton } from "./file-tree-skeleton";
 import { MainContentSkeleton } from "./main-content-skeleton";
 import { TableOfContentsSkeleton } from "./table-of-contents-skeleton";
+import { EmptyStateSkeleton } from "./empty-state-skeleton";
 import { Page, FileTreeNode, Heading } from "./types";
 import { buildFileTree, extractHeadings } from "./utils";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,13 @@ import {
 } from "@/lib/services/repoService";
 import { motion } from "framer-motion";
 
-export default function DocumentationViewer({ repoId }: { repoId: string }) {
+export default function DocumentationViewer({
+  repoId,
+  hasDocs,
+}: {
+  repoId: string;
+  hasDocs: boolean;
+}) {
   const [fileTree, setFileTree] = useState<FileTreeNode[]>([]);
   const [selectedFile, setSelectedFile] = useState<Page | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
@@ -288,6 +295,7 @@ export default function DocumentationViewer({ repoId }: { repoId: string }) {
   };
 
   if (isLoading) {
+    if (!hasDocs) return <EmptyStateSkeleton />;
     return (
       <div className="flex bg-background h-full">
         <FileTreeSkeleton />

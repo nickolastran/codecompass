@@ -90,7 +90,10 @@ export default async function RepoPage({
         <RepoContextSetter repoId={repo.id} version={latestVersion} />
         {/* Documentation Viewer - Main content */}
         <div className="flex-1 overflow-hidden relative">
-          <DocumentationViewer repoId={repo.id} />
+          <DocumentationViewer
+            repoId={repo.id}
+            hasDocs={latestVersion !== null}
+          />
 
           {/* Chat Bubble - Floating input (shows when chat is minimized) */}
           <ChatBubble />
