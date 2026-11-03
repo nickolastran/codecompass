@@ -1,5 +1,5 @@
-"""Routing self-check against the live Ollama agent model: .venv/bin/python -m retreival_pipeline.check_routing"""
-from retreival_pipeline.rag_agent import RAG_Agent
+"""Routing self-check against the live Ollama agent model: .venv/bin/python -m retrieval_pipeline.check_routing"""
+from retrieval_pipeline.rag_agent import RAG_Agent
 
 CASES = {
     "How often does the contributions data refresh?": "code_rag",

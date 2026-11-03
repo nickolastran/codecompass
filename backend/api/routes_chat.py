@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel
 
-from retreival_pipeline.rag_agent import RAG_Agent
+from retrieval_pipeline.rag_agent import RAG_Agent
 from startup.ollama_checks import Ollama_Manager
 
 # Define the FastAPI Router Object

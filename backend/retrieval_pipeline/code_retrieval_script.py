@@ -1,5 +1,5 @@
 """
-    This file contains all the code for retreiving from the ChromaDB that contains the code embeddings and retreiving the context from the graph
+    This file contains all the code for retrieving from the ChromaDB that contains the code embeddings and retrieving the context from the graph
 """
 
 import os
@@ -14,14 +14,14 @@ from langchain_chroma import Chroma
 
 from indexing_pipelines.code_pipeline.core.graph_model import Graph
 
-class Code_Retreival:
+class Code_Retrieval:
     def __init__(self, user_id: str, repo_id: str):
         self.user_id = user_id
         self.repo_id = repo_id
 
-    def retreive_from_DB(self, query):
+    def retrieve_from_DB(self, query):
         """
-            Given the query this function retreives the relevant code snippet context and returns it.
+            Given the query this function retrieves the relevant code snippet context and returns it.
 
             Args:
                 query (str): User Query

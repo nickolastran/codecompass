@@ -1,5 +1,5 @@
 """
-    This file contains all the code for retreiving from the ChromaDB that contains all the documentation embeddings
+    This file contains all the code for retrieving from the ChromaDB that contains all the documentation embeddings
 """
 
 import os
@@ -7,7 +7,7 @@ import chromadb
 from sentence_transformers import SentenceTransformer
 from config import DOCUMENTATION_CHROMA_DB_PATH
 
-class Documentation_Retreival:
+class Documentation_Retrieval:
     def __init__(self, user_id: str, repo_id: str):
         self.user_id = user_id
         self.repo_id = repo_id
@@ -15,7 +15,7 @@ class Documentation_Retreival:
         self.client = chromadb.PersistentClient(path=DOCUMENTATION_CHROMA_DB_PATH)
         self.model = SentenceTransformer(os.getenv("DOCUMENT_EMBEDDING_MODEL"))
 
-    def retreive_from_DB(self, query: str):
+    def retrieve_from_DB(self, query: str):
         """
             Retrieve similar context chunks based on query from Chrom DB
 
@@ -23,7 +23,7 @@ class Documentation_Retreival:
                 query (str): Entered user query
 
             Returns:
-                context (str): Retreived Context
+                context (str): Retrieved Context
                 chunks_list (List[str]): 
                 filepaths_list (List[str]):
         """
@@ -35,7 +35,7 @@ class Documentation_Retreival:
         # Generate query embedding
         query_embedding = self.model.encode(query, normalize_embeddings=True).tolist()
         
-        # Retreive the collection
+        # Retrieve the collection
         results = collection.query(
             query_embeddings=[query_embedding],
             n_results=3,
@@ -44,7 +44,7 @@ class Documentation_Retreival:
         )
 
         # Parse the results
-        # A list with each element being one of the retreived chunks
+        # A list with each element being one of the retrieved chunks
         # One string with all the context
         # A list with all the filepaths
         # Extract first batch from Chroma (because everything is batched)

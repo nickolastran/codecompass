@@ -105,5 +105,5 @@ def get_embeddings():
     return SimpleEmbeddings(model=model, batch_size=8)
 
 
-# Built once at import; shared by indexing (process_graph) and chat (code_retreival_script)
+# Built once at import; shared by indexing (process_graph) and chat (code_retrieval_script)
 DEFAULT_EMBEDDINGS = get_embeddings()

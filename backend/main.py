@@ -78,7 +78,7 @@ if __name__ == "__main__":
     #obj.dispatch_files()
     
     
-    #from retreival_pipeline.rag_agent import RAG_Agent
+    #from retrieval_pipeline.rag_agent import RAG_Agent
     #query = "explain how indexing works"
     #
     #agent_obj = RAG_Agent("Mann","Repo-Test5")

@@ -69,6 +69,6 @@ class Code_Indexing:
             persist_dir=CODE_CHROMA_DB_PATH,
         )
 
-        # Save the created Knowledge Graph for retreival later
+        # Save the created Knowledge Graph for retrieval later
         KG.save(f"{KG_GRAPH_STORE_PATH}/graph_{self.user_id}_{self.repo_id}.json")
         return

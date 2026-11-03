@@ -2,7 +2,7 @@
 """
     - The RAG agent acts as the brain of the pipeline.
         It Orchestrates:
-        - Retreival from all the Data Sources:
+        - Retrieval from all the Data Sources:
             1. Vector DB
             2. Graph DB
             3. Keyword Search
@@ -10,8 +10,8 @@
         - Response Post Processing
             
     - It receives `query` & `chat_history`
-    - It retreives relevant context from the Knowledge Base
-    - It Prompts the LLM with retreived context
+    - It retrieves relevant context from the Knowledge Base
+    - It Prompts the LLM with retrieved context
     - It Streams back LLM response
 
     - An “orchestrator agent” in a RAG system is usually just a normal LLM that has tool-calling abilities.
@@ -24,8 +24,8 @@ import os
 
 from .system_prompts import AGENT_SYS_PROMPT
 
-from .documentation_retreival_script import Documentation_Retreival
-from .code_retreival_script import Code_Retreival
+from .documentation_retrieval_script import Documentation_Retrieval
+from .code_retrieval_script import Code_Retrieval
 
 from typing import List
 
@@ -40,7 +40,7 @@ class RAG_Agent:
         1. Codebase Documentation RAG Pipeline
         2. Code RAG Pipeline
         3. Keyword Search
-        4. No retreival necessary
+        4. No retrieval necessary
 
         The agent:
         - Receives a natural language query
@@ -87,7 +87,7 @@ class RAG_Agent:
 
     def dispatch_to_tool(self, tool_name, query):
         """
-            Executes the selected tool & returns the retreived context.
+            Executes the selected tool & returns the retrieved context.
 
             Args:
                 tool_name (str): 
@@ -99,14 +99,14 @@ class RAG_Agent:
 
         match tool_name:
             case "docs_rag":
-                doc_ret_obj = Documentation_Retreival(self.user_id, self.repo_id)
+                doc_ret_obj = Documentation_Retrieval(self.user_id, self.repo_id)
 
-                context, chunks_list, chunks_file_paths = doc_ret_obj.retreive_from_DB(query)
+                context, chunks_list, chunks_file_paths = doc_ret_obj.retrieve_from_DB(query)
                 
             case "code_rag":
-                code_ret_obj = Code_Retreival(self.user_id, self.repo_id)
+                code_ret_obj = Code_Retrieval(self.user_id, self.repo_id)
 
-                context, chunks_list, chunks_file_paths = code_ret_obj.retreive_from_DB(query)
+                context, chunks_list, chunks_file_paths = code_ret_obj.retrieve_from_DB(query)
 
             case "conversation_history":
                 context = ""
@@ -117,7 +117,7 @@ class RAG_Agent:
                 context = ""
                 chunks_list, chunks_file_paths = [], []
 
-        print("RETREIVED CONTEXT: ", context)
+        print("RETRIEVED CONTEXT: ", context)
 
         return context, chunks_list, chunks_file_paths
 
@@ -128,7 +128,7 @@ class RAG_Agent:
             Args:
                 query (str): User Query
                 chat_history (List): Past Conversation in ChatML(Chat Markup Language) format
-                context (str): Retreived context
+                context (str): Retrieved context
                 selected_llm (str): The selected LLM
             Returns:
                 stream (generator): Ollama streaming generator object
@@ -159,14 +159,14 @@ class RAG_Agent:
 
             Returns:
                 stream (generator): The Ollama Generator Object (which is used for streaming the LLM response)
-                chunks_list (List[str]): List of the retreived code chunks
+                chunks_list (List[str]): List of the retrieved code chunks
                 chunks_file_paths (List[str]):List of the files from the which the code chunks belong
         """
 
-        # Ask Agent which Knowledge Source to retreive Context from
+        # Ask Agent which Knowledge Source to retrieve Context from
         selected_tool = self.select_tool(query)
 
-        # Retreive Context from Selected Knowledge Source
+        # Retrieve Context from Selected Knowledge Source
         context, chunks_list, chunks_file_paths = self.dispatch_to_tool(selected_tool, query)
 
         # Query the LLM through Ollama with provided context
