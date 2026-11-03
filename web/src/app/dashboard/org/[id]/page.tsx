@@ -22,7 +22,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const org = await getOrgDetails(id);
-  return { title: org.success ? org.data.name : "Organization" };
+  return { title: org.success ? `${org.data.name} Organization` : "Organization" };
 }
 
 export default async function OrgPage({

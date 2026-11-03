@@ -28,7 +28,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const repo = await getRepo(id);
-  return { title: repo.success ? repo.data.name : "Repository" };
+  return { title: repo.success ? `${repo.data.name} Repository` : "Repository" };
 }
 
 export default async function RepoPage({

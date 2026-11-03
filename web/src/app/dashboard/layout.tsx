@@ -7,7 +7,10 @@ import { DashboardProvider } from "./dashboard-provider";
 import { User } from "@/app/types/supabase";
 import { ScrollArea } from "@/components/dashboard/scroll-area";
 
-export const metadata: Metadata = { title: "Dashboard" };
+export const metadata: Metadata = {
+  // A plain string title would drop the root template for every dashboard page
+  title: { default: "Dashboard", template: "CodeCompass | %s" },
+};
 
 export default async function DashboardLayout({
   children,
