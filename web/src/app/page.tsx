@@ -1,4 +1,4 @@
-import LandingPage from "@/components/landing/landing-page";
+import LandingPage from "@/components/landing/landingPage";
 import Navbar from "@/components/landing/navbar";
 import { createClient } from "@/utils/supabase/server";
 

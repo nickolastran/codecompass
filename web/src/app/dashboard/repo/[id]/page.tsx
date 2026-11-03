@@ -3,8 +3,8 @@ import {
   RepoView,
   getRepo,
   repoMetadata,
-} from "@/components/dashboard/repo-view";
-import { githubSlug, repoHref } from "@/lib/repo-href";
+} from "@/components/dashboard/repoView";
+import { githubSlug, repoHref } from "@/lib/repoHref";
 
 type Props = { params: Promise<{ id: string }> };
 

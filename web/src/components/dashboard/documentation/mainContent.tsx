@@ -3,7 +3,7 @@ import { toRepoPath } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
-import VersionSelector from "@/components/dashboard/chat/version-selector";
+import VersionSelector from "@/components/dashboard/chat/versionSelector";
 import mermaid from "mermaid";
 import { motion } from "framer-motion";
 import {

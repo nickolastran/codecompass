@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { NewProjectForm } from "@/components/dashboard/repos/new-repo-form";
+import { NewProjectForm } from "@/components/dashboard/repos/newRepoForm";
 
 export const metadata: Metadata = { title: "New Repository" };
 

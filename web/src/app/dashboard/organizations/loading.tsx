@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { CardPageSkeleton } from "@/components/dashboard/card-grid-skeleton";
+import { CardPageSkeleton } from "@/components/dashboard/cardGridSkeleton";
 
 // One skeleton card per org if we've loaded the list before; else the default
 export default function OrganizationsLoading() {

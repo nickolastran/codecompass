@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { notFound } from "next/navigation";
-import { RepoView, repoMetadata } from "@/components/dashboard/repo-view";
+import { RepoView, repoMetadata } from "@/components/dashboard/repoView";
 import { getRepoIdByGithubSlug } from "@/lib/services/repoService";
 
 type Props = { params: Promise<{ owner: string; repo: string }> };

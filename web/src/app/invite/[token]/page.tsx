@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { AcceptInviteForm } from "@/components/invite/accept-invite-form";
+import { AcceptInviteForm } from "@/components/invite/acceptInviteForm";
 
 export const metadata: Metadata = { title: "Join Organization" };
 

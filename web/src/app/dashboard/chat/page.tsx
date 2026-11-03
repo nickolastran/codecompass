@@ -1,6 +1,6 @@
 "use client";
 
-import ChatInterface from "@/components/dashboard/chat/chat-interface";
+import ChatInterface from "@/components/dashboard/chat/chatInterface";
 
 export default function ChatPage() {
   return <ChatInterface />;

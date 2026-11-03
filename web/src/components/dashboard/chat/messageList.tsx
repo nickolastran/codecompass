@@ -1,6 +1,6 @@
-import AnimatedSkeleton from "./animated-skeleton";
-import CodeSnippet from "./code-snippet";
-import MessageBubble from "./message-bubble";
+import AnimatedSkeleton from "./animatedSkeleton";
+import CodeSnippet from "./codeSnippet";
+import MessageBubble from "./messageBubble";
 
 interface Message {
   id: string;

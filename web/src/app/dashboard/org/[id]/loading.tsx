@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { CardPageSkeleton } from "@/components/dashboard/card-grid-skeleton";
+import { CardPageSkeleton } from "@/components/dashboard/cardGridSkeleton";
 
 // One skeleton card per repo if they're cached (visited, or the org card was
 // hovered, which prefetches them); else the default

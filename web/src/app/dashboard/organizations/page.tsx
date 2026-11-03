@@ -6,7 +6,7 @@ import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { OrganizationList } from "@/components/dashboard/organizations/list";
 import Link from "next/link";
 import { getOrgs } from "@/lib/services/orgService";
-import { NavbarContextSetter } from "@/components/dashboard/navbar-context-setter";
+import { NavbarContextSetter } from "@/components/dashboard/navbarContextSetter";
 
 export const metadata: Metadata = { title: "Organizations" };
 

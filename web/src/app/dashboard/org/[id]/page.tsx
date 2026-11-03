@@ -11,8 +11,8 @@ import { getReposByOrganizationId } from "@/lib/services/repoService";
 import { Repo } from "@/app/types/supabase";
 import { notFound } from "next/navigation";
 import { RepoList } from "@/components/dashboard/repos/list";
-import OrgHeader from "@/components/dashboard/repos/org-header";
-import { NavbarContextSetter } from "@/components/dashboard/navbar-context-setter";
+import OrgHeader from "@/components/dashboard/repos/orgHeader";
+import { NavbarContextSetter } from "@/components/dashboard/navbarContextSetter";
 import { getOrgDetails, prefetchOrgData } from "@/lib/services/orgCache";
 
 export async function generateMetadata({

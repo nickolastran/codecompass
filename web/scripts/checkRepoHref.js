@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-// Self-check for src/lib/repo-href.ts: node scripts/check-repo-href.js
+// Self-check for src/lib/repoHref.ts: node scripts/checkRepoHref.js
 const ts = require("typescript"), fs = require("fs"), path = require("path"), os = require("os");
 const assert = require("assert");
-const src = fs.readFileSync(path.join(__dirname, "../src/lib/repo-href.ts"), "utf8");
+const src = fs.readFileSync(path.join(__dirname, "../src/lib/repoHref.ts"), "utf8");
 const out = path.join(os.tmpdir(), "repo-href.check.js");
 fs.writeFileSync(out, ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText);
 const { githubSlug, repoHref } = require(out);

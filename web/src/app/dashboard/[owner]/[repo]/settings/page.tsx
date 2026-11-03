@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import RepoSettings from "@/components/dashboard/repo-settings";
+import RepoSettings from "@/components/dashboard/repoSettings";
 import { getRepoIdByGithubSlug } from "@/lib/services/repoService";
 
 export const metadata: Metadata = { title: "Repository Settings" };

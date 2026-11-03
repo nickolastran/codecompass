@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useChatUIStore } from "@/lib/stores/useChatUIStore";
-import MessageList from "./message-list";
-import ChatInput from "./chat-input";
-import ChatEmptyState from "./chat-empty-state";
-import VersionSelector from "./version-selector";
+import MessageList from "./messageList";
+import ChatInput from "./chatInput";
+import ChatEmptyState from "./chatEmptyState";
+import VersionSelector from "./versionSelector";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getConversationMessages,

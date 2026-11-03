@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { cache } from "react";
 import DocumentationViewer from "@/components/dashboard/documentation/documentation";
-import ChatBubble from "@/components/dashboard/chat/chat-bubble";
-import ChatOverlay from "@/components/dashboard/chat/chat-overlay";
-import { NavbarContextSetter } from "@/components/dashboard/navbar-context-setter";
-import { RepoContextSetter } from "@/components/dashboard/repo-context-setter";
+import ChatBubble from "@/components/dashboard/chat/chatBubble";
+import ChatOverlay from "@/components/dashboard/chat/chatOverlay";
+import { NavbarContextSetter } from "@/components/dashboard/navbarContextSetter";
+import { RepoContextSetter } from "@/components/dashboard/repoContextSetter";
 import {
   getRepoWithStatus,
   getConversations,

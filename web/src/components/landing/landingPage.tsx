@@ -2,7 +2,7 @@
 import dynamic from "next/dynamic";
 import Hero from "./hero";
 import CTA from "./cta";
-import OnboardingCrisis from "./onboarding-crisis";
+import OnboardingCrisis from "./onboardingCrisis";
 import Footer from "./footer";
 const Features = dynamic(() => import("./features").then((mod) => mod.default));
 const Comparison = dynamic(() =>

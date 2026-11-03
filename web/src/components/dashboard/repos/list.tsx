@@ -1,6 +1,6 @@
 "use client";
 
-import { CardGridSkeleton } from "@/components/dashboard/card-grid-skeleton";
+import { CardGridSkeleton } from "@/components/dashboard/cardGridSkeleton";
 import { useQuery } from "@tanstack/react-query";
 import { Repo } from "@/app/types/supabase";
 import { getReposByOrganizationId } from "@/lib/services/repoService";

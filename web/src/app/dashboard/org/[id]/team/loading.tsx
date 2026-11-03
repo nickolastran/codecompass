@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { MembersTableSkeleton } from "@/components/dashboard/organizations/members-table";
+import { MembersTableSkeleton } from "@/components/dashboard/organizations/membersTable";
 
 export default function TeamLoading() {
   return (

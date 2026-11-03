@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { MdxContent } from "@/components/docs/mdx-content";
+import { MdxContent } from "@/components/docs/mdxContent";
 
 export const metadata: Metadata = { title: "Self-Hosting" };
 

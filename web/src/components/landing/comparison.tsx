@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LandingSection, SectionHeading, landingCard } from "./section-container";
+import { LandingSection, SectionHeading, landingCard } from "./sectionContainer";
 
 const columns = [
   {

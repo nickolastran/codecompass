@@ -9,9 +9,9 @@ import {
 import { getOrgMembers } from "@/lib/services/orgService";
 import { OrganizationMember } from "@/app/types/supabase";
 import { notFound } from "next/navigation";
-import { MembersTable } from "@/components/dashboard/organizations/members-table";
-import { NavbarContextSetter } from "@/components/dashboard/navbar-context-setter";
-import { InviteMemberDialog } from "@/components/dashboard/organizations/invite-member-dialog";
+import { MembersTable } from "@/components/dashboard/organizations/membersTable";
+import { NavbarContextSetter } from "@/components/dashboard/navbarContextSetter";
+import { InviteMemberDialog } from "@/components/dashboard/organizations/inviteMemberDialog";
 import { prefetchOrgData } from "@/lib/services/orgCache";
 
 export const metadata: Metadata = { title: "Team" };

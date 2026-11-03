@@ -6,7 +6,7 @@ import { Github } from "@geist-ui/icons";
 import { Gitlab } from "@geist-ui/icons";
 import { Repo } from "@/app/types/supabase";
 import Link from "next/link";
-import { repoHref } from "@/lib/repo-href";
+import { repoHref } from "@/lib/repoHref";
 import { motion } from "framer-motion";
 
 // [label, dot color]; anything unknown falls back to "Not indexed"

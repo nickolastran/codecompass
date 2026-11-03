@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { fetchGitLabProjects } from "@/lib/services/gitProviderService";
-import { GitLabRepoSelector } from "@/components/dashboard/gitlab/repo-selector";
+import { GitLabRepoSelector } from "@/components/dashboard/gitlab/repoSelector";
 
 export const metadata: Metadata = { title: "Select GitLab Repositories" };
 

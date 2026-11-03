@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { getDocPagesForVersion } from "@/lib/services/repoService";
 import { useChatUIStore } from "@/lib/stores/useChatUIStore";
-import { FALLBACK, suggestPrompts } from "@/lib/suggest-prompts";
+import { FALLBACK, suggestPrompts } from "@/lib/suggestPrompts";
 
 interface ChatEmptyStateProps {
   onSendMessage: (message: string) => void;

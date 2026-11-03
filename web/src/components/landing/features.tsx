@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, FileText, MessageSquare, Network, Server } from "lucide-react";
-import { LandingSection, SectionHeading, landingCard } from "./section-container";
+import { LandingSection, SectionHeading, landingCard } from "./sectionContainer";
 import Demo from "./demo";
 
 const highlights = [

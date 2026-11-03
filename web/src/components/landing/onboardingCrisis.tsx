@@ -1,5 +1,5 @@
 import { Clock, FileWarning, Users } from "lucide-react";
-import { LandingSection, SectionHeading, landingCard } from "./section-container";
+import { LandingSection, SectionHeading, landingCard } from "./sectionContainer";
 
 const staleDocs = [
   { file: "auth.md", updated: "2019" },

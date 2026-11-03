@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { NewOrganizationForm } from "@/components/dashboard/organizations/new-organization-form";
+import { NewOrganizationForm } from "@/components/dashboard/organizations/newOrganizationForm";
 
 export const metadata: Metadata = { title: "New Organization" };
 

@@ -3,7 +3,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useEffect, useState } from "react";
-import { DocsTableOfContents } from "./table-of-contents";
+import { DocsTableOfContents } from "./tableOfContents";
 
 interface Heading {
   id: string;

@@ -10,7 +10,7 @@ import {
   CodeSnippet,
 } from "@/app/types/supabase";
 import { ActionResult } from "@/app/types/action";
-import { githubSlug } from "@/lib/repo-href";
+import { githubSlug } from "@/lib/repoHref";
 import {
   verifyGithubRepoAccess,
   verifyGitLabRepoAccess,

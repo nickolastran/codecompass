@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Github } from "lucide-react";
-import { SectionContainer } from "./section-container";
+import { SectionContainer } from "./sectionContainer";
 
 const REPO_URL = "https://github.com/nickolastran/codecompass";
 

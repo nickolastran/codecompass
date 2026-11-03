@@ -15,7 +15,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { useChatUIStore } from "@/lib/stores/useChatUIStore";
-import ConversationPanel from "./conversation-panel";
+import ConversationPanel from "./conversationPanel";
 
 export function DashboardSidebar() {
   const pathname = usePathname();

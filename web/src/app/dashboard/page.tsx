@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useAuth } from "./dashboard-provider";
+import { useAuth } from "./dashboardProvider";
 import { usePrefetchRoute } from "@/hooks/usePrefetchRoute";
 
 export default function DashboardPage() {

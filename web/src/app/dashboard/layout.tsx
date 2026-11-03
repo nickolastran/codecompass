@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { DashboardNavbar } from "@/components/dashboard/navbar";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
-import { DashboardProvider } from "./dashboard-provider";
+import { DashboardSidebar } from "@/components/dashboard/dashboardSidebar";
+import { DashboardProvider } from "./dashboardProvider";
 import { User } from "@/app/types/supabase";
-import { ScrollArea } from "@/components/dashboard/scroll-area";
+import { ScrollArea } from "@/components/dashboard/scrollArea";
 
 export const metadata: Metadata = {
   // A plain string title would drop the root template for every dashboard page

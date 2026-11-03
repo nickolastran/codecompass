@@ -136,13 +136,13 @@ export function ChatBubble() {
 ```
 
 **Used By**:
-- `chat-bubble.tsx`
-- `chat-overlay.tsx`
-- `chat-interface.tsx`
-- `message-bubble.tsx`
-- `chat-input.tsx`
+- `chatBubble.tsx`
+- `chatOverlay.tsx`
+- `chatInterface.tsx`
+- `messageBubble.tsx`
+- `chatInput.tsx`
 - `documentation.tsx`
-- `version-selector.tsx`
+- `versionSelector.tsx`
 
 ---
 
@@ -196,9 +196,9 @@ export function RepoPage({ repo, org }) {
 
 **Used By**:
 - `navcontext.tsx`
-- `repo-context-setter.tsx`
-- `organizations/members-table.tsx`
-- `dashboard-sidebar.tsx`
+- `repoContextSetter.tsx`
+- `organizations/membersTable.tsx`
+- `dashboardSidebar.tsx`
 
 ---
 
@@ -254,7 +254,7 @@ export function VersionSelector() {
 
 **Used By**:
 - `documentation.tsx`
-- `version-selector.tsx`
+- `versionSelector.tsx`
 
 ---
 
@@ -307,7 +307,7 @@ function SidebarItem() {
 
 ### 7. useAuth
 
-**Location**: `src/app/dashboard/dashboard-provider.tsx`
+**Location**: `src/app/dashboard/dashboardProvider.tsx`
 
 **Purpose**: Provides authenticated user data via React Context with React Query.
 
@@ -325,7 +325,7 @@ function SidebarItem() {
 
 ```tsx
 // Must be within DashboardProvider
-import { useAuth } from "@/app/dashboard/dashboard-provider";
+import { useAuth } from "@/app/dashboard/dashboardProvider";
 
 export function UserProfile() {
   const { user, isLoading } = useAuth();

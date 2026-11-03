@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Menu, List, FileText, Loader2 } from "lucide-react";
-import { FileTreeSidebar } from "./file-tree";
-import { MainContent } from "./main-content";
-import { TableOfContentsSidebar } from "./table-of-contents";
-import { FileTreeSkeleton } from "./file-tree-skeleton";
-import { MainContentSkeleton } from "./main-content-skeleton";
-import { TableOfContentsSkeleton } from "./table-of-contents-skeleton";
-import { EmptyStateSkeleton } from "./empty-state-skeleton";
+import { FileTreeSidebar } from "./fileTree";
+import { MainContent } from "./mainContent";
+import { TableOfContentsSidebar } from "./tableOfContents";
+import { FileTreeSkeleton } from "./fileTreeSkeleton";
+import { MainContentSkeleton } from "./mainContentSkeleton";
+import { TableOfContentsSkeleton } from "./tableOfContentsSkeleton";
+import { EmptyStateSkeleton } from "./emptyStateSkeleton";
 import { Page, FileTreeNode, Heading } from "./types";
 import { buildFileTree, extractHeadings } from "./utils";
 import { Button } from "@/components/ui/button";

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import RepoSettings from "@/components/dashboard/repo-settings";
-import { getRepo } from "@/components/dashboard/repo-view";
-import { githubSlug, repoHref } from "@/lib/repo-href";
+import RepoSettings from "@/components/dashboard/repoSettings";
+import { getRepo } from "@/components/dashboard/repoView";
+import { githubSlug, repoHref } from "@/lib/repoHref";
 
 export default async function RepoSettingsPage({
   params,

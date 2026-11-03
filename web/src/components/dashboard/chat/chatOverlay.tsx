@@ -3,7 +3,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useChatUIStore } from "@/lib/stores/useChatUIStore";
-import ChatInterface from "./chat-interface";
+import ChatInterface from "./chatInterface";
 
 export default function ChatOverlay() {
   const { isExpanded } = useChatUIStore();

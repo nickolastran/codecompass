@@ -37,11 +37,11 @@ components/
 │   └── navbar.tsx
 ├── docs/                        # Documentation site
 │   ├── navbar.tsx
-│   └── mdx-content.tsx
+│   └── mdxContent.tsx
 ├── invite/                      # Invite flow
-│   └── accept-invite-form.tsx
-├── query-provider.tsx           # TanStack Query wrapper
-└── theme-provider.tsx           # next-themes wrapper
+│   └── acceptInviteForm.tsx
+├── queryProvider.tsx           # TanStack Query wrapper
+└── themeProvider.tsx           # next-themes wrapper
 ```
 
 ## Component Categories
@@ -94,9 +94,9 @@ npx shadcn@latest add [component-name]
 |-----------|------|---------|
 | `list.tsx` | Client | Grid of organization cards with TanStack Query |
 | `card.tsx` | Client | Individual org card (clickable) |
-| `new-organization-form.tsx` | Client | Form to create new org with validation |
-| `members-table.tsx` | Client | Table of org members with roles |
-| `invite-member-dialog.tsx` | Client | Modal to invite new team members |
+| `newOrganizationForm.tsx` | Client | Form to create new org with validation |
+| `membersTable.tsx` | Client | Table of org members with roles |
+| `inviteMemberDialog.tsx` | Client | Modal to invite new team members |
 
 **Key Features**:
 - Query invalidation after mutations
@@ -109,8 +109,8 @@ npx shadcn@latest add [component-name]
 |-----------|------|---------|
 | `list.tsx` | Client | Grid of repository cards |
 | `card.tsx` | Client | Repo card with provider icon + status |
-| `new-repo-form.tsx` | Client | Create repo from GitHub/GitLab/local file |
-| `org-header.tsx` | Client | Organization header with repo count |
+| `newRepoForm.tsx` | Client | Create repo from GitHub/GitLab/local file |
+| `orgHeader.tsx` | Client | Organization header with repo count |
 
 **Key Features**:
 - Provider detection (GitHub, GitLab, Local)
@@ -125,16 +125,16 @@ npx shadcn@latest add [component-name]
 | Component | Type | Purpose |
 |-----------|------|---------|
 | `documentation.tsx` | Client | Main container managing doc state |
-| `file-tree.tsx` | Client | Left sidebar with hierarchical navigation |
-| `main-content.tsx` | Client | Center panel with ReactMarkdown rendering |
-| `table-of-contents.tsx` | Client | Right sidebar with heading navigation |
+| `fileTree.tsx` | Client | Left sidebar with hierarchical navigation |
+| `mainContent.tsx` | Client | Center panel with ReactMarkdown rendering |
+| `tableOfContents.tsx` | Client | Right sidebar with heading navigation |
 | `types.ts` | Types | Shared TypeScript interfaces |
 | `utils.ts` | Utils | Tree building and heading extraction |
 
 **Skeleton Loaders**:
-- `file-tree-skeleton.tsx`
-- `main-content-skeleton.tsx`
-- `table-of-contents-skeleton.tsx`
+- `fileTreeSkeleton.tsx`
+- `mainContentSkeleton.tsx`
+- `tableOfContentsSkeleton.tsx`
 
 **TypeScript Interfaces**:
 ```typescript
@@ -178,18 +178,18 @@ interface Heading {
 
 | Component | Type | Purpose |
 |-----------|------|---------|
-| `chat-interface.tsx` | Client | Main chat container with streaming |
-| `message-list.tsx` | Client | One row per question: answer + its code snippets |
-| `message-bubble.tsx` | Client | Individual message rendering |
-| `chat-input.tsx` | Client | Message input with send button |
-| `code-snippet.tsx` | Client | Syntax-highlighted code in modal |
+| `chatInterface.tsx` | Client | Main chat container with streaming |
+| `messageList.tsx` | Client | One row per question: answer + its code snippets |
+| `messageBubble.tsx` | Client | Individual message rendering |
+| `chatInput.tsx` | Client | Message input with send button |
+| `codeSnippet.tsx` | Client | Syntax-highlighted code in modal |
 
 **Supporting Components**:
-- `chat-bubble.tsx` - Floating minimized chat input
-- `chat-overlay.tsx` - Full-screen chat interface
-- `chat-empty-state.tsx` - Welcome message for new conversations
-- `version-selector.tsx` - Documentation version filter
-- `animated-skeleton.tsx` - Streaming response loader
+- `chatBubble.tsx` - Floating minimized chat input
+- `chatOverlay.tsx` - Full-screen chat interface
+- `chatEmptyState.tsx` - Welcome message for new conversations
+- `versionSelector.tsx` - Documentation version filter
+- `animatedSkeleton.tsx` - Streaming response loader
 
 **Key Features**:
 - Server-Sent Events (SSE) streaming
@@ -216,10 +216,10 @@ ChatBubble (minimized) → ChatOverlay (expanded)
 |-----------|------|---------|
 | `navbar.tsx` | Client | Top navigation with breadcrumbs |
 | `sidebar.tsx` | Client | Left navigation sidebar |
-| `dashboard-sidebar.tsx` | Client | Alternative sidebar implementation |
-| `conversation-panel.tsx` | Client | Chat history panel |
-| `navbar-context-setter.tsx` | Client | Sets breadcrumb context |
-| `repo-context-setter.tsx` | Client | Sets repo context |
+| `dashboardSidebar.tsx` | Client | Alternative sidebar implementation |
+| `conversationPanel.tsx` | Client | Chat history panel |
+| `navbarContextSetter.tsx` | Client | Sets breadcrumb context |
+| `repoContextSetter.tsx` | Client | Sets repo context |
 | `navcontext.tsx` | Context | Navigation context definitions |
 
 **Key Features**:
@@ -232,7 +232,7 @@ ChatBubble (minimized) → ChatOverlay (expanded)
 
 | Component | Type | Purpose |
 |-----------|------|---------|
-| `repo-selector.tsx` | Client | Select GitLab repos to import |
+| `repoSelector.tsx` | Client | Select GitLab repos to import |
 
 ---
 
@@ -242,13 +242,13 @@ ChatBubble (minimized) → ChatOverlay (expanded)
 
 | Component | Type | Purpose |
 |-----------|------|---------|
-| `landing-page.tsx` | Client | Main container orchestrating all sections |
+| `landingPage.tsx` | Client | Main container orchestrating all sections |
 | `hero.tsx` | Client | Hero with animated heading + CTAs |
 | `features.tsx` | Client | Feature highlights (dynamically imported) |
 | `comparison.tsx` | Client | Feature comparison table (dynamically imported) |
 | `cta.tsx` | Client | Call-to-action section |
-| `onboarding-crisis.tsx` | Client | Problem statement section |
-| `section-container.tsx` | Server | Reusable section wrapper |
+| `onboardingCrisis.tsx` | Client | Problem statement section |
+| `sectionContainer.tsx` | Server | Reusable section wrapper |
 | `navbar.tsx` | Client | Landing page header |
 
 **Key Features**:
@@ -265,8 +265,8 @@ ChatBubble (minimized) → ChatOverlay (expanded)
 | Component | Type | Purpose |
 |-----------|------|---------|
 | `navbar.tsx` | Client | Documentation site header |
-| `mdx-content.tsx` | Client | MDX content renderer |
-| `table-of-contents.tsx` | Client | Doc page table of contents |
+| `mdxContent.tsx` | Client | MDX content renderer |
+| `tableOfContents.tsx` | Client | Doc page table of contents |
 
 ---
 
@@ -274,7 +274,7 @@ ChatBubble (minimized) → ChatOverlay (expanded)
 
 | Component | Type | Purpose |
 |-----------|------|---------|
-| `accept-invite-form.tsx` | Client | Accept organization invite form |
+| `acceptInviteForm.tsx` | Client | Accept organization invite form |
 
 ---
 
@@ -282,8 +282,8 @@ ChatBubble (minimized) → ChatOverlay (expanded)
 
 | Component | Type | Purpose |
 |-----------|------|---------|
-| `query-provider.tsx` | Client | TanStack Query initialization |
-| `theme-provider.tsx` | Client | next-themes for light/dark mode |
+| `queryProvider.tsx` | Client | TanStack Query initialization |
+| `themeProvider.tsx` | Client | next-themes for light/dark mode |
 
 ---
 

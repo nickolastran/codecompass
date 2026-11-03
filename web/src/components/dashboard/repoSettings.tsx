@@ -14,14 +14,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
-import { repoHref } from "@/lib/repo-href";
+import { repoHref } from "@/lib/repoHref";
 import { toast } from "sonner";
 import {
   updateRepoSettings,
   deleteRepo,
   getRepoWithStatus,
 } from "@/lib/services/repoService";
-import { NavbarContextSetter } from "@/components/dashboard/navbar-context-setter";
+import { NavbarContextSetter } from "@/components/dashboard/navbarContextSetter";
 import { createClient } from "@/utils/supabase/client";
 import type { Repo } from "@/app/types/supabase";
 

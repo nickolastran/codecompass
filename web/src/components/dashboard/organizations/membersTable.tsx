@@ -29,7 +29,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/app/dashboard/dashboard-provider";
+import { useAuth } from "@/app/dashboard/dashboardProvider";
 import dynamic from "next/dynamic";
 import {
   Dialog,

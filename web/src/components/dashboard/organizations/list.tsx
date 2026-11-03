@@ -1,6 +1,6 @@
 "use client";
 
-import { CardGridSkeleton } from "@/components/dashboard/card-grid-skeleton";
+import { CardGridSkeleton } from "@/components/dashboard/cardGridSkeleton";
 import { useQuery } from "@tanstack/react-query";
 import { OrganizationWithRole } from "@/app/types/supabase";
 import { OrganizationButton } from "./card";

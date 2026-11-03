@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowRight, BookOpen } from "lucide-react";
-import { LandingSection } from "./section-container";
+import { LandingSection } from "./sectionContainer";
 
 type CTAProps = {
   isAuthenticated: boolean;

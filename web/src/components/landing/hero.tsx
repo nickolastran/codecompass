@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { GridPattern } from "@/components/ui/shadcn-io/grid-pattern";
 import { cn } from "@/lib/utils";
-import { SectionContainer } from "./section-container";
+import { SectionContainer } from "./sectionContainer";
 
 type HeroProps = {
   isAuthenticated: boolean;
