@@ -43,6 +43,10 @@ export function NavContext() {
     if (pathname.startsWith("/dashboard/new/")) {
       return "New Repository";
     }
+    // /dashboard/<owner>/<repo>, see lib/repo-href
+    if (pathname.split("/").length >= 4) {
+      return "Repository";
+    }
 
     // Default fallback
     return "Dashboard";

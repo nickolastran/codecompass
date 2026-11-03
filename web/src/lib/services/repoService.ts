@@ -10,6 +10,7 @@ import {
   CodeSnippet,
 } from "@/app/types/supabase";
 import { ActionResult } from "@/app/types/action";
+import { githubSlug } from "@/lib/repo-href";
 import {
   verifyGithubRepoAccess,
   verifyGitLabRepoAccess,
@@ -403,6 +404,29 @@ export async function getRepoWithStatus(
   }
 
   return { success: true, data: repo as Repo };
+}
+
+// Resolve /dashboard/<owner>/<repo> to a repo id. RLS limits rows to the user's orgs.
+// ponytail: same GitHub repo in two of the user's orgs -> newest wins; add ?org= if that bites
+export async function getRepoIdByGithubSlug(
+  owner: string,
+  name: string,
+): Promise<string | null> {
+  const client = await createClient();
+  const { data } = await client
+    .from("repositories")
+    .select("id, repo_url")
+    .ilike("repo_url", `%github.com/${owner}/${name}%`)
+    .order("created_at", { ascending: false });
+
+  const match = (data ?? []).find((r) => {
+    const slug = githubSlug(r.repo_url);
+    return (
+      slug?.[0].toLowerCase() === owner.toLowerCase() &&
+      slug?.[1].toLowerCase() === name.toLowerCase()
+    );
+  });
+  return match?.id ?? null;
 }
 
 type UpdateData = {

@@ -6,6 +6,7 @@ import { Github } from "@geist-ui/icons";
 import { Gitlab } from "@geist-ui/icons";
 import { Repo } from "@/app/types/supabase";
 import Link from "next/link";
+import { repoHref } from "@/lib/repo-href";
 import { motion } from "framer-motion";
 
 // [label, dot color]; anything unknown falls back to "Not indexed"
@@ -34,7 +35,7 @@ export function RepoButton({ repo }: RepoButtonProps) {
         className="bg-background h-auto min-h-21 justify-start p-4 w-full hover:bg-elevated"
         asChild
       >
-        <Link href={`/dashboard/repo/${repo.id}`}>
+        <Link href={repoHref(repo)}>
           <div className="flex flex-row gap-4 text-sm w-full overflow-hidden">
             {/* Surround in a circular container */}
             <div className="rounded-full dark:bg-black border-2 border-primary p-2.5 shrink-0">

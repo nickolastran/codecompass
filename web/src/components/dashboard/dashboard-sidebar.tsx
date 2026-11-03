@@ -36,11 +36,15 @@ export function DashboardSidebar() {
     if (pathname.startsWith("/dashboard/org/") && id) {
       return { type: "org", id };
     }
-    if (pathname.startsWith("/dashboard/repo/") && id) {
-      return { type: "repository", id };
+    if (
+      (pathname.startsWith("/dashboard/repo/") && id) ||
+      (params.owner && params.repo)
+    ) {
+      // For repos, "id" is the repo's base path: /dashboard/repo/<id> or /dashboard/<owner>/<repo>
+      return { type: "repository", id: pathname.replace(/\/settings$/, "") };
     }
     return { type: "default", id: null };
-  }, [pathname, id]);
+  }, [pathname, id, params.owner, params.repo]);
 
   // Render different sidebar items based on context
   const renderContextualItems = () => {
@@ -72,7 +76,7 @@ export function DashboardSidebar() {
 
       case "repository":
         if (pathname.includes("/settings")) {
-          const repoPath = `/dashboard/repo/${currentContext.id}`;
+          const repoPath = currentContext.id!;
           return (
             <>
               <SidebarItem
@@ -126,7 +130,7 @@ export function DashboardSidebar() {
               icon={<Settings className="h-4.5 w-4.5" />}
               label="Settings"
               action={() =>
-                router.push(`/dashboard/repo/${currentContext.id}/settings`)
+                router.push(`${currentContext.id}/settings`)
               }
             />
           </>

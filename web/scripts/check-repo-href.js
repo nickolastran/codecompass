@@ -1,0 +1,22 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+// Self-check for src/lib/repo-href.ts: node scripts/check-repo-href.js
+const ts = require("typescript"), fs = require("fs"), path = require("path"), os = require("os");
+const assert = require("assert");
+const src = fs.readFileSync(path.join(__dirname, "../src/lib/repo-href.ts"), "utf8");
+const out = path.join(os.tmpdir(), "repo-href.check.js");
+fs.writeFileSync(out, ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText);
+const { githubSlug, repoHref } = require(out);
+
+const id = "94a8d5c8";
+assert.deepStrictEqual(githubSlug("https://github.com/nickolastran/portfolio"), ["nickolastran", "portfolio"]);
+assert.deepStrictEqual(githubSlug("https://github.com/a/b.git"), ["a", "b"]);
+assert.deepStrictEqual(githubSlug("https://github.com/a/b/"), ["a", "b"]);
+assert.deepStrictEqual(githubSlug("https://www.github.com/A/my.repo"), ["A", "my.repo"]);
+assert.strictEqual(githubSlug("https://gitlab.com/a/b"), null);
+assert.strictEqual(githubSlug("https://github.com/a/b/tree/main"), null);
+assert.strictEqual(githubSlug(null), null);
+assert.strictEqual(githubSlug("https://github.com/org/b"), null); // reserved owner
+assert.strictEqual(repoHref({ id, repo_url: "https://github.com/nickolastran/portfolio" }), "/dashboard/nickolastran/portfolio");
+assert.strictEqual(repoHref({ id, repo_url: null }), `/dashboard/repo/${id}`);
+assert.strictEqual(repoHref({ id, repo_url: "https://github.com/new/x" }), `/dashboard/repo/${id}`);
+console.log("repo-href checks ok");
