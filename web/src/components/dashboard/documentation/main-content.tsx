@@ -218,7 +218,7 @@ export function MainContent({
                   No source files are referenced in this documentation page.
                 </p>
               ) : (
-                <ul className="flex flex-col gap-1.5 max-h-[60vh] overflow-y-auto min-w-0">
+                <ul className="flex flex-col gap-1.5 max-h-[60vh] overflow-y-auto min-w-0 pr-3 [scrollbar-width:thin] [scrollbar-gutter:stable]">
                   {selectedFile.referenced_files.map((file, index) => {
                     const rel = toRepoPath(file);
                     const slash = rel.lastIndexOf("/");
