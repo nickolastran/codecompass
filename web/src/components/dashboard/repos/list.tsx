@@ -1,5 +1,6 @@
 "use client";
 
+import { CardGridSkeleton } from "@/components/dashboard/card-grid-skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { Repo } from "@/app/types/supabase";
 import { getReposByOrganizationId } from "@/lib/services/repoService";
@@ -28,7 +29,7 @@ export function RepoList({ organizationId }: RepoListProps) {
   });
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <CardGridSkeleton />;
   }
 
   if (error) {
