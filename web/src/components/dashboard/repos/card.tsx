@@ -8,13 +8,24 @@ import { Repo } from "@/app/types/supabase";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
+// [label, dot color]; anything unknown falls back to "Not indexed"
+const STATUS: Record<string, [string, string]> = {
+  indexed: ["Indexed", "bg-primary"],
+  indexing: ["Indexing", "bg-amber-500 animate-pulse"],
+  pending: ["Queued", "bg-amber-500 animate-pulse"],
+  failed: ["Failed", "bg-destructive"],
+};
+
 type RepoButtonProps = {
   repo: Repo;
 };
 
 export function RepoButton({ repo }: RepoButtonProps) {
   const type = repo.provider;
-  const index_status = repo.index_status;
+  const [statusLabel, statusDot] = STATUS[repo.index_status] ?? [
+    "Not indexed",
+    "bg-muted-foreground",
+  ];
 
   return (
     <motion.div whileHover="hover" className="parent">
@@ -37,14 +48,15 @@ export function RepoButton({ repo }: RepoButtonProps) {
             </div>
             <div className="flex flex-col justify-start items-start min-w-0 flex-1">
               <span className="font-semibold truncate">{repo.name}</span>
-              <span className="text-muted-foreground text-xs whitespace-nowrap">
+              <span className="flex items-center gap-1.5 text-muted-foreground text-xs whitespace-nowrap">
                 {type === "github"
                   ? "GitHub"
                   : type === "gitlab"
                     ? "GitLab"
-                    : "Local"}{" "}
-                <span className="text-md">&middot;</span>{" "}
-                {index_status || "Not Indexed"}
+                    : "Local"}
+                <span className="text-md">&middot;</span>
+                <span className={`size-1.5 rounded-full ${statusDot}`} />
+                {statusLabel}
               </span>
             </div>
             <motion.div
