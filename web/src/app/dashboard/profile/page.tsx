@@ -27,6 +27,7 @@ import { signOut } from "@/app/(auth)/client";
 import { getOrgs } from "@/lib/services/orgService";
 import { OrganizationWithRole } from "@/app/types/supabase";
 import { formatRelativeTime } from "@/lib/utils";
+import { OrgRowsSkeleton } from "./loading";
 
 type Notice = { kind: "ok" | "error"; text: string } | null;
 
@@ -58,7 +59,7 @@ export default function ProfilePage() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const { data: orgs } = useQuery<OrganizationWithRole[]>({
+  const { data: orgs, isLoading: orgsLoading } = useQuery<OrganizationWithRole[]>({
     queryKey: ["organizations"],
     queryFn: async () => {
       const result = await getOrgs();
@@ -271,7 +272,9 @@ export default function ProfilePage() {
           <CardTitle>Your organizations</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {orgs?.length ? (
+          {orgsLoading ? (
+            <OrgRowsSkeleton />
+          ) : orgs?.length ? (
             orgs.map((org) => (
               <Link
                 key={org.id}
