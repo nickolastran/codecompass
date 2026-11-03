@@ -63,19 +63,10 @@ export function usePrefetchRoute() {
     // Orgs data is already prefetched by the page, so we just prefetch the route
   };
 
-  /**
-   * Prefetch repository page (route only)
-   */
-  const prefetchRepoPage = (repoId: string) => {
-    // Prefetch the route bundle
-    router.prefetch(`/dashboard/repo/${repoId}`);
-    // TODO: Add data prefetching when repo page services are implemented
-  };
 
   return {
     prefetchOrgPage,
     prefetchTeamPage,
     prefetchOrganizationsPage,
-    prefetchRepoPage,
   };
 }
