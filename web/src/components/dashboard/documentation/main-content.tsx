@@ -14,6 +14,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+// Backend stores absolute clone paths; show the repo-relative path instead
+const toRepoPath = (file: string) =>
+  file.replace(/^.*?cloned_repos\/[^/]+\//, "");
+
 // Initialize Mermaid once (outside component to avoid re-initialization)
 let mermaidInitialized = false;
 const initializeMermaid = (theme: string) => {
@@ -216,8 +220,7 @@ export function MainContent({
               ) : (
                 <ul className="flex flex-col gap-1.5 max-h-[60vh] overflow-y-auto min-w-0">
                   {selectedFile.referenced_files.map((file, index) => {
-                    // Strip the backend clone dir so only the repo-relative path shows
-                    const rel = file.replace(/^.*?cloned_repos\/[^/]+\//, "");
+                    const rel = toRepoPath(file);
                     const slash = rel.lastIndexOf("/");
                     const dir = slash >= 0 ? rel.slice(0, slash + 1) : "";
                     const name = rel.slice(slash + 1);
@@ -392,18 +395,18 @@ export function MainContent({
 
           {selectedFile.referenced_files &&
             selectedFile.referenced_files.length > 0 && (
-              <div className="mt-6 pt-4 border-t border-grey-800">
-                <h3 className="text-xs font-semibold text-grey-400 mb-2">
+              <div className="mt-6 pt-4 border-t">
+                <h3 className="text-xs font-semibold text-muted-foreground mb-2">
                   Referenced Files
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {selectedFile.referenced_files.map((file, i) => (
-                    <button
+                    <span
                       key={i}
-                      className="bg-grey-800 hover:bg-grey-700 rounded px-2 py-1 text-xs text-teal-400 transition-colors font-mono"
+                      className="rounded-md border bg-muted/40 px-2 py-1 text-xs text-teal-400 font-mono break-all"
                     >
-                      {file}
-                    </button>
+                      {toRepoPath(file)}
+                    </span>
                   ))}
                 </div>
               </div>
