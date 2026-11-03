@@ -22,7 +22,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const org = await getOrgDetails(id);
-  return { title: org.success ? `${org.data.name} Organization` : "Organization" };
+  return {
+    title: org.success ? `${org.data.name} Organization` : "Organization",
+  };
 }
 
 export default async function OrgPage({
@@ -55,6 +57,10 @@ export default async function OrgPage({
     },
   });
 
+  // The empty state has its own "New repository" button
+  const hasRepos = !!queryClient.getQueryData<Repo[]>(["repositories", id])
+    ?.length;
+
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <NavbarContextSetter
@@ -67,14 +73,16 @@ export default async function OrgPage({
         {/* Header Section */}
         <div className="flex items-center justify-between mb-8">
           <OrgHeader orgName={orgData.details?.name || "Organization"} />
-          <Button variant="default" size="sm" asChild>
-            <Link href={`/dashboard/new/${id}`} prefetch={true}>
-              <div className="flex items-center gap-1">
-                <Plus />
-                <span>New repository</span>
-              </div>
-            </Link>
-          </Button>
+          {hasRepos && (
+            <Button variant="default" size="sm" asChild>
+              <Link href={`/dashboard/new/${id}`} prefetch={true}>
+                <div className="flex items-center gap-1">
+                  <Plus />
+                  <span>New repository</span>
+                </div>
+              </Link>
+            </Button>
+          )}
         </div>
         <RepoList organizationId={orgData.access.organizationId} />
       </div>

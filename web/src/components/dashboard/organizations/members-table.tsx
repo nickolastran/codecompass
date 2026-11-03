@@ -1,5 +1,6 @@
 "use client";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { EllipsisVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -120,13 +121,7 @@ export function MembersTable({ organizationId }: MembersTableProps) {
   }, [data]);
 
   if (isLoading) {
-    return (
-      <div className="rounded-md border">
-        <div className="p-8 text-center text-muted-foreground">
-          Loading members...
-        </div>
-      </div>
-    );
+    return <MembersTableSkeleton />;
   }
 
   if (error) {
@@ -484,6 +479,41 @@ export function MembersTable({ organizationId }: MembersTableProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+export function MembersTableSkeleton() {
+  return (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="text-muted-foreground">Email</TableHead>
+            <TableHead className="text-muted-foreground">Role</TableHead>
+            <TableHead className="text-muted-foreground">Joined</TableHead>
+            <TableHead />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {[0, 1, 2].map((i) => (
+            <TableRow key={i}>
+              <TableCell>
+                <Skeleton className="h-4 w-48" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-6 w-16" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-24" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-8 w-8 ml-auto" />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }

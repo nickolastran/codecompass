@@ -16,6 +16,7 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
+import OrgSettingsLoading from "./loading";
 
 export default function OrganizationSettings() {
   const [orgName, setOrgName] = useState("");
@@ -26,6 +27,7 @@ export default function OrganizationSettings() {
   const [deleteStep, setDeleteStep] = useState<0 | 1 | 2>(0);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const router = useRouter();
   const params = useParams();
   const orgId = params.id as string;
@@ -69,6 +71,7 @@ export default function OrganizationSettings() {
       }
       setIsOwner(membership?.role === "owner");
       setCounts({ members: members.count ?? 0, repos: repos.count ?? 0 });
+      setIsLoaded(true);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId]);
@@ -124,6 +127,8 @@ export default function OrganizationSettings() {
     toast.success("Organization deleted");
     router.push("/dashboard/organizations");
   };
+
+  if (!isLoaded) return <OrgSettingsLoading />;
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 py-12">
@@ -187,9 +192,9 @@ export default function OrganizationSettings() {
             {deleteStep === 2 && (
               <DialogDescription>
                 This will permanently delete the organization, its{" "}
-                {counts.repos} {counts.repos === 1 ? "repository" : "repositories"}
-                , and all documentation and chat history. This cannot be
-                undone.
+                {counts.repos}{" "}
+                {counts.repos === 1 ? "repository" : "repositories"}, and all
+                documentation and chat history. This cannot be undone.
               </DialogDescription>
             )}
           </DialogHeader>
