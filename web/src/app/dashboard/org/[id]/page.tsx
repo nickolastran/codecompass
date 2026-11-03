@@ -67,7 +67,7 @@ export default async function OrgPage({
         {/* Header Section */}
         <div className="flex items-center justify-between mb-8">
           <OrgHeader orgName={orgData.details?.name || "Organization"} />
-          <Button variant="default" size="sm">
+          <Button variant="default" size="sm" asChild>
             <Link href={`/dashboard/new/${id}`} prefetch={true}>
               <div className="flex items-center gap-1">
                 <Plus />

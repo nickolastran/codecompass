@@ -39,7 +39,7 @@ export function OrganizationList() {
           description="Create or join an organization to get started"
           icon={<Users className="w-6 h-6 text-muted-foreground" />}
         >
-          <Button variant="default" size="sm">
+          <Button variant="default" size="sm" asChild>
             <Link href={`/dashboard/new`}>
               <div className="flex items-center gap-1">
                 <Plus />

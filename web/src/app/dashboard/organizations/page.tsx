@@ -30,7 +30,7 @@ export default async function OrganizationsPage() {
         {/* Header Section */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl text-foreground">Your Organizations</h1>
-          <Button variant="default" size="sm">
+          <Button variant="default" size="sm" asChild>
             <Link href="/dashboard/new" prefetch={true}>
               <div className="flex items-center gap-1">
                 <Plus />

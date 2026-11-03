@@ -45,7 +45,7 @@ export function RepoList({ organizationId }: RepoListProps) {
           description="Index a repository to get started"
           icon={<FolderPlus className="w-6 h-6 text-muted-foreground" />}
         >
-          <Button variant="default" size="sm">
+          <Button variant="default" size="sm" asChild>
             <Link href={`/dashboard/new/${organizationId}`}>
               <div className="flex items-center gap-1">
                 <Plus />
