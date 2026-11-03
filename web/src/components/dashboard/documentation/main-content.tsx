@@ -1,4 +1,5 @@
 import { ChevronRight } from "lucide-react";
+import { toRepoPath } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
@@ -13,10 +14,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
-// Backend stores absolute clone paths; show the repo-relative path instead
-const toRepoPath = (file: string) =>
-  file.replace(/^.*?cloned_repos\/[^/]+\//, "");
 
 // Initialize Mermaid once (outside component to avoid re-initialization)
 let mermaidInitialized = false;

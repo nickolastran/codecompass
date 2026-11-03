@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Copy, Check } from "lucide-react";
 import { useState } from "react";
+import { toRepoPath } from "@/lib/utils";
 
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 
@@ -41,7 +42,7 @@ export default function CodeSnippet({
         <div className="flex flex-row">
           <DialogTrigger asChild>
             <button className="font-sans text-xs pl-2 pt-1 hover:text-primary transition-colors cursor-pointer">
-              {file}
+              {toRepoPath(file)}
             </button>
           </DialogTrigger>
         </div>
@@ -62,7 +63,7 @@ export default function CodeSnippet({
           <DialogHeader>
             <div className="flex items-center justify-between">
               <div>
-                <DialogTitle>{file}</DialogTitle>
+                <DialogTitle>{toRepoPath(file)}</DialogTitle>
                 <DialogDescription>Full file content</DialogDescription>
               </div>
               <Button

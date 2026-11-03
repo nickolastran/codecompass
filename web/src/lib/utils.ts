@@ -5,6 +5,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Backend stores absolute clone paths; show the repo-relative path instead
+export const toRepoPath = (file: string) =>
+  file.replace(/^.*?cloned_repos\/[^/]+\//, "");
+
 export function formatRelativeTime(dateString: string): string {
   if (!dateString) return "";
 
