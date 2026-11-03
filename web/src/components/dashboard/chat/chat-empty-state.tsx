@@ -1,6 +1,10 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import Image from "next/image";
+import { useQuery } from "@tanstack/react-query";
+import { getDocPagesForVersion } from "@/lib/services/repoService";
+import { useChatUIStore } from "@/lib/stores/useChatUIStore";
+import { FALLBACK, suggestPrompts } from "@/lib/suggest-prompts";
 
 interface ChatEmptyStateProps {
   onSendMessage: (message: string) => void;
@@ -8,24 +12,25 @@ interface ChatEmptyStateProps {
 
 export default function ChatEmptyState({ onSendMessage }: ChatEmptyStateProps) {
   const time = new Date().getHours();
+  const repoId = useChatUIStore((state) => state.repoId);
+  const version = useChatUIStore((state) => state.selectedVersion);
 
-  const suggestions = [
-    "Explain this codebase structure",
-    "How does authentication work?",
-    "Where is the main entry point?",
-    "How is data stored and accessed?",
-  ];
-
-  const handleSuggestionClick = (suggestion: string) => {
-    onSendMessage(suggestion);
-  };
+  const { data: suggestions, isLoading } = useQuery({
+    queryKey: ["suggested-prompts", repoId, version],
+    queryFn: async () => {
+      const result = await getDocPagesForVersion(repoId!, version!);
+      return result.success ? suggestPrompts(result.data) : FALLBACK;
+    },
+    enabled: !!repoId && version !== null,
+    staleTime: Infinity,
+  });
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-8 pb-32">
       {/* Greeting */}
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-normal dark:text-gray-100 mb-2">
-          <Sparkles className="inline-block h-8 w-8 mr-2 text-teal-500" />
+        <h1 className="flex items-center justify-center gap-3 text-3xl font-normal dark:text-gray-100 mb-2">
+          <Image src="/codecompass.png" alt="" width={36} height={36} />
           {time < 12
             ? "Good Morning"
             : time < 17
@@ -38,17 +43,16 @@ export default function ChatEmptyState({ onSendMessage }: ChatEmptyStateProps) {
       </div>
 
       {/* Suggested Prompts */}
-      <div className="w-full max-w-2xl">
+      <div className="w-full max-w-2xl min-h-[136px]">
         <p className="text-sm text-gray-400 mb-3">Suggested prompts:</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {suggestions.map((suggestion, index) => (
+          {(isLoading ? [] : (suggestions ?? FALLBACK)).map((suggestion) => (
             <button
-              key={index}
-              onClick={() => handleSuggestionClick(suggestion)}
+              key={suggestion}
+              onClick={() => onSendMessage(suggestion)}
               className="px-4 py-3 bg-background border border-border rounded-lg
                        text-left text-sm dark:text-gray-200 hover:bg-elevated
-                       hover:border-teal-500/50 transition-all duration-200
-                       hover:shadow-[0_0_10px_rgba(20,184,166,0.2)]"
+                       hover:border-teal-500/50 transition-colors"
             >
               {suggestion}
             </button>
