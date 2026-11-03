@@ -8,14 +8,14 @@ import { RepoButton } from "./card";
 import { Empty } from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { FolderPlus, Plus } from "lucide-react";
+import { FolderPlus, Plus, AlertCircle } from "lucide-react";
 
 type RepoListProps = {
   organizationId: string;
 };
 
 export function RepoList({ organizationId }: RepoListProps) {
-  const { data, isLoading, error } = useQuery<Repo[]>({
+  const { data, isLoading, error, refetch, isFetching } = useQuery<Repo[]>({
     queryKey: ["repositories", organizationId],
     queryFn: async () => {
       const result = await getReposByOrganizationId(organizationId);
@@ -33,7 +33,24 @@ export function RepoList({ organizationId }: RepoListProps) {
   }
 
   if (error) {
-    return <div className="text-destructive"> Error: {error.message} </div>;
+    return (
+      <div className="flex justify-center items-center">
+        <Empty
+          title="Couldn't load repositories"
+          description={error.message}
+          icon={<AlertCircle className="w-6 h-6 text-destructive" />}
+        >
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isFetching}
+          >
+            {isFetching ? "Retrying..." : "Try again"}
+          </Button>
+        </Empty>
+      </div>
+    );
   }
 
   if (!data || data.length === 0) {

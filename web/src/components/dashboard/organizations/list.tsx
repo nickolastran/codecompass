@@ -8,10 +8,12 @@ import { getOrgs } from "@/lib/services/orgService";
 import { Empty } from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Users, Plus } from "lucide-react";
+import { Users, Plus, AlertCircle } from "lucide-react";
 
 export function OrganizationList() {
-  const { data, isLoading, error } = useQuery<OrganizationWithRole[]>({
+  const { data, isLoading, error, refetch, isFetching } = useQuery<
+    OrganizationWithRole[]
+  >({
     queryKey: ["organizations"],
     queryFn: async () => {
       const result = await getOrgs();
@@ -29,7 +31,24 @@ export function OrganizationList() {
   }
 
   if (error) {
-    return <div className="text-destructive">Error: {error.message}</div>;
+    return (
+      <div className="flex justify-center items-center">
+        <Empty
+          title="Couldn't load organizations"
+          description={error.message}
+          icon={<AlertCircle className="w-6 h-6 text-destructive" />}
+        >
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isFetching}
+          >
+            {isFetching ? "Retrying..." : "Try again"}
+          </Button>
+        </Empty>
+      </div>
+    );
   }
 
   if (!data || data.length === 0) {
