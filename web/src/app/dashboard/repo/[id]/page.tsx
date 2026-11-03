@@ -96,7 +96,13 @@ export default async function RepoPage({
           />
 
           {/* Chat Bubble - Floating input (shows when chat is minimized) */}
-          <ChatBubble />
+          <ChatBubble
+            repoName={
+              repo.repo_url
+                ?.replace(/^https?:\/\/github\.com\//, "")
+                .replace(/\.git$/, "") || repo.name
+            }
+          />
 
           {/* Chat Overlay - Independent layer (shows when chat is expanded) */}
           <ChatOverlay />

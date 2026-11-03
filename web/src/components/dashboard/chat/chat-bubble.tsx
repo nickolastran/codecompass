@@ -2,10 +2,10 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Send } from "lucide-react";
+import { ArrowRight, Send } from "lucide-react";
 import { useChatUIStore } from "@/lib/stores/useChatUIStore";
 
-export default function ChatBubble() {
+export default function ChatBubble({ repoName }: { repoName: string }) {
   const [inputValue, setInputValue] = useState("");
   const expand = useChatUIStore((state) => state.expand);
   const isExpanded = useChatUIStore((state) => state.isExpanded);
@@ -54,23 +54,33 @@ export default function ChatBubble() {
         <div className="relative">
           <textarea
             ref={inputRef}
-            placeholder={`Ask about this codebase (${/Mac|iPhone|iPad/.test(navigator.userAgent) ? "⌘K" : "Ctrl+K"})`}
+            placeholder={`Ask about ${repoName} (${/Mac|iPhone|iPad/.test(navigator.userAgent) ? "⌘K" : "Ctrl+K"})`}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            rows={2}
-            className="w-full bg-background backdrop-blur-md text-gray-900 dark:text-gray-100 px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-border focus:outline-none
+            rows={1}
+            className="w-full bg-background backdrop-blur-md text-gray-900 dark:text-gray-100 px-4 py-6 pr-14 leading-6 rounded-lg border border-gray-300 dark:border-border focus:outline-none
                       focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 focus:shadow-[0_0_15px_rgba(20,184,166,0.3)]
                       placeholder-gray-400 dark:placeholder-gray-500 resize-none disabled:cursor-not-allowed
                       transition-shadow duration-200 opacity-90"
           />
-          <button
-            onClick={handleSend}
-            disabled={!inputValue.trim()}
-            className="absolute bottom-3 right-3 p-2 text-teal-500 hover:text-teal-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Send size={20} />
-          </button>
+          <div className="group absolute top-1/2 right-3 -translate-y-1/2">
+            <button
+              onClick={handleSend}
+              disabled={!inputValue.trim()}
+              aria-label="Send message"
+              className="flex size-8 items-center justify-center rounded-full transition-colors text-teal-500 hover:text-teal-400 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
+            >
+              {inputValue.trim() ? (
+                <Send size={20} strokeWidth={2.5} />
+              ) : (
+                <ArrowRight size={16} />
+              )}
+            </button>
+            <span className="pointer-events-none absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-md bg-popover px-2.5 py-1 text-xs text-popover-foreground border shadow-md opacity-0 transition-opacity group-hover:opacity-100">
+              Enter to send, Shift+Enter for new line
+            </span>
+          </div>
         </div>
       </motion.div>
     </div>
