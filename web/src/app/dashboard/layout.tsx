@@ -22,7 +22,7 @@ export default async function DashboardLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  //protected route
+  // Protected route
   if (!user) {
     redirect("/login");
   }

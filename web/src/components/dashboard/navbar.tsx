@@ -13,7 +13,7 @@ export function DashboardNavbar() {
     <header className="w-full bg-background border-b border-border">
       <div className="flex h-13 *:items-center justify-between px-5">
         <div className="flex items-center flex-row gap-5 hover:cursor-pointer">
-          {/*Replace this with our logo */}
+          {/* Replace this with our logo */}
           <motion.div
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}

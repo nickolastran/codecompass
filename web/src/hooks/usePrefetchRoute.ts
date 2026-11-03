@@ -5,17 +5,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getOrgMembers } from "@/lib/services/orgService";
 import { getReposByOrganizationId } from "@/lib/services/repoService";
 
-/**
- * Custom hook for prefetching routes and their associated data
- * Combines Next.js route prefetching with React Query data prefetching
- */
+// Custom hook for prefetching routes and their associated data
+// Combines Next.js route prefetching with React Query data prefetching
 export function usePrefetchRoute() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  /**
-   * Prefetch organization page (route + repos data)
-   */
+  // Prefetch organization page (route + repos data)
   const prefetchOrgPage = (orgId: string) => {
     // Prefetch the route bundle
     router.prefetch(`/dashboard/org/${orgId}`);
@@ -34,9 +30,7 @@ export function usePrefetchRoute() {
     });
   };
 
-  /**
-   * Prefetch team page (route + members data)
-   */
+  // Prefetch team page (route + members data)
   const prefetchTeamPage = (orgId: string) => {
     // Prefetch the route bundle
     router.prefetch(`/dashboard/org/${orgId}/team`);
@@ -55,9 +49,7 @@ export function usePrefetchRoute() {
     });
   };
 
-  /**
-   * Prefetch organizations list page (route + orgs data)
-   */
+  // Prefetch organizations list page (route + orgs data)
   const prefetchOrganizationsPage = () => {
     router.prefetch("/dashboard/organizations");
     // Orgs data is already prefetched by the page, so we just prefetch the route

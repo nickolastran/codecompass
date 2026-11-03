@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  //exchange code for token
+  // Exchange code for token
 
   const tokenResponse = await fetch("https://gitlab.com/oauth/token", {
     method: "POST",

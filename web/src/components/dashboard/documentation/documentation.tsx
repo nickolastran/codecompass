@@ -71,7 +71,7 @@ export default function DocumentationViewer({
     (state) => state.setSelectedVersion,
   );
 
-  /*This is a React anti-pattern. Replace with tanstack query later*/
+  // This is a React anti-pattern. Replace with tanstack query later
   useEffect(() => {
     fetchVersions();
   }, []);

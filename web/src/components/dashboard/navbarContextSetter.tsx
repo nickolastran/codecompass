@@ -9,14 +9,12 @@ interface NavbarContextSetterProps {
   appendBreadcrumb?: { label: string; href?: string };
 }
 
-/**
- * Client component that sets the navbar context.
- * Use this in Server Components to update the navbar state.
- *
- * @param contextText - Simple text to display (no breadcrumbs)
- * @param breadcrumbs - Complete breadcrumb trail (replaces existing)
- * @param appendBreadcrumb - Single breadcrumb to append to existing trail
- */
+// Client component that sets the navbar context.
+// Use this in Server Components to update the navbar state.
+//
+//   contextText: Simple text to display (no breadcrumbs)
+//   breadcrumbs: Complete breadcrumb trail (replaces existing)
+//   appendBreadcrumb: Single breadcrumb to append to existing trail
 export function NavbarContextSetter({
   contextText,
   breadcrumbs,

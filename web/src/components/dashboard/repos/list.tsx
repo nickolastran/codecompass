@@ -54,7 +54,7 @@ export function RepoList({ organizationId }: RepoListProps) {
   }
 
   if (!data || data.length === 0) {
-    //where i'm gonna add the empty
+    // Where i'm gonna add the empty
     // for /dashboard/new/${id} , figure out how to get the id
     return (
       <div className="flex justify-center items-center">

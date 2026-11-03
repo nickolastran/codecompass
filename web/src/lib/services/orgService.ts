@@ -193,7 +193,7 @@ export async function createInviteLink(
 ): Promise<ActionResult<{ token: string; expiresAt: string }>> {
   const supabase = await createClient();
 
-  //authenticate user
+  // Authenticate user
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -202,7 +202,7 @@ export async function createInviteLink(
     return { success: false, error: "User not authenticated!" };
   }
 
-  //check membership
+  // Check membership
   const { data: userOrg, error: accessError } = await supabase
     .from("user_organizations")
     .select("organization_id, role")
@@ -217,15 +217,15 @@ export async function createInviteLink(
     };
   }
 
-  //generate a secure token
+  // Generate a secure token
 
   const token = crypto.randomUUID();
 
-  //calculate expiry date
+  // Calculate expiry date
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7);
 
-  //store the invite in supa
+  // Store the invite in supa
 
   const { error: inviteError } = await supabase
     .from("organization_invites")

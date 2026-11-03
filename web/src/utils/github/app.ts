@@ -4,9 +4,7 @@ import fs from "fs";
 
 let app: App | undefined;
 
-/** 
- * Lazily built so a missing GITHUB_APP_* env can't break `next build`. 
- */
+// Lazily built so a missing GITHUB_APP_* env can't break `next build`.
 export function githubApp(): App {
   return (app ??= new App({
     appId: process.env.NEXT_PUBLIC_GITHUB_APP_CLIENT_ID!,
@@ -20,9 +18,7 @@ export function githubApp(): App {
   }));
 }
 
-/**
- * Generate an installation access token (valid for 1 hour)
- */
+// Generate an installation access token (valid for 1 hour)
 export async function getInstallationToken(
   installationId: number,
 ): Promise<string> {
@@ -38,9 +34,7 @@ export async function getInstallationToken(
   return data.token;
 }
 
-/**
- * Get installation for a specific user/org
- */
+// Get installation for a specific user/org
 export async function getInstallationByAccount(accountLogin: string) {
   try {
     const octokit = await githubApp().octokit;
@@ -56,9 +50,7 @@ export async function getInstallationByAccount(accountLogin: string) {
   }
 }
 
-/**
- * Check if a repo is accessible by an installation
- */
+// Check if a repo is accessible by an installation
 export async function checkRepoAccess(
   installationId: number,
   owner: string,

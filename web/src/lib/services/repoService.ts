@@ -151,7 +151,7 @@ export async function createRepoViaGithub(
     };
   }
 
-  //parse url for owner and repo
+  // Parse url for owner and repo
   const { owner, repo: repoName } = parseGitHubUrl(url);
 
   const hasAccess = await verifyGithubRepoAccess(
@@ -226,7 +226,7 @@ export async function createRepoViaGitlab(
 
   const { owner, repo: repoName } = parseGitLabUrl(url);
 
-  //verify access
+  // Verify access
   const hasAccess = await verifyGitLabRepoAccess(
     installation.access_token,
     owner,
@@ -768,9 +768,7 @@ export async function getDocPagesHierarchical(
   return { success: true, data: (pages ?? []) as DocPage[] };
 }
 
-/**
- * Get all documentation versions for a repository
- */
+// Get all documentation versions for a repository
 export async function getDocumentationVersions(
   repoId: string,
 ): Promise<ActionResult<Documentation[]>> {
@@ -798,9 +796,7 @@ export async function getDocumentationVersions(
   return { success: true, data: (versions ?? []) as Documentation[] };
 }
 
-/**
- * Get the latest completed documentation version for a repository
- */
+// Get the latest completed documentation version for a repository
 export async function getLatestDocumentation(
   repoId: string,
 ): Promise<ActionResult<Documentation>> {
@@ -834,9 +830,7 @@ export async function getLatestDocumentation(
   return { success: true, data: documentation as Documentation };
 }
 
-/**
- * Get documentation pages for a specific version
- */
+// Get documentation pages for a specific version
 export async function getDocPagesForVersion(
   repoId: string,
   version: number,
@@ -1197,7 +1191,7 @@ export async function indexRepository(
     return { success: false, error: "Github App Installation not found!" };
   }
 
-  //fetch repo
+  // Fetch repo
 
   const repoResult = await getRepoWithStatus(repoId);
 
@@ -1228,7 +1222,7 @@ export async function indexRepository(
     };
   }
 
-  //mark the repository as indexing in supabase first (clearing any previous error)
+  // Mark the repository as indexing in supabase first (clearing any previous error)
   const { error: updateError } = await client
     .from("repositories")
     .update({ index_status: "indexing", metadata: null })

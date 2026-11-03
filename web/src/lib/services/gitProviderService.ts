@@ -12,7 +12,7 @@ export async function verifyGithubRepoAccess(
   repo: string,
 ): Promise<boolean> {
   try {
-    //convert installation_id to number
+    // Convert installation_id to number
     const installationId = parseInt(installation_id, 10);
     const octokit = await githubApp().getInstallationOctokit(installationId);
 

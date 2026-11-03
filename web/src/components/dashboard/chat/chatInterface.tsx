@@ -200,7 +200,7 @@ export default function ChatInterface() {
       // Call the streaming API endpoint
 
       const new_conversation: Message[] = [];
-      //start a new conversation
+      // Start a new conversation
       if (!conversationMessages) {
       }
       const response = await fetch("/api/chat", {

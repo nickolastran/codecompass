@@ -16,11 +16,9 @@ type OrgDataBundle = {
   details: Organization | null;
 };
 
-/**
- * Prefetch organization data (access check + details) in parallel
- * Caches results in React Query for reuse across pages
- * Gets user from Supabase session to avoid duplicate auth calls
- */
+// Prefetch organization data (access check + details) in parallel
+// Caches results in React Query for reuse across pages
+// Gets user from Supabase session to avoid duplicate auth calls
 export async function prefetchOrgData(
   orgId: string,
   queryClient: QueryClient,
@@ -82,9 +80,7 @@ export async function prefetchOrgData(
   };
 }
 
-/**
- * Get cached organization access data
- */
+// Get cached organization access data
 export async function getOrgAccess(
   orgId: string,
   userId: string,
@@ -112,9 +108,7 @@ export async function getOrgAccess(
   };
 }
 
-/**
- * Get cached organization details
- */
+// Get cached organization details
 export async function getOrgDetails(
   orgId: string,
 ): Promise<ActionResult<Organization>> {
