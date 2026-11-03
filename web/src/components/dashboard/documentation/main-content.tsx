@@ -196,7 +196,7 @@ export function MainContent({
             </motion.button>
           </DialogTrigger>
 
-          <DialogContent className="max-w-md">
+          <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Referenced Source Files</DialogTitle>
               <DialogDescription>
@@ -207,23 +207,34 @@ export function MainContent({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="py-4">
+            <div className="py-2 min-w-0">
               {!selectedFile.referenced_files ||
               selectedFile.referenced_files.length === 0 ? (
                 <p className="text-sm text-grey-400 text-center py-6">
                   No source files are referenced in this documentation page.
                 </p>
               ) : (
-                <div className="flex flex-col gap-2">
-                  {selectedFile.referenced_files.map((file, index) => (
-                    <div
-                      key={index}
-                      className="bg-grey-800 hover:bg-grey-700 rounded px-3 py-2 text-xs text-teal-400 transition-colors font-mono break-words"
-                    >
-                      {file}
-                    </div>
-                  ))}
-                </div>
+                <ul className="flex flex-col gap-1.5 max-h-[60vh] overflow-y-auto min-w-0">
+                  {selectedFile.referenced_files.map((file, index) => {
+                    // Strip the backend clone dir so only the repo-relative path shows
+                    const rel = file.replace(/^.*?cloned_repos\/[^/]+\//, "");
+                    const slash = rel.lastIndexOf("/");
+                    const dir = slash >= 0 ? rel.slice(0, slash + 1) : "";
+                    const name = rel.slice(slash + 1);
+                    return (
+                      <li
+                        key={index}
+                        title={rel}
+                        className="flex items-baseline gap-2 min-w-0 rounded-md border bg-muted/40 hover:bg-muted px-3 py-2 font-mono text-xs transition-colors"
+                      >
+                        <span className="shrink-0 text-teal-400">{name}</span>
+                        <span className="truncate text-muted-foreground">
+                          {dir}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
             </div>
           </DialogContent>
