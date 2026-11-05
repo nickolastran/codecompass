@@ -356,99 +356,6 @@ async def index_repo(request: Request):
                 verbose=VERBOSE,
             )
 
-            # Phase 5: Vectorize knowledge graph
-            vectorization_stats = None
-            try:
-                if VERBOSE:
-                    print("\n" + "=" * 70)
-                    print("PHASE 5: Knowledge Graph Vectorization")
-                    print("=" * 70)
-
-                # Import vectorization modules
-                from Indexing_Pipeline.vectorization.embeddings_config import (
-                    get_embeddings,
-                )
-                from Indexing_Pipeline.vectorization.process_graph import (
-                    index_graph_into_vectors,
-                )
-
-                # Configuration
-                use_local_embeddings = (
-                    False  # Set to True for local nomic-embed-code, False for Voyage AI
-                )
-
-                # Use version-specific collection name and directory
-                collection_name = f"code_graph_v{latest_version}"
-                persist_dir = os.path.join(
-                    codecompass_dir, f"chroma_db_v{latest_version}"
-                )
-
-                # Check for required API key if using Voyage AI
-                if not use_local_embeddings and not os.getenv("VOYAGE_API_KEY"):
-                    print(
-                        "\n WARNING: VOYAGE_API_KEY not set, skipping vectorization"
-                    )
-                    print("  Set VOYAGE_API_KEY in .env to enable vector search")
-                    vectorization_stats = {
-                        "status": "skipped",
-                        "reason": "VOYAGE_API_KEY not set",
-                        "vectorized_count": 0,
-                    }
-                else:
-                    if VERBOSE:
-                        embedding_model = (
-                            "nomic-embed-code (local)"
-                            if use_local_embeddings
-                            else "voyage-code-3 (Voyage AI)"
-                        )
-                        print(f"Vectorizing code definitions into {persist_dir}...")
-                        print(f"  Collection name: {collection_name}")
-                        print(f"  Embedding model: {embedding_model}")
-
-                    # Get embeddings configuration
-                    embeddings = get_embeddings(use_local=use_local_embeddings)
-
-                    # Vectorize the graph with version-specific collection
-                    vectorstore = index_graph_into_vectors(
-                        graph, persist_dir=persist_dir, collection_name=collection_name
-                    )
-
-                    # Get statistics
-                    collection = vectorstore._collection
-                    count = collection.count()
-
-                    vectorization_stats = {
-                        "status": "success",
-                        "vectorized_count": count,
-                        "embedding_model": "nomic-embed-code"
-                        if use_local_embeddings
-                        else "voyage-code-3",
-                        "vector_db_path": persist_dir,
-                        "collection_name": collection_name,
-                        "version": latest_version,
-                    }
-
-                    if VERBOSE:
-                        print(f" Vectorized {count} code definitions")
-                        print(f" Vector database: {persist_dir}")
-
-            except Exception as vec_error:
-                # Log vectorization error but don't fail the pipeline
-                import traceback
-
-                error_trace = traceback.format_exc()
-                error_message = f"Vectorization failed: {str(vec_error)}"
-
-                print(f"\n WARNING: {error_message}")
-                if VERBOSE:
-                    print(f"Error trace:\n{error_trace}")
-
-                vectorization_stats = {
-                    "status": "failed",
-                    "error": error_message,
-                    "vectorized_count": 0,
-                }
-
             # Phase 6: Database operations (wrapped in try-except for graceful error handling)
             page_insertion_stats = None
             documentation_id = None
@@ -487,7 +394,6 @@ async def index_repo(request: Request):
                                     "summarization_stats": summarization_stats,
                                     "wiki_ia_stats": wiki_ia_stats,
                                     "content_generation_stats": content_stats,
-                                    "vectorization_stats": vectorization_stats,
                                     "output_paths": {
                                         "graph": os.path.join(
                                             temp_dir, ".codecompass", "graph.json"
@@ -586,7 +492,6 @@ async def index_repo(request: Request):
                 "summarization_stats": summarization_stats,
                 "wiki_ia_stats": wiki_ia_stats,
                 "content_generation_stats": content_stats,
-                "vectorization_stats": vectorization_stats,
                 "page_insertion_stats": page_insertion_stats,
                 "output_paths": {
                     "graph": os.path.join(temp_dir, ".codecompass", "graph.json"),
