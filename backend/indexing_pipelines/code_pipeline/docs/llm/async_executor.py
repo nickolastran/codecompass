@@ -5,10 +5,14 @@ Provides generic async execution with progress tracking and error handling.
 """
 
 import asyncio
-from typing import List, Callable, Awaitable, TypeVar, Dict, Any
+from contextvars import ContextVar
+from typing import List, Callable, Awaitable, TypeVar, Dict, Any, Optional
 from dataclasses import dataclass
 
 T = TypeVar('T')
+
+# Set by the indexing route so batches can report "Summarizing <batch> · done/total" (per request, so concurrent indexes don't mix)
+index_progress: ContextVar[Optional[Callable[[str], None]]] = ContextVar("index_progress", default=None)
 
 
 @dataclass
@@ -119,13 +123,21 @@ async def async_batch_process_with_tracking(
     if verbose:
         print(f"Processing {total} {batch_name}...")
 
+    report = index_progress.get()
+    done = 0
+
     # Create tasks with index tracking
     async def process_with_index(idx: int, item: T):
+        nonlocal done
         try:
             success, name = await process_func(item, idx + 1, total)
             return (success, name, None)
         except Exception as e:
             return (False, f"item_{idx}", str(e))
+        finally:
+            done += 1
+            if report:
+                report(f"Summarizing {batch_name} · {done}/{total}")
 
     tasks = [process_with_index(i, item) for i, item in enumerate(items)]
 

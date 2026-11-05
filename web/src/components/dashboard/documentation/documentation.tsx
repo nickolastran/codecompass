@@ -50,6 +50,7 @@ export default function DocumentationViewer({
   const [isTocOpen, setIsTocOpen] = useState(false);
   const [error, setError] = useState("");
   const [indexError, setIndexError] = useState("");
+  const [indexProgress, setIndexProgress] = useState("");
   const mainContentScrollRef = useRef<HTMLDivElement>(null);
   const setHasDocumentation = useChatUIStore(
     (state) => state.setHasDocumentation,
@@ -113,6 +114,8 @@ export default function DocumentationViewer({
           ? repoResult.data.metadata?.index_error || "Indexing failed."
           : "",
       );
+
+      setIndexProgress(repoResult.data.metadata?.index_progress ?? "");
 
       // Don't fetch documentation if still indexing
       if (repoResult.data.index_status === "indexing") {
@@ -326,6 +329,11 @@ export default function DocumentationViewer({
               the size of your repository. You can safely navigate away from
               this page.
             </p>
+            {indexProgress && (
+              <p className="text-sm font-medium mt-3 tabular-nums">
+                {indexProgress}
+              </p>
+            )}
           </div>
         </div>
       </div>

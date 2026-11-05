@@ -13,6 +13,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 import zipfile
 
 from dotenv import load_dotenv
@@ -33,6 +34,7 @@ from indexing_pipelines.code_pipeline.documentation import (
     generate_wiki_ia,
 )
 from indexing_pipelines.code_pipeline.core.summary_cache import save_summaries
+from indexing_pipelines.code_pipeline.docs.llm.async_executor import index_progress
 
 
 from services.github_app import github_app
@@ -77,6 +79,26 @@ def _mark_failed(repo_id, message: str):
         print(f"Failed to mark repo {repo_id} as failed: {e}")
 
 
+def _progress_writer(repo_id):
+    """Returns report(text, force=False) that shows text on the repo's indexing screen (it polls every 5s)."""
+    last = 0.0
+
+    def report(text: str, force: bool = False):
+        nonlocal last
+        # Per-call batch updates are throttled; phase changes always go through
+        if not repo_id or (not force and time.monotonic() - last < 3):
+            return
+        last = time.monotonic()
+        try:
+            supabase.table("repositories").update(
+                {"metadata": {"index_progress": text}}
+            ).eq("id", repo_id).execute()
+        except Exception as e:
+            print(f"Could not report progress: {e}")
+
+    return report
+
+
 class IndexRequest(BaseModel):
     repo_url: str
     installation_id: str
@@ -110,6 +132,8 @@ async def index_repo(request: Request):
         installation_id = body.get("installation_id")
         access_token = body.get("access_token")  # GitLab / Bitbucket OAuth token
         object_path = body.get("object_path")  # local upload in the local_repos bucket
+        report = _progress_writer(repo_id)
+        index_progress.set(report)
         git_provider = body.get("provider", "github")
         latest_version = body.get("version")
         branch = body.get("branch")
@@ -170,6 +194,7 @@ async def index_repo(request: Request):
         # STEP 1: Clone Repository
         # ====================================================================
         print("STARTING CLONE REPO")
+        report("Cloning repository", force=True)
         if is_upload:
             # Older rows hold the full public URL; newer ones just the bucket path
             path = object_path.split("/local_repos/")[-1]
@@ -246,6 +271,7 @@ async def index_repo(request: Request):
         # ====================================================================
         
         print("STARTING ACTUAL INDEXING")
+        report("Embedding code for search", force=True)
 
         Indexer_obj = Indexing_Pipeline_Head(temp_dir, user_id, repo_id)
         Indexer_obj.dispatch_files()
@@ -276,6 +302,7 @@ async def index_repo(request: Request):
         wiki_output_dir = os.path.join(temp_dir, "wiki")
 
         # Phase 1: Build knowledge graph
+        report("Building knowledge graph", force=True)
         graph = await build_knowledge_graph(
             repo_path=temp_dir,
             graph_cache_path=graph_cache_path,
@@ -335,6 +362,7 @@ async def index_repo(request: Request):
                 )
 
             # Phase 3: Generate wiki IA
+            report("Planning documentation pages", force=True)
             ia = await generate_wiki_ia(
                 graph=graph,
                 provider=provider,
@@ -355,6 +383,7 @@ async def index_repo(request: Request):
             }
 
             # Phase 4: Generate wiki content
+            report("Writing documentation pages", force=True)
             content_stats = await generate_wiki_content(
                 graph=graph,
                 ia=ia,
@@ -365,6 +394,7 @@ async def index_repo(request: Request):
             )
 
             # Phase 6: Database operations (wrapped in try-except for graceful error handling)
+            report("Saving documentation", force=True)
             page_insertion_stats = None
             documentation_id = None
 
