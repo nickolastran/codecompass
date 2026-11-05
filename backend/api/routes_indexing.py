@@ -32,6 +32,7 @@ from indexing_pipelines.code_pipeline.documentation import (
     generate_wiki_content,
     generate_wiki_ia,
 )
+from indexing_pipelines.code_pipeline.core.summary_cache import save_summaries
 
 
 from services.github_app import github_app
@@ -158,6 +159,8 @@ async def index_repo(request: Request):
         temp_dir = os.path.join(
             clone_base_dir, f"local_{repo_id}" if is_upload else f"{owner}_{repo}"
         )
+        # A failed run's summaries live beside the clone (which gets deleted) so a retry skips finished LLM calls
+        resume_cache = temp_dir + ".summaries.json"
 
         # A previous run (successful, or killed mid-way) leaves the clone behind; git won't clone into it
         if os.path.exists(temp_dir):
@@ -303,7 +306,12 @@ async def index_repo(request: Request):
             "total_edges": len(graph.edges),
         }
 
-        # Phase 2: Generate AI summaries
+        # Phase 2: Generate AI summaries (generate_summaries loads summaries_path and skips nodes it already has)
+        # ponytail: resumed summaries aren't checked against code changes since the failed run; add a source hash if that matters
+        if os.path.exists(resume_cache):
+            os.makedirs(codecompass_dir, exist_ok=True)
+            shutil.copyfile(resume_cache, summaries_path)
+
         # Note: generate_summaries from documentation.py uses hardcoded paths
         # We need to temporarily change working directory or modify the function
         # For now, we'll call it and let it use default paths within temp_dir
@@ -480,6 +488,9 @@ async def index_repo(request: Request):
         finally:
             os.chdir(original_cwd)  # Restore original working directory
 
+        if os.path.exists(resume_cache):
+            os.remove(resume_cache)
+
         return {
             "status": "success",
             "message": "Repository indexed and documented successfully",
@@ -523,6 +534,12 @@ async def index_repo(request: Request):
         raise
 
     except Exception as e:
+        if "graph" in locals():
+            try:
+                save_summaries(graph, cache_path=resume_cache)
+            except Exception as save_error:
+                print(f"Could not keep summaries for a retry: {save_error}")
+
         # Clean up on failure
         if "temp_dir" in locals() and os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
