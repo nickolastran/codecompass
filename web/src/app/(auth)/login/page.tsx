@@ -61,6 +61,7 @@ export default function LoginPage() {
           <Link href="/">
             <Image
               src="/codecompass.png"
+              loading="eager" // header logo is the LCP image
               alt="CodeCompass Logo"
               width={45}
               height={45}

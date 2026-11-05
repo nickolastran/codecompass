@@ -21,6 +21,7 @@ export function DashboardNavbar() {
           >
             <Image
               src="/codecompass.png"
+              loading="eager" // header logo is the LCP image
               alt="Logo"
               width={40}
               height={40}

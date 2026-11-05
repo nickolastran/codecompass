@@ -21,6 +21,7 @@ export default function Navbar({ isAuthenticated }: NavbarProps) {
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <Image
             src="/codecompass.png"
+            loading="eager" // header logo is the LCP image
             alt=""
             width={28}
             height={28}

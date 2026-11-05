@@ -13,6 +13,7 @@ export default function Navbar() {
             <Link href="/" className="flex items-center gap-2">
               <Image
                 src="/codecompass.png"
+                loading="eager" // header logo is the LCP image
                 alt="CodeCompass Logo"
                 width={40}
                 height={40}
