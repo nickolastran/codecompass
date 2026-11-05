@@ -9,6 +9,13 @@ import { signInWithProvider } from "../client";
 import Image from "next/image";
 import Link from "next/link";
 import LoginLoading from "./loading";
+import { BitbucketIcon } from "@/components/bitbucketIcon";
+
+const PROVIDERS = [
+  ["github", Github, "GitHub"],
+  ["gitlab", Gitlab, "GitLab"],
+  ["bitbucket", BitbucketIcon, "Bitbucket"],
+] as const;
 
 export default function LoginPage() {
   // Brief skeleton on mount so the form doesn't pop in instantly
@@ -75,32 +82,22 @@ export default function LoginPage() {
           </div>
           <form action={handleSubmit} className="space-y-4">
             <div className="flex flex-col space-y-5">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={async () => {
-                  const error = await signInWithProvider("github");
-                  if (error) setStatus({ type: "error", message: error });
-                }}
-              >
-                <div className="flex flex-row gap-3">
-                  <Github />
-                  <p>Continue with GitHub</p>
-                </div>
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={async () => {
-                  const error = await signInWithProvider("gitlab");
-                  if (error) setStatus({ type: "error", message: error });
-                }}
-              >
-                <div className="flex flex-row gap-3">
-                  <Gitlab />
-                  <p>Continue with GitLab</p>
-                </div>
-              </Button>
+              {PROVIDERS.map(([provider, Icon, label]) => (
+                <Button
+                  key={provider}
+                  type="button"
+                  variant="outline"
+                  onClick={async () => {
+                    const error = await signInWithProvider(provider);
+                    if (error) setStatus({ type: "error", message: error });
+                  }}
+                >
+                  <div className="flex flex-row gap-3">
+                    <Icon />
+                    <p>Continue with {label}</p>
+                  </div>
+                </Button>
+              ))}
             </div>
             {/* divider */}
             <div className="border-b border-border"></div>

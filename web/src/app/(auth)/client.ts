@@ -2,7 +2,7 @@
 
 import { createClient } from "@/utils/supabase/client";
 
-export async function signInWithProvider(provider: "github" | "gitlab") {
+export async function signInWithProvider(provider: "github" | "gitlab" | "bitbucket") {
   const supabase = createClient();
 
   const { data, error } = await supabase.auth.signInWithOAuth({

@@ -11,10 +11,13 @@ import {
 } from "@/app/types/supabase";
 import { ActionResult } from "@/app/types/action";
 import { githubSlug } from "@/lib/repoHref";
+import { verifyGithubRepoAccess } from "./gitProviderService";
 import {
-  verifyGithubRepoAccess,
-  verifyGitLabRepoAccess,
-} from "./gitProviderService";
+  OAUTH,
+  getProviderToken,
+  isOAuthProvider,
+  lookupRepo,
+} from "@/lib/gitOAuth";
 
 // Helper function to parse GitHub URLs
 function parseGitHubUrl(url: string): { owner: string; repo: string } {
@@ -34,55 +37,6 @@ function parseGitHubUrl(url: string): { owner: string; repo: string } {
     if (url.startsWith("git@github.com:")) {
       const parts = url.replace("git@github.com:", "").split("/");
       return { owner: parts[0], repo: parts[1] };
-    }
-
-    return { owner: "", repo: "" };
-  } catch (error) {
-    return { owner: "", repo: "" };
-  }
-}
-
-// Helper function to parse GitLab URLs
-function parseGitLabUrl(url: string): { owner: string; repo: string } {
-  try {
-    // Handle multiple formats:
-    // - https://gitlab.com/owner/repo
-    // - https://gitlab.com/owner/subgroup/repo
-    // - https://gitlab.com/owner/repo.git
-    // - git@gitlab.com:owner/repo.git
-    // - Self-hosted: https://gitlab.example.com/owner/repo
-
-    url = url.trim().replace(/\.git$/, "");
-
-    // Handle HTTPS URLs (gitlab.com or self-hosted)
-    if (url.includes("gitlab.com/") || /gitlab\.[^/]+\//.test(url)) {
-      // Extract the path after the domain
-      const match = url.match(/gitlab[^/]*\/(.+)/);
-      if (match) {
-        const pathParts = match[1].split("/");
-        // GitLab supports nested groups, so we need to handle:
-        // - owner/repo (2 parts)
-        // - owner/subgroup/repo (3+ parts)
-        if (pathParts.length >= 2) {
-          // Take everything except the last part as owner/group
-          const repo = pathParts[pathParts.length - 1];
-          const owner = pathParts.slice(0, -1).join("/");
-          return { owner, repo };
-        }
-      }
-    }
-
-    // Handle SSH URLs
-    if (url.startsWith("git@gitlab.com:") || /git@gitlab\.[^:]+:/.test(url)) {
-      const match = url.match(/git@gitlab[^:]*:(.+)/);
-      if (match) {
-        const pathParts = match[1].split("/");
-        if (pathParts.length >= 2) {
-          const repo = pathParts[pathParts.length - 1];
-          const owner = pathParts.slice(0, -1).join("/");
-          return { owner, repo };
-        }
-      }
     }
 
     return { owner: "", repo: "" };
@@ -131,7 +85,7 @@ export async function createRepoViaGithub(
 
   const name = formData.get("name") as string;
   const provider = formData.get("type") as string;
-  const url = formData.get("github-url") as string;
+  const url = formData.get("repo-url") as string;
 
   if (!name) {
     return { success: false, error: "Name is required!" };
@@ -187,7 +141,7 @@ export async function createRepoViaGithub(
   return { success: true, data: repo as Repo };
 }
 
-export async function createRepoViaGitlab(
+export async function createRepoViaOAuthProvider(
   formData: FormData,
   orgId: string,
 ): Promise<ActionResult<Repo | undefined>> {
@@ -201,49 +155,37 @@ export async function createRepoViaGitlab(
     return { success: false, error: "User not authenticated!" };
   }
 
-  const name = formData.get("name") as string;
+  const name = (formData.get("name") as string)?.trim();
   const provider = formData.get("type") as string;
-  const url = formData.get("gitlab-url") as string;
+  const url = (formData.get("repo-url") as string)?.trim();
 
-  // Validate inputs
-  if (!name || name.trim() === "") {
-    return { success: false, error: "Repository name is required" };
+  if (!name) {
+    return { success: false, error: "Name is required!" };
   }
 
-  if (!url || url.trim() === "") {
-    return { success: false, error: "GitLab URL is required" };
+  if (!isOAuthProvider(provider)) {
+    return { success: false, error: "Unsupported provider" };
   }
 
-  const { data: installation } = await client
-    .from("gitlab_installations")
-    .select("*")
-    .eq("installed_by", user.id)
-    .single();
+  const { label } = OAUTH[provider];
 
-  if (!installation) {
+  if (!url) {
+    return { success: false, error: `${label} URL is required` };
+  }
+
+  const token = await getProviderToken(provider);
+
+  if (!token) {
     return { success: false, error: "Installation Needed" };
   }
 
-  const { owner, repo: repoName } = parseGitLabUrl(url);
+  // Store the canonical URL the backend clones from
+  const repoUrl = await lookupRepo(provider, url, token);
 
-  // Verify access
-  const hasAccess = await verifyGitLabRepoAccess(
-    installation.access_token,
-    owner,
-    repoName,
-  );
-
-  if (!hasAccess) {
-    if (installation.access_token) {
-      return {
-        success: false,
-        error: "Access required!",
-      };
-    }
-
+  if (!repoUrl) {
     return {
       success: false,
-      error: "Access denied!",
+      error: `Couldn't find that repository on ${label}, or your account can't access it.`,
     };
   }
 
@@ -252,7 +194,7 @@ export async function createRepoViaGitlab(
     .insert({
       name,
       provider,
-      repo_url: url,
+      repo_url: repoUrl,
       organization_id: orgId,
       indexed_by: user.id,
       index_status: "not indexed",
@@ -264,7 +206,7 @@ export async function createRepoViaGitlab(
     return { success: false, error: repoError.message };
   }
 
-  return { success: true, data: repo };
+  return { success: true, data: repo as Repo };
 }
 
 export async function createRepoViaLocalFile(
@@ -462,6 +404,7 @@ export async function updateRepoSettings(
   }
 
   const updateData: UpdateData = {};
+  const provider: string = currentRepo.provider;
 
   // Handle name update
   if (settings.name) {
@@ -502,6 +445,25 @@ export async function updateRepoSettings(
     }
 
     updateData.repo_url = settings.repo_url;
+    updateData.index_status = "not indexed"; // Trigger re-indexing
+  } else if (settings.repo_url && isOAuthProvider(provider)) {
+    const { label } = OAUTH[provider];
+    const token = await getProviderToken(provider);
+
+    if (!token) {
+      return { success: false, error: `Reconnect ${label} first!` };
+    }
+
+    const repoUrl = await lookupRepo(provider, settings.repo_url, token);
+
+    if (!repoUrl) {
+      return {
+        success: false,
+        error: `Cannot access this repository on ${label}.`,
+      };
+    }
+
+    updateData.repo_url = repoUrl;
     updateData.index_status = "not indexed"; // Trigger re-indexing
   }
 
@@ -1181,26 +1143,44 @@ export async function indexRepository(
     return { success: false, error: "User not authenticated!" };
   }
 
-  const { data: installation, error: installationError } = await client
-    .from("github_installations")
-    .select("*")
-    .eq("installed_by", user.id)
-    .single();
-
-  if (!installation || installationError) {
-    return { success: false, error: "Github App Installation not found!" };
-  }
-
-  // Fetch repo
-
   const repoResult = await getRepoWithStatus(repoId);
 
   if (!repoResult.success) {
     return { success: false, error: repoResult.error };
   }
 
-  const repoUrl = repoResult.data.repo_url;
-  const installationId = installation.installation_id;
+  const { provider, repo_url: repoUrl } = repoResult.data;
+
+  // Clone credentials: GitHub App installation, or a GitLab/Bitbucket OAuth token
+  let auth: { installation_id: string } | { access_token: string };
+
+  if (provider === "github") {
+    const { data: installation } = await client
+      .from("github_installations")
+      .select("installation_id")
+      .eq("installed_by", user.id)
+      .maybeSingle();
+
+    if (!installation) {
+      return { success: false, error: "Github App Installation not found!" };
+    }
+    auth = { installation_id: String(installation.installation_id) };
+  } else if (isOAuthProvider(provider)) {
+    const token = await getProviderToken(provider);
+
+    if (!token) {
+      return {
+        success: false,
+        error: `Reconnect ${OAUTH[provider].label} to index this repository.`,
+      };
+    }
+    auth = { access_token: token };
+  } else {
+    return {
+      success: false,
+      error: "Only GitHub, GitLab and Bitbucket repositories can be indexed right now.",
+    };
+  }
 
   // Get the latest version number for this repo
   const { data: latestDoc } = await client
@@ -1213,14 +1193,6 @@ export async function indexRepository(
 
   // Increment version (start at 1 if no previous versions)
   const nextVersion = (latestDoc?.version ?? 0) + 1;
-
-  // The backend only clones from GitHub
-  if (!repoUrl?.includes("github.com")) {
-    return {
-      success: false,
-      error: "Only GitHub repositories can be indexed right now.",
-    };
-  }
 
   // Mark the repository as indexing in supabase first (clearing any previous error)
   const { error: updateError } = await client
@@ -1244,8 +1216,8 @@ export async function indexRepository(
       repo_url: repoUrl,
       repo_id: repoId,
       user_id: user.id,
-      installation_id: installationId,
-      branch: "main",
+      provider,
+      ...auth,
       version: nextVersion,
     }),
   });

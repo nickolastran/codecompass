@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 import { ActionResult } from "@/app/types/action";
 import { Repo } from "@/app/types/supabase";
 import type { GitLabProject } from "@/app/types/gitlab";
+import { getProviderToken } from "@/lib/gitOAuth";
 
 export async function verifyGithubRepoAccess(
   installation_id: string,
@@ -22,30 +23,6 @@ export async function verifyGithubRepoAccess(
     });
 
     return true;
-  } catch (error) {
-    if (error instanceof Error && "status" in error && error.status === 404) {
-      return false;
-    }
-    throw error;
-  }
-}
-
-export async function verifyGitLabRepoAccess(
-  access_token: string,
-  owner: string,
-  name: string,
-): Promise<boolean> {
-  try {
-    const response = await fetch(
-      `https://gitlab.com/api/v4/projects/${owner}/${name}`,
-      {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-        },
-      },
-    );
-
-    return response.ok;
   } catch (error) {
     if (error instanceof Error && "status" in error && error.status === 404) {
       return false;
@@ -94,14 +71,9 @@ export async function importGitLabProjects(
     return { success: false, error: "User not found" };
   }
 
-  const { data: installation, error: installationError } = await supabase
-    .from("gitlab_installations")
-    .select("*")
-    .eq("installed_by", user.id)
-    .single();
+  const accessToken = await getProviderToken("gitlab");
 
-  if (installationError || !installation) {
-    console.error("Failed to fetch GitLab installation:", installationError);
+  if (!accessToken) {
     return { success: false, error: "GitLab installation not found" };
   }
 
@@ -115,7 +87,7 @@ export async function importGitLabProjects(
         `https://gitlab.com/api/v4/projects/${project.id}`,
         {
           headers: {
-            Authorization: `Bearer ${installation.access_token}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         },
       );

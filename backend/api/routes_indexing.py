@@ -103,10 +103,12 @@ async def index_repo(request: Request):
         user_id = body.get("user_id")
         repo_id = body.get("repo_id")
         installation_id = body.get("installation_id")
+        access_token = body.get("access_token")  # GitLab / Bitbucket OAuth token
+        git_provider = body.get("provider", "github")
         latest_version = body.get("version")
         branch = body.get("branch")
 
-        if not url or not user_id or not installation_id or not branch:
+        if not url or not user_id or not (installation_id or access_token):
             raise HTTPException(status_code=400, detail="Missing required fields")
 
         # Fail before cloning if the LLM provider can't run
@@ -117,10 +119,16 @@ async def index_repo(request: Request):
             )
 
         # Parse owner and repo from url
-        owner, repo = url.split("/")[-2:]
+        owner, repo = url.rstrip("/").split("/")[-2:]
 
-        # Obtain installation token from github app
-        token = github_app.get_installation_token(installation_id=int(installation_id))
+        if access_token:
+            # GitLab and Bitbucket take an OAuth token as the password for a fixed username
+            token = access_token
+            username = "oauth2" if git_provider == "gitlab" else "x-token-auth"
+            auth_url = url.replace("https://", f"https://{username}:{token}@", 1) + ".git"
+        else:
+            token = github_app.get_installation_token(installation_id=int(installation_id))
+            auth_url = f"https://x-access-token:{token}@github.com/{owner}/{repo}.git"
 
         # Create a directory for cloning within the project
         clone_base_dir = os.path.join(
@@ -129,7 +137,7 @@ async def index_repo(request: Request):
         os.makedirs(clone_base_dir, exist_ok=True)
 
         # Create a unique directory for this repo
-        temp_dir = os.path.join(clone_base_dir, f"{owner}_{repo}_{branch}")
+        temp_dir = os.path.join(clone_base_dir, f"{owner}_{repo}")
 
         # A previous run (successful, or killed mid-way) leaves the clone behind; git won't clone into it
         if os.path.exists(temp_dir):
@@ -140,9 +148,11 @@ async def index_repo(request: Request):
         # ====================================================================
         print("STARTING CLONE REPO")
         try:
-            # Clone the repository using installation_id for auth (shallow clone with depth=1)
-            auth_url = f"https://x-access-token:{token}@github.com/{owner}/{repo}.git"
-            Repo.clone_from(auth_url, temp_dir, branch=branch, depth=1)
+            # Shallow clone; no branch given = the repo's default branch
+            cloned = Repo.clone_from(
+                auth_url, temp_dir, depth=1, **({"branch": branch} if branch else {})
+            )
+            branch = cloned.active_branch.name
 
         except GitCommandError as git_error:
             # Clean up temp directory on failure
@@ -152,7 +162,7 @@ async def index_repo(request: Request):
             # Check for specific git errors
             error_message = (
                 str(git_error.stderr) if git_error.stderr else str(git_error)
-            )
+            ).replace(token, "***")  # str(git_error) includes the authed URL
 
             if (
                 "repository not found" in error_message.lower()
@@ -544,7 +554,7 @@ async def index_repo(request: Request):
         }
 
         # TODO: Store generated documentation files in database
-        # Currently files are kept in: cloned_repos/{owner}_{repo}_{branch}/
+        # Currently files are kept in: cloned_repos/{owner}_{repo}/
         # Files to store:
         # - .codecompass/graph.json (knowledge graph)
         # - .codecompass/summaries.json (node summaries)

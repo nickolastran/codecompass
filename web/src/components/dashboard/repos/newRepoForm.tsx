@@ -27,10 +27,16 @@ import { toast } from "sonner";
 import { useState } from "react";
 import {
   createRepoViaGithub,
-  createRepoViaGitlab,
+  createRepoViaOAuthProvider,
   createRepoViaLocalFile,
 } from "@/lib/services/repoService";
 import { useQueryClient } from "@tanstack/react-query";
+
+const PROVIDER_LABELS: Record<string, string> = {
+  github: "GitHub",
+  gitlab: "GitLab",
+  bitbucket: "Bitbucket",
+};
 
 type NewProjectFormProps = {
   orgId: string;
@@ -43,8 +49,7 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
   const [name, setName] = useState("");
   const [type, setType] = useState("local");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [githubUrl, setGithubUrl] = useState("");
-  const [gitlabUrl, setGitlabUrl] = useState("");
+  const [repoUrl, setRepoUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
@@ -78,8 +83,11 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
         toast.success("Repository added");
 
         router.push(`/dashboard/org/${orgId}`);
-      } else if (type === "github") {
-        const result = await createRepoViaGithub(formData, orgId);
+      } else {
+        const result =
+          type === "github"
+            ? await createRepoViaGithub(formData, orgId)
+            : await createRepoViaOAuthProvider(formData, orgId);
 
         if (!result.success) {
           if (result.error === "Name is required!") {
@@ -88,39 +96,13 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
             return;
           }
           if (result.error === "Installation Needed") {
-            // Automatically redirect to GitHub App installation page
-            router.push(`/dashboard/install-github-app?org_id=${orgId}`);
-            return;
-          }
-          setError(result.error);
-          setIsLoading(false);
-          return;
-        }
-
-        // Invalidate repositories query to refetch fresh data
-        queryClient.invalidateQueries({ queryKey: ["repositories", orgId] });
-        toast.success("Repository added");
-
-        router.push(`/dashboard/org/${orgId}`);
-      } else if (type === "gitlab") {
-        const result = await createRepoViaGitlab(formData, orgId);
-
-        if (!result.success) {
-          console.log(result.error);
-          if (result.error === "Name is required!") {
-            setNameError(result.error);
-            setIsLoading(false);
-            return;
-          }
-          if (result.error === "Installation Needed") {
-            // Redirect to GitLab App installation page
-            router.push(`/dashboard/install-gitlab-app?org_id=${orgId}`);
-          }
-          if (result.error === "Access required!") {
-            // Redirect to project selection page
+            // Connect the provider first, then come back here
             router.push(
-              `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/org/${orgId}/gitlab/select-repos`,
+              type === "github"
+                ? `/dashboard/install-github-app?org_id=${orgId}`
+                : `/dashboard/connect/${type}?org_id=${orgId}`,
             );
+            return;
           }
           setError(result.error);
           setIsLoading(false);
@@ -196,45 +178,30 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
                   <SelectItem value="local">Local</SelectItem>
                   <SelectItem value="github">GitHub</SelectItem>
                   <SelectItem value="gitlab">GitLab</SelectItem>
+                  <SelectItem value="bitbucket">Bitbucket</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
             <FieldDescription>Select a repository type</FieldDescription>
-            {type === "github" && (
+            {type !== "local" && (
               <div className="flex flex-col gap-3 py-2">
                 <Separator />
                 <Field className="py-2">
-                  <FieldLabel htmlFor="github-url">GitHub URL</FieldLabel>
+                  <FieldLabel htmlFor="repo-url">
+                    {PROVIDER_LABELS[type]} URL
+                  </FieldLabel>
                   <Input
-                    id="github-url"
-                    name="github-url"
+                    id="repo-url"
+                    name="repo-url"
                     type="url"
-                    value={githubUrl}
-                    onChange={(e) => setGithubUrl(e.target.value)}
+                    value={repoUrl}
+                    onChange={(e) => setRepoUrl(e.target.value)}
                     className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                   />
                   <FieldDescription>
-                    Enter the URL of the GitHub repository.
+                    Enter the URL of the {PROVIDER_LABELS[type]} repository.
                   </FieldDescription>
-                </Field>
-              </div>
-            )}
-            {type === "gitlab" && (
-              <div className="flex flex-col gap-3 py-2">
-                <Separator />
-                <Field className="py-2">
-                  <FieldLabel htmlFor="gitlab-url">GitLab URL</FieldLabel>
-                  <Input
-                    id="gitlab-url"
-                    name="gitlab-url"
-                    type="url"
-                    value={gitlabUrl}
-                    onChange={(e) => setGitlabUrl(e.target.value)}
-                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-                  />
-                  <FieldDescription>
-                    Enter the URL of the GitLab repository.
-                  </FieldDescription>
+                  <FieldError>{error}</FieldError>
                 </Field>
               </div>
             )}

@@ -1,43 +1,54 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Gitlab } from "@geist-ui/icons";
+import { BitbucketIcon } from "@/components/bitbucketIcon";
 import Link from "next/link";
+import { OAUTH, authorizeUrl, isOAuthProvider } from "@/lib/gitOAuth";
 
-export const metadata: Metadata = { title: "Install GitLab App" };
+const ICONS = { gitlab: Gitlab, bitbucket: BitbucketIcon };
 
-type InstallGitlabAppPageProps = {
+type ConnectPageProps = {
+  params: Promise<{ provider: string }>;
   searchParams: Promise<{ org_id?: string }>;
 };
 
-export default async function InstallGitlabAppPage({
+export async function generateMetadata({
+  params,
+}: ConnectPageProps): Promise<Metadata> {
+  const { provider } = await params;
+  return {
+    title: isOAuthProvider(provider) ? `Connect ${OAUTH[provider].label}` : "Connect",
+  };
+}
+
+export default async function ConnectProviderPage({
+  params,
   searchParams,
-}: InstallGitlabAppPageProps) {
+}: ConnectPageProps) {
+  const { provider } = await params;
   const { org_id } = await searchParams;
+  if (!isOAuthProvider(provider)) notFound();
 
-  const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/gitlab/installation`;
-
-  // Build the GitLab OAuth URL with state parameter
-  const stateParam = org_id
-    ? encodeURIComponent(JSON.stringify({ org_id }))
-    : "";
-  const gitlabInstallUrl = `https://gitlab.com/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_GITLAB_APP_CLIENT_ID}&redirect_uri=${redirectUrl}&response_type=code&scope=read_api+read_repository${stateParam ? `&state=${stateParam}` : ""}`;
+  const { label } = OAUTH[provider];
+  const Icon = ICONS[provider];
 
   return (
     <div className="container mx-auto py-16 px-4 max-w-2xl">
       <Card className="p-8">
         <div className="flex flex-col items-center text-center space-y-6">
           <div className="rounded-full bg-muted p-4">
-            <Gitlab className="h-12 w-12" />
+            <Icon className="h-12 w-12" />
           </div>
 
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold">
-              Authenticate using GitLab
+              Authenticate using {label}
             </h1>
             <p className="text-muted-foreground">
-              To import repositories from GitLab, you need to verify using
-              GitLab. This will allow us to access your repositories and
+              To import repositories from {label}, you need to verify using{" "}
+              {label}. This will allow us to access your repositories and
               generate documentation.
             </p>
           </div>
@@ -53,9 +64,9 @@ export default async function InstallGitlabAppPage({
 
             <div className="flex flex-col gap-3">
               <Button asChild size="lg" className="w-full">
-                <a href={gitlabInstallUrl}>
-                  <Gitlab className="mr-2 h-5 w-5" />
-                  Login with Gitlab
+                <a href={authorizeUrl(provider, org_id)}>
+                  <Icon className="mr-2 h-5 w-5" />
+                  Login with {label}
                 </a>
               </Button>
 

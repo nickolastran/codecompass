@@ -138,7 +138,7 @@ if (result.success) {
 | Function | Purpose | Returns |
 |----------|---------|---------|
 | `createRepoViaGithub(formData, orgId)` | Create from GitHub URL | `ActionResult<Repo>` |
-| `createRepoViaGitlab(formData, orgId)` | Create from GitLab URL | `ActionResult<Repo>` |
+| `createRepoViaOAuthProvider(formData, orgId)` | Create from a GitLab/Bitbucket URL | `ActionResult<Repo>` |
 | `createRepoViaLocalFile(formData, orgId)` | Upload .zip (max 100MB) | `ActionResult<Repo>` |
 
 **Key Features**:
@@ -224,8 +224,8 @@ if (result.success) {
 parseGitHubUrl(url: string): { owner: string; repo: string } | null
 // Supports: https://github.com/owner/repo, git@github.com:owner/repo.git
 
-parseGitLabUrl(url: string): { owner: string; repo: string } | null
-// Supports: https://gitlab.com/group/subgroup/repo, nested groups, self-hosted
+providerRepoPath(provider: "gitlab" | "bitbucket", url: string): string | null
+// In lib/repoHref.ts. gitlab.com nested groups, bitbucket.org workspace/repo; web, clone or SSH URLs
 ```
 
 ---

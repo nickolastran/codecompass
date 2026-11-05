@@ -122,9 +122,9 @@ CodeCompass requires a GitHub App to clone repositories:
 3. Generate a private key and save as `github-app-key.pem`
 4. Copy App ID, Client ID, and Client Secret to `.env`
 
-### Sign-in Providers (GitHub / GitLab Login)
+### Sign-in Providers (GitHub / GitLab / Bitbucket Login)
 
-The "Continue with GitHub" and "Continue with GitLab" buttons go through **Supabase
+The "Continue with GitHub", "Continue with GitLab" and "Continue with Bitbucket" buttons go through **Supabase
 Auth**, not the GitHub App above — they are separate credentials. If a provider is
 not enabled in Supabase you get:
 
@@ -153,7 +153,33 @@ GitLab is the same flow: create an application at **GitLab → Preferences →
 Applications** with scopes `read_user` + `openid`, redirect URI pointing at the same
 Supabase `/auth/v1/callback`, then enable the GitLab provider in Supabase.
 
+Bitbucket is the same flow too: create an **OAuth consumer** at **Bitbucket →
+Workspace settings → OAuth consumers** with permission **Account: Read** and the
+callback URL set to the Supabase `/auth/v1/callback`, then enable the Bitbucket
+provider in Supabase.
+
 These credentials live in Supabase only — no `.env` entry in this repo.
+
+### GitLab / Bitbucket Repository Access
+
+Adding a GitLab or Bitbucket repository uses a separate OAuth app (like the GitHub
+App above), so the backend can clone private repos. Set these in `web/.env.local`:
+
+```env
+# GitLab → Preferences → Applications, scopes read_api + read_repository,
+# redirect URI http://localhost:3000/api/gitlab/installation
+NEXT_PUBLIC_GITLAB_APP_CLIENT_ID=...
+GITLAB_APP_SECRET=...
+
+# Bitbucket → Workspace settings → OAuth consumers, permissions
+# Account: Read + Repositories: Read,
+# callback URL http://localhost:3000/api/bitbucket/installation
+BITBUCKET_APP_CLIENT_ID=...   # the consumer's "Key"
+BITBUCKET_APP_SECRET=...      # the consumer's "Secret"
+```
+
+Run `supabase/migrations/20261104000000_bitbucket_installations.sql` to create the
+`bitbucket_installations` table.
 
 ### Supabase Configuration
 

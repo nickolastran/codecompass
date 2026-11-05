@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { fetchGitLabProjects } from "@/lib/services/gitProviderService";
+import { getProviderToken } from "@/lib/gitOAuth";
 import { GitLabRepoSelector } from "@/components/dashboard/gitlab/repoSelector";
 
 export const metadata: Metadata = { title: "Select GitLab Repositories" };
@@ -24,22 +25,17 @@ export default async function SelectReposPage({
     redirect("/login");
   }
 
-  // Fetch GitLab installation for the user
-  const { data: installation, error } = await supabase
-    .from("gitlab_installations")
-    .select("*")
-    .eq("installed_by", user.id)
-    .single();
+  const accessToken = await getProviderToken("gitlab");
 
-  if (error || !installation) {
-    // No GitLab installation found, redirect to install page
-    redirect(`/dashboard/install-gitlab-app?org_id=${orgId}`);
+  if (!accessToken) {
+    // Not connected (or the token was revoked)
+    redirect(`/dashboard/connect/gitlab?org_id=${orgId}`);
   }
 
   // Fetch projects from GitLab API
   let projects;
   try {
-    projects = await fetchGitLabProjects(installation.access_token);
+    projects = await fetchGitLabProjects(accessToken);
   } catch (error) {
     console.error("Failed to fetch GitLab projects:", error);
     return (

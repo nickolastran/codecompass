@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { FolderCode, ChevronRight } from "lucide-react";
 import { Github } from "@geist-ui/icons";
 import { Gitlab } from "@geist-ui/icons";
+import { BitbucketIcon } from "@/components/bitbucketIcon";
 import { Repo } from "@/app/types/supabase";
 import Link from "next/link";
 import { repoHref } from "@/lib/repoHref";
@@ -43,6 +44,8 @@ export function RepoButton({ repo }: RepoButtonProps) {
                 <Github className="w-4 h-4" />
               ) : type === "gitlab" ? (
                 <Gitlab className="w-4 h-4" />
+              ) : type === "bitbucket" ? (
+                <BitbucketIcon className="w-4 h-4" />
               ) : (
                 <FolderCode className="w-4 h-4 text-white" />
               )}
@@ -54,7 +57,9 @@ export function RepoButton({ repo }: RepoButtonProps) {
                   ? "GitHub"
                   : type === "gitlab"
                     ? "GitLab"
-                    : "Local"}
+                    : type === "bitbucket"
+                      ? "Bitbucket"
+                      : "Local"}
                 <span className="text-md">&middot;</span>
                 <span className={`size-1.5 rounded-full ${statusDot}`} />
                 {statusLabel}

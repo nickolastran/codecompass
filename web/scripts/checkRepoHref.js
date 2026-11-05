@@ -5,7 +5,7 @@ const assert = require("assert");
 const src = fs.readFileSync(path.join(__dirname, "../src/lib/repoHref.ts"), "utf8");
 const out = path.join(os.tmpdir(), "repo-href.check.js");
 fs.writeFileSync(out, ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText);
-const { githubSlug, repoHref } = require(out);
+const { githubSlug, repoHref, providerRepoPath } = require(out);
 
 const id = "94a8d5c8";
 assert.deepStrictEqual(githubSlug("https://github.com/nickolastran/portfolio"), ["nickolastran", "portfolio"]);
@@ -19,4 +19,13 @@ assert.strictEqual(githubSlug("https://github.com/org/b"), null); // reserved ow
 assert.strictEqual(repoHref({ id, repo_url: "https://github.com/nickolastran/portfolio" }), "/dashboard/nickolastran/portfolio");
 assert.strictEqual(repoHref({ id, repo_url: null }), `/dashboard/repo/${id}`);
 assert.strictEqual(repoHref({ id, repo_url: "https://github.com/new/x" }), `/dashboard/repo/${id}`);
+assert.strictEqual(providerRepoPath("gitlab", "https://gitlab.com/g/sub/repo"), "g/sub/repo");
+assert.strictEqual(providerRepoPath("gitlab", "https://gitlab.com/g/repo/-/tree/main?x=1"), "g/repo");
+assert.strictEqual(providerRepoPath("gitlab", "git@gitlab.com:g/repo.git"), "g/repo");
+assert.strictEqual(providerRepoPath("gitlab", "https://gitlab.com/g"), null);
+assert.strictEqual(providerRepoPath("gitlab", "https://github.com/a/b"), null);
+assert.strictEqual(providerRepoPath("bitbucket", "https://bitbucket.org/ws/repo/src/main/"), "ws/repo");
+assert.strictEqual(providerRepoPath("bitbucket", "https://user@bitbucket.org/ws/repo.git"), "ws/repo");
+assert.strictEqual(providerRepoPath("bitbucket", "git@bitbucket.org:ws/repo.git"), "ws/repo");
+assert.strictEqual(providerRepoPath("bitbucket", "https://gitlab.com/a/b"), null);
 console.log("repo-href checks ok");

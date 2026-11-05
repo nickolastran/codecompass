@@ -3,7 +3,7 @@
 const RESERVED = new Set([
   "chat",
   "install-github-app",
-  "install-gitlab-app",
+  "connect",
   "new",
   "org",
   "organizations",
@@ -26,4 +26,24 @@ export function repoHref(repo: { id: string; repo_url: string | null }) {
   return slug
     ? `/dashboard/${slug[0]}/${slug[1]}`
     : `/dashboard/repo/${repo.id}`;
+}
+
+// "group/sub/repo" (GitLab) or "workspace/repo" (Bitbucket) from a web, clone or SSH URL
+export function providerRepoPath(
+  provider: "gitlab" | "bitbucket",
+  url: string,
+): string | null {
+  const host = provider === "gitlab" ? "gitlab\\.com" : "bitbucket\\.org";
+  const m = url
+    .trim()
+    .replace(/[?#].*$/, "")
+    .replace(/\/+$/, "")
+    .replace(/\.git$/, "")
+    .match(new RegExp(`${host}[/:](.+)`, "i"));
+  if (!m) return null;
+
+  // Drop /-/tree/... (GitLab) and /src/... (Bitbucket, always workspace/repo)
+  const parts = m[1].split("/-/")[0].split("/");
+  const path = (provider === "bitbucket" ? parts.slice(0, 2) : parts).join("/");
+  return parts.length >= 2 ? path : null;
 }
