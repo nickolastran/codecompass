@@ -36,12 +36,11 @@ export function authorizeUrl(provider: OAuthProvider, orgId?: string) {
     client_id: OAUTH[provider].clientId ?? "",
     response_type: "code",
     state: JSON.stringify({ org_id: orgId ?? null }),
+    // Picks which of the OAuth client's registered callback URLs to return to (localhost vs prod)
+    redirect_uri: redirectUri(provider),
   });
-  // Bitbucket uses the consumer's callback URL and permissions instead
-  if (provider === "gitlab") {
-    params.set("redirect_uri", redirectUri(provider));
-    params.set("scope", "read_api read_repository");
-  }
+  // Bitbucket uses the OAuth client's scopes instead
+  if (provider === "gitlab") params.set("scope", "read_api read_repository");
   return `${OAUTH[provider].authorizeUrl}?${params}`;
 }
 
@@ -50,7 +49,7 @@ async function requestToken(
   params: Record<string, string>,
 ): Promise<{ access_token: string; refresh_token?: string } | null> {
   const { clientId, secret, tokenUrl } = OAUTH[provider];
-  if (provider === "gitlab") params.redirect_uri = redirectUri(provider);
+  params.redirect_uri = redirectUri(provider);
 
   const res = await fetch(tokenUrl, {
     method: "POST",
