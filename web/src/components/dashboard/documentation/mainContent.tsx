@@ -2,9 +2,8 @@ import { ChevronRight } from "lucide-react";
 import { toRepoPath } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import { useEffect, useRef, useState } from "react";
-import { useTheme } from "next-themes";
 import VersionSelector from "@/components/dashboard/chat/versionSelector";
-import mermaid from "mermaid";
+import { MermaidDiagram } from "@/components/mermaidDiagram";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -14,18 +13,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
-// Initialize Mermaid once (outside component to avoid re-initialization)
-let mermaidInitialized = false;
-const initializeMermaid = (theme: string) => {
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: theme === "dark" ? "dark" : "default",
-    securityLevel: "loose",
-    fontFamily: "ui-sans-serif, system-ui, sans-serif",
-  });
-  mermaidInitialized = true;
-};
 
 interface Page {
   id: string;
@@ -46,95 +33,6 @@ interface Page {
 interface MainContentProps {
   selectedFile: Page | null;
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
-}
-
-interface MermaidComponentProps {
-  chart: string;
-}
-
-function MermaidComponent({ chart }: MermaidComponentProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [error, setError] = useState<string | null>(null);
-  const { theme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  // Avoid hydration mismatch by waiting for client-side mount
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted || !ref.current) return;
-
-    const currentTheme = resolvedTheme || theme || "dark";
-
-    // Re-initialize Mermaid when theme changes
-    if (!mermaidInitialized || ref.current.dataset.theme !== currentTheme) {
-      initializeMermaid(currentTheme);
-    }
-
-    const renderDiagram = async () => {
-      if (!ref.current) return;
-
-      try {
-        // Clear previous content
-        ref.current.innerHTML = "";
-        setError(null);
-
-        // Generate unique ID for each diagram
-        const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
-
-        // Render the diagram
-        const { svg } = await mermaid.render(id, chart);
-
-        if (ref.current) {
-          ref.current.innerHTML = svg;
-          ref.current.dataset.theme = currentTheme;
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to render diagram";
-        console.error("Mermaid rendering error:", err);
-        setError(errorMessage);
-      }
-    };
-
-    renderDiagram();
-  }, [chart, theme, resolvedTheme, mounted]);
-
-  if (!mounted) {
-    return (
-      <div className="my-6 flex justify-center items-center min-h-[200px] bg-grey-900 rounded border border-grey-800">
-        <p className="text-grey-500 text-sm">Loading diagram...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="my-6 bg-red-900/20 border border-red-800 rounded p-4">
-        <p className="text-red-400 text-sm font-semibold mb-1">
-          Diagram rendering failed
-        </p>
-        <p className="text-red-300/80 text-xs">{error}</p>
-        <details className="mt-2">
-          <summary className="text-xs text-red-300/60 cursor-pointer hover:text-red-300/80">
-            View source
-          </summary>
-          <pre className="mt-2 text-xs text-red-200/60 overflow-x-auto bg-red-950/30 p-2 rounded">
-            {chart}
-          </pre>
-        </details>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      ref={ref}
-      className="mermaid my-6 flex justify-center items-center overflow-x-auto"
-    />
-  );
 }
 
 export function MainContent({
@@ -360,7 +258,7 @@ export function MainContent({
 
                   if (match && match[1] === "mermaid") {
                     const code = String(children).replace(/\n$/, "");
-                    return <MermaidComponent chart={code} />;
+                    return <MermaidDiagram chart={code} />;
                   }
                   return isInline ? (
                     <code

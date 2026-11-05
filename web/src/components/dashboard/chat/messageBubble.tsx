@@ -5,6 +5,7 @@ import { Clipboard, ClipboardCheck } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { MermaidDiagram } from "@/components/mermaidDiagram";
 
 export default function MessageBubble({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -93,15 +94,20 @@ export default function MessageBubble({ text }: { text: string }) {
                   const isInline = !className?.includes("language-");
                   const match = /language-(\w+)/.exec(className || "");
                   const language = match ? match[1] : "text";
+                  const source = String(children).replace(/\n$/, "");
 
-                  return isInline ? (
-                    <code
-                      className="bg-elevated text-teal-400 px-1.5 py-0.5 rounded text-sm font-mono"
-                      {...props}
-                    >
-                      {children}
-                    </code>
-                  ) : (
+                  if (isInline) {
+                    return (
+                      <code
+                        className="bg-elevated text-teal-400 px-1.5 py-0.5 rounded text-sm font-mono"
+                        {...props}
+                      >
+                        {children}
+                      </code>
+                    );
+                  }
+
+                  const highlighted = (
                     <SyntaxHighlighter
                       language={language}
                       style={vscDarkPlus}
@@ -114,8 +120,15 @@ export default function MessageBubble({ text }: { text: string }) {
                         marginBottom: "1rem",
                       }}
                     >
-                      {String(children).replace(/\n$/, "")}
+                      {source}
                     </SyntaxHighlighter>
+                  );
+
+                  // Shown as code while streaming or if the diagram doesn't parse
+                  return language === "mermaid" ? (
+                    <MermaidDiagram chart={source} fallback={highlighted} />
+                  ) : (
+                    highlighted
                   );
                 },
                 blockquote: ({ node, ...props }) => (

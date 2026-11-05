@@ -22,7 +22,7 @@ import ollama
 from dotenv import load_dotenv
 import os
 
-from .system_prompts import AGENT_SYS_PROMPT
+from .system_prompts import AGENT_SYS_PROMPT, chat_system_prompt
 
 from .documentation_retrieval_script import Documentation_Retrieval
 from .code_retrieval_script import Code_Retrieval
@@ -140,7 +140,7 @@ class RAG_Agent:
         stream = ollama.chat(
             model=selected_llm,
             messages=[
-                {"role": "system", "content": "Use the provided context to answer the user."},
+                {"role": "system", "content": chat_system_prompt(query)},
                 {"role": "user", "content": f"Context:\n{context}\n\nUser question: {query}"},
             ]
             + chat_history,
