@@ -209,6 +209,53 @@ export async function createRepoViaOAuthProvider(
   return { success: true, data: repo as Repo };
 }
 
+// Public Mercurial repos only: no host has a standard OAuth flow, so nothing to verify against
+export async function createRepoViaMercurial(
+  formData: FormData,
+  orgId: string,
+): Promise<ActionResult<Repo | undefined>> {
+  const client = await createClient();
+
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: "User not authenticated!" };
+  }
+
+  const name = (formData.get("name") as string)?.trim();
+  const url = (formData.get("repo-url") as string)?.trim().replace(/\/+$/, "");
+
+  if (!name) {
+    return { success: false, error: "Name is required!" };
+  }
+
+  // The backend refuses anything else too (ssh:// and file paths would run on the server)
+  if (!url?.startsWith("https://")) {
+    return { success: false, error: "Mercurial URL must start with https://" };
+  }
+
+  const { data: repo, error: repoError } = await client
+    .from("repositories")
+    .insert({
+      name,
+      provider: "mercurial",
+      repo_url: url,
+      organization_id: orgId,
+      indexed_by: user.id,
+      index_status: "not indexed",
+    })
+    .select()
+    .single();
+
+  if (repoError) {
+    return { success: false, error: repoError.message };
+  }
+
+  return { success: true, data: repo as Repo };
+}
+
 export async function createRepoViaLocalFile(
   formData: FormData,
   orgId: string,
@@ -459,6 +506,13 @@ export async function updateRepoSettings(
     }
 
     updateData.repo_url = repoUrl;
+    updateData.index_status = "not indexed"; // Trigger re-indexing
+  } else if (settings.repo_url && provider === "mercurial") {
+    if (!settings.repo_url.startsWith("https://")) {
+      return { success: false, error: "Mercurial URL must start with https://" };
+    }
+
+    updateData.repo_url = settings.repo_url.trim().replace(/\/+$/, "");
     updateData.index_status = "not indexed"; // Trigger re-indexing
   }
 
@@ -1145,7 +1199,8 @@ export async function indexRepository(
   let auth:
     | { installation_id: string }
     | { access_token: string }
-    | { object_path: string; name: string };
+    | { object_path: string; name: string }
+    | Record<string, never>; // public Mercurial: nothing needed
 
   if (provider === "github") {
     const { data: installation } = await client
@@ -1168,6 +1223,8 @@ export async function indexRepository(
       };
     }
     auth = { access_token: token };
+  } else if (provider === "mercurial") {
+    auth = {};
   } else if (provider === "local" && repoResult.data.object_url) {
     auth = {
       object_path: repoResult.data.object_url,

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { FolderCode, ChevronRight } from "lucide-react";
+import { FolderCode, ChevronRight, Droplet } from "lucide-react";
 import { Github } from "@geist-ui/icons";
 import { Gitlab } from "@geist-ui/icons";
 import { BitbucketIcon } from "@/components/bitbucketIcon";
@@ -46,6 +46,8 @@ export function RepoButton({ repo }: RepoButtonProps) {
                 <Gitlab className="w-4 h-4" />
               ) : type === "bitbucket" ? (
                 <BitbucketIcon className="w-4 h-4" />
+              ) : type === "mercurial" ? (
+                <Droplet className="w-4 h-4" />
               ) : (
                 <FolderCode className="w-4 h-4 text-white" />
               )}
@@ -59,7 +61,9 @@ export function RepoButton({ repo }: RepoButtonProps) {
                     ? "GitLab"
                     : type === "bitbucket"
                       ? "Bitbucket"
-                      : "Local"}
+                      : type === "mercurial"
+                        ? "Mercurial"
+                        : "Local"}
                 <span className="text-md">&middot;</span>
                 <span className={`size-1.5 rounded-full ${statusDot}`} />
                 {statusLabel}

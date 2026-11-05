@@ -11,6 +11,8 @@ Integrates the complete 5-phase CodeCompass pipeline:
 
 import os
 import shutil
+import subprocess
+import sys
 import zipfile
 
 from dotenv import load_dotenv
@@ -113,7 +115,9 @@ async def index_repo(request: Request):
 
         is_upload = git_provider == "local"
         if not user_id or not (
-            object_path if is_upload else url and (installation_id or access_token)
+            object_path
+            if is_upload
+            else url and (git_provider == "mercurial" or installation_id or access_token)
         ):
             raise HTTPException(status_code=400, detail="Missing required fields")
 
@@ -130,7 +134,12 @@ async def index_repo(request: Request):
         else:
             owner, repo = url.rstrip("/").split("/")[-2:]
 
-            if access_token:
+            if git_provider == "mercurial":
+                # Public repos only; https keeps hg off ssh:// and the server's own files
+                token = None
+                if not url.startswith("https://"):
+                    raise HTTPException(status_code=400, detail="Mercurial URL must start with https://")
+            elif access_token:
                 # GitLab and Bitbucket take an OAuth token as the password for a fixed username
                 token = access_token
                 username = "oauth2" if git_provider == "gitlab" else "x-token-auth"
@@ -172,6 +181,21 @@ async def index_repo(request: Request):
             except ValueError as e:
                 raise HTTPException(status_code=400, detail=str(e))
             branch = "upload"
+        elif git_provider == "mercurial":
+            # dev.sh activates the venv; fall back to the venv's hg if PATH doesn't have it
+            hg = shutil.which("hg") or os.path.join(os.path.dirname(sys.executable), "hg")
+            try:
+                subprocess.run(
+                    [hg, "clone", "--", url, temp_dir],
+                    check=True, capture_output=True, text=True, timeout=600,
+                )
+            except FileNotFoundError:
+                raise HTTPException(status_code=500, detail="Mercurial isn't installed on the server (pip install mercurial)")
+            except subprocess.TimeoutExpired:
+                raise HTTPException(status_code=504, detail="hg clone took longer than 10 minutes")
+            except subprocess.CalledProcessError as e:
+                raise HTTPException(status_code=400, detail=f"hg clone failed: {e.stderr.strip()}")
+            branch = "default"
         else:
             try:
                 # Shallow clone; no branch given = the repo's default branch

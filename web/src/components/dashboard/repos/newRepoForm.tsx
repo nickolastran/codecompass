@@ -28,6 +28,7 @@ import { useState } from "react";
 import {
   createRepoViaGithub,
   createRepoViaOAuthProvider,
+  createRepoViaMercurial,
   createRepoViaLocalFile,
 } from "@/lib/services/repoService";
 import { useQueryClient } from "@tanstack/react-query";
@@ -36,6 +37,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   github: "GitHub",
   gitlab: "GitLab",
   bitbucket: "Bitbucket",
+  mercurial: "Mercurial",
 };
 
 type NewProjectFormProps = {
@@ -87,7 +89,9 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
         const result =
           type === "github"
             ? await createRepoViaGithub(formData, orgId)
-            : await createRepoViaOAuthProvider(formData, orgId);
+            : type === "mercurial"
+              ? await createRepoViaMercurial(formData, orgId)
+              : await createRepoViaOAuthProvider(formData, orgId);
 
         if (!result.success) {
           if (result.error === "Name is required!") {
@@ -179,6 +183,7 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
                   <SelectItem value="github">GitHub</SelectItem>
                   <SelectItem value="gitlab">GitLab</SelectItem>
                   <SelectItem value="bitbucket">Bitbucket</SelectItem>
+                  <SelectItem value="mercurial">Mercurial</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -199,7 +204,9 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
                     className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                   />
                   <FieldDescription>
-                    Enter the URL of the {PROVIDER_LABELS[type]} repository.
+                    {type === "mercurial"
+                      ? "Enter the https:// URL of a public Mercurial repository."
+                      : `Enter the URL of the ${PROVIDER_LABELS[type]} repository.`}
                   </FieldDescription>
                   <FieldError>{error}</FieldError>
                 </Field>
