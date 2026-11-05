@@ -85,8 +85,8 @@ export default function RepoSettings({ repoId }: { repoId: string }) {
       name: repoName,
     };
 
-    // Add GitHub URL if changed
-    if (repo?.provider === "github" && repoUrl && repoUrl !== repo.repo_url) {
+    // Add repo URL if changed
+    if (repo && repo.provider !== "local" && repoUrl && repoUrl !== repo.repo_url) {
       settings.repo_url = repoUrl;
     }
 
@@ -183,8 +183,8 @@ export default function RepoSettings({ repoId }: { repoId: string }) {
             />
           </div>
 
-          {/* GitHub Repository URL */}
-          {repo?.provider === "github" && (
+          {/* Git provider repository URL */}
+          {repo && repo.provider !== "local" && (
             <div className="space-y-2">
               <Label htmlFor="repoUrl" className="text-sm font-medium">
                 Repository URL
@@ -193,7 +193,7 @@ export default function RepoSettings({ repoId }: { repoId: string }) {
                 id="repoUrl"
                 value={isLoading ? "Loading..." : repoUrl}
                 onChange={(e) => setRepoUrl(e.target.value)}
-                placeholder="https://github.com/owner/repo"
+                placeholder={repo.repo_url ?? ""}
                 disabled={isSaving}
                 className="h-10 font-mono text-sm"
               />

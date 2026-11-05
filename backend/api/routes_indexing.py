@@ -11,6 +11,7 @@ Integrates the complete 5-phase CodeCompass pipeline:
 
 import os
 import shutil
+import zipfile
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException, Request
@@ -34,6 +35,7 @@ from indexing_pipelines.code_pipeline.documentation import (
 from services.github_app import github_app
 from services.create_client import supabase
 from services.pages_service import insert_wiki_pages
+from services.upload_zip import extract_upload
 
 
 from indexing_pipelines.indexing_script import Indexing_Pipeline_Head
@@ -104,11 +106,15 @@ async def index_repo(request: Request):
         repo_id = body.get("repo_id")
         installation_id = body.get("installation_id")
         access_token = body.get("access_token")  # GitLab / Bitbucket OAuth token
+        object_path = body.get("object_path")  # local upload in the local_repos bucket
         git_provider = body.get("provider", "github")
         latest_version = body.get("version")
         branch = body.get("branch")
 
-        if not url or not user_id or not (installation_id or access_token):
+        is_upload = git_provider == "local"
+        if not user_id or not (
+            object_path if is_upload else url and (installation_id or access_token)
+        ):
             raise HTTPException(status_code=400, detail="Missing required fields")
 
         # Fail before cloning if the LLM provider can't run
@@ -118,17 +124,20 @@ async def index_repo(request: Request):
                 detail="LLM_API_KEY is not set. Add it to backend/.env and restart the backend.",
             )
 
-        # Parse owner and repo from url
-        owner, repo = url.rstrip("/").split("/")[-2:]
-
-        if access_token:
-            # GitLab and Bitbucket take an OAuth token as the password for a fixed username
-            token = access_token
-            username = "oauth2" if git_provider == "gitlab" else "x-token-auth"
-            auth_url = url.replace("https://", f"https://{username}:{token}@", 1) + ".git"
+        if is_upload:
+            # Folder name comes from repo_id; repo (the docs title) is the user's name for it
+            owner, repo, token = "local", body.get("name") or "upload", None
         else:
-            token = github_app.get_installation_token(installation_id=int(installation_id))
-            auth_url = f"https://x-access-token:{token}@github.com/{owner}/{repo}.git"
+            owner, repo = url.rstrip("/").split("/")[-2:]
+
+            if access_token:
+                # GitLab and Bitbucket take an OAuth token as the password for a fixed username
+                token = access_token
+                username = "oauth2" if git_provider == "gitlab" else "x-token-auth"
+                auth_url = url.replace("https://", f"https://{username}:{token}@", 1) + ".git"
+            else:
+                token = github_app.get_installation_token(installation_id=int(installation_id))
+                auth_url = f"https://x-access-token:{token}@github.com/{owner}/{repo}.git"
 
         # Create a directory for cloning within the project
         clone_base_dir = os.path.join(
@@ -137,7 +146,9 @@ async def index_repo(request: Request):
         os.makedirs(clone_base_dir, exist_ok=True)
 
         # Create a unique directory for this repo
-        temp_dir = os.path.join(clone_base_dir, f"{owner}_{repo}")
+        temp_dir = os.path.join(
+            clone_base_dir, f"local_{repo_id}" if is_upload else f"{owner}_{repo}"
+        )
 
         # A previous run (successful, or killed mid-way) leaves the clone behind; git won't clone into it
         if os.path.exists(temp_dir):
@@ -147,46 +158,61 @@ async def index_repo(request: Request):
         # STEP 1: Clone Repository
         # ====================================================================
         print("STARTING CLONE REPO")
-        try:
-            # Shallow clone; no branch given = the repo's default branch
-            cloned = Repo.clone_from(
-                auth_url, temp_dir, depth=1, **({"branch": branch} if branch else {})
-            )
-            branch = cloned.active_branch.name
+        if is_upload:
+            # Older rows hold the full public URL; newer ones just the bucket path
+            path = object_path.split("/local_repos/")[-1]
+            try:
+                data = supabase.storage.from_("local_repos").download(path)
+            except Exception as e:
+                raise HTTPException(status_code=404, detail=f"Uploaded zip not found: {e}")
+            try:
+                temp_dir = extract_upload(data, temp_dir)
+            except zipfile.BadZipFile:
+                raise HTTPException(status_code=400, detail="Upload is not a valid zip file")
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+            branch = "upload"
+        else:
+            try:
+                # Shallow clone; no branch given = the repo's default branch
+                cloned = Repo.clone_from(
+                    auth_url, temp_dir, depth=1, **({"branch": branch} if branch else {})
+                )
+                branch = cloned.active_branch.name
 
-        except GitCommandError as git_error:
-            # Clean up temp directory on failure
-            if os.path.exists(temp_dir):
-                shutil.rmtree(temp_dir)
+            except GitCommandError as git_error:
+                # Clean up temp directory on failure
+                if os.path.exists(temp_dir):
+                    shutil.rmtree(temp_dir)
 
-            # Check for specific git errors
-            error_message = (
-                str(git_error.stderr) if git_error.stderr else str(git_error)
-            ).replace(token, "***")  # str(git_error) includes the authed URL
+                # Check for specific git errors
+                error_message = (
+                    str(git_error.stderr) if git_error.stderr else str(git_error)
+                ).replace(token, "***")  # str(git_error) includes the authed URL
 
-            if (
-                "repository not found" in error_message.lower()
-                or "not found" in error_message.lower()
-            ):
-                raise HTTPException(
-                    status_code=404, detail=f"Repository not found: {url}"
-                )
-            elif (
-                "invalid username or password" in error_message.lower()
-                or "authentication failed" in error_message.lower()
-            ):
-                raise HTTPException(
-                    status_code=401,
-                    detail="Authentication failed. Invalid installation token.",
-                )
-            elif "not a git repository" in error_message.lower():
-                raise HTTPException(
-                    status_code=400, detail=f"Invalid repository URL: {url}"
-                )
-            else:
-                raise HTTPException(
-                    status_code=500, detail=f"Git clone failed: {error_message}"
-                )
+                if (
+                    "repository not found" in error_message.lower()
+                    or "not found" in error_message.lower()
+                ):
+                    raise HTTPException(
+                        status_code=404, detail=f"Repository not found: {url}"
+                    )
+                elif (
+                    "invalid username or password" in error_message.lower()
+                    or "authentication failed" in error_message.lower()
+                ):
+                    raise HTTPException(
+                        status_code=401,
+                        detail="Authentication failed. Invalid installation token.",
+                    )
+                elif "not a git repository" in error_message.lower():
+                    raise HTTPException(
+                        status_code=400, detail=f"Invalid repository URL: {url}"
+                    )
+                else:
+                    raise HTTPException(
+                        status_code=500, detail=f"Git clone failed: {error_message}"
+                    )
 
         # ====================================================================
         # STEP 1.5: Actual Indexing of Codebase

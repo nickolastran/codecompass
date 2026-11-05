@@ -272,11 +272,6 @@ export async function createRepoViaLocalFile(
       };
     }
 
-    // Get the public URL for the uploaded file
-    const { data: urlData } = client.storage
-      .from("local_repos")
-      .getPublicUrl(filePath);
-
     // Create repository record in database
     const { data: repo, error: repoError } = await client
       .from("repositories")
@@ -284,7 +279,7 @@ export async function createRepoViaLocalFile(
         name: name.trim(),
         provider: "local",
         repo_url: null,
-        object_url: urlData.publicUrl,
+        object_url: filePath, // path in the private local_repos bucket
         organization_id: orgId,
         indexed_by: user.id,
         index_status: "not indexed",
@@ -478,7 +473,7 @@ export async function updateRepoSettings(
 
     // Upload to Supabase Storage
     const fileName = `${repoId}-${Date.now()}.zip`;
-    const { data: uploadData, error: uploadError } = await client.storage
+    const { error: uploadError } = await client.storage
       .from("local_repos")
       .upload(fileName, file);
 
@@ -487,12 +482,7 @@ export async function updateRepoSettings(
       return { success: false, error: "Failed to upload file!" };
     }
 
-    // Get public URL
-    const { data: urlData } = client.storage
-      .from("local_repos")
-      .getPublicUrl(fileName);
-
-    updateData.object_url = urlData.publicUrl;
+    updateData.object_url = fileName; // path in the private local_repos bucket
     updateData.index_status = "pending"; // Trigger re-indexing
   }
 
@@ -1151,8 +1141,11 @@ export async function indexRepository(
 
   const { provider, repo_url: repoUrl } = repoResult.data;
 
-  // Clone credentials: GitHub App installation, or a GitLab/Bitbucket OAuth token
-  let auth: { installation_id: string } | { access_token: string };
+  // Clone credentials, or where the uploaded zip lives
+  let auth:
+    | { installation_id: string }
+    | { access_token: string }
+    | { object_path: string; name: string };
 
   if (provider === "github") {
     const { data: installation } = await client
@@ -1175,11 +1168,13 @@ export async function indexRepository(
       };
     }
     auth = { access_token: token };
-  } else {
-    return {
-      success: false,
-      error: "Only GitHub, GitLab and Bitbucket repositories can be indexed right now.",
+  } else if (provider === "local" && repoResult.data.object_url) {
+    auth = {
+      object_path: repoResult.data.object_url,
+      name: repoResult.data.name,
     };
+  } else {
+    return { success: false, error: "This repository has nothing to index." };
   }
 
   // Get the latest version number for this repo
