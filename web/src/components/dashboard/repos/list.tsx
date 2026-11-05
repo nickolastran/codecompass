@@ -8,13 +8,16 @@ import { RepoButton } from "./card";
 import { Empty } from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { FolderPlus, Plus, AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { FolderPlus, Plus, AlertCircle, Search } from "lucide-react";
 
 type RepoListProps = {
   organizationId: string;
 };
 
 export function RepoList({ organizationId }: RepoListProps) {
+  const [query, setQuery] = useState("");
   const { data, isLoading, error, refetch, isFetching } = useQuery<Repo[]>({
     queryKey: ["repositories", organizationId],
     queryFn: async () => {
@@ -76,11 +79,34 @@ export function RepoList({ organizationId }: RepoListProps) {
     );
   }
 
+  const shown = data.filter((repo) =>
+    repo.name.toLowerCase().includes(query.trim().toLowerCase()),
+  );
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      {data.map((repo) => (
-        <RepoButton key={repo.id} repo={repo} />
-      ))}
+    <div className="space-y-6">
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Search repositories..."
+          aria-label="Search repositories"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+      {shown.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          No repositories match &ldquo;{query.trim()}&rdquo;.
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {shown.map((repo) => (
+            <RepoButton key={repo.id} repo={repo} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
