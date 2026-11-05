@@ -51,7 +51,7 @@ export function MainContent({
 
   if (!selectedFile) {
     return (
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         <div className="border-b border-grey-800 px-6 py-3"></div>
         <div className="flex-1 flex items-center justify-center">
           <p className="text-grey-500 text-sm">
@@ -67,7 +67,7 @@ export function MainContent({
   };
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col min-h-0">
       <div className="h-14 shrink-0 border-b border-border px-6 flex items-center justify-between">
         <div className="flex flex-row gap-5 items-center">
           <h1 className="text-xl font-bold">{selectedFile.title}</h1>
