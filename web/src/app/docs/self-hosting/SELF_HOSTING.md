@@ -1,641 +1,306 @@
 # Self-Hosting CodeCompass
 
-This guide covers deploying CodeCompass on your own infrastructure. Self-hosting is ideal for enterprises with data sensitivity requirements or teams who want complete control over their deployment.
+Run CodeCompass on your own machine or server. With the fully local model setup below, your code and questions never leave your infrastructure.
 
-## Overview
-
-CodeCompass consists of four main components:
-
-- **Frontend**: Next.js application
-- **Backend**: FastAPI server
-- **Database**: Supabase (PostgreSQL + Auth + Storage)
-- **LLM**: Ollama for local model inference
-
-All components run within your infrastructure, ensuring code never leaves your network.
+There is no Docker setup: you run the web app and the backend as two processes, next to Ollama and a Supabase project.
 
 ---
 
-## Prerequisites
+## What You'll Run
 
-### Hardware Requirements
+| Piece | What it does | Default address |
+| --- | --- | --- |
+| **Web** (`web/`, Next.js) | UI, sign-in, repo management. Talks to the backend server-side. | `http://localhost:3000` |
+| **Backend** (`backend/`, FastAPI) | Clones/unzips repos, indexes them, generates docs, answers chat. | `http://localhost:8000` |
+| **Supabase** | Postgres (users, orgs, repos, docs, chats), auth, and storage for uploaded zips. | Hosted project or local CLI |
+| **Ollama** | Runs the chat model locally (and optionally the indexing model). | `http://localhost:11434` |
 
-**Minimum**:
+Data the backend keeps on disk, inside `backend/`:
 
-- 16GB RAM (8GB for Ollama, 8GB for other services)
-- 4 CPU cores
-- 50GB disk space (models + vector storage)
+- `code_chroma_db/`, `document_chroma_db/`: vector indexes used by chat.
+- `kg_store/`: the code knowledge graph per repo, used by chat.
+- `cloned_repos/`: scratch copies made while indexing. Chat doesn't read them; safe to delete (re-indexing recreates them).
 
-**Recommended**:
-
-- 32GB+ RAM
-- 8+ CPU cores
-- 100GB+ SSD storage
-- NVIDIA GPU for faster inference (optional)
-
-### Software Requirements
-
-- Docker & Docker Compose
-- Git
-- (Optional) NVIDIA Container Toolkit for GPU support
+Back up those first three folders plus your Supabase database.
 
 ---
 
-## Quick Start
+## Requirements
+
+- **OS**: Linux, macOS, or Windows via WSL2.
+- **Node.js** 20+ and **Python** 3.12.
+- **Git**.
+- **Ollama**: [ollama.com/download](https://ollama.com/download).
+- **Language servers** (used to link calls and imports while indexing):
+  - Python repos: `npm install -g pyright`
+  - TypeScript/JavaScript repos: `npm install -g typescript-language-server typescript`
+  - C/C++ repos only: `clangd` (from LLVM or your package manager)
+- **Hardware**: a GPU is optional. CodeCompass has been run on a 12-core, 16 GB RAM machine with no NVIDIA GPU. On CPU, local code embeddings take about 0.7 s per function, so indexing a few hundred files takes a while.
+
+---
+
+## 1. Clone and Install
 
 ```bash
-# 1. Clone repository
-git clone https://github.com/your-org/codecompass.git
+git clone <your fork or this repo's URL> codecompass
 cd codecompass
 
-# 2. Copy environment template
-cp .env.example .env
+# Web
+cd web && npm install && cd ..
 
-# 3. Edit .env with your configuration
-nano .env
-
-# 4. Start all services
-docker-compose up -d
-
-# 5. Initialize database
-docker-compose exec backend python scripts/init_db.py
-
-# 6. Pull Ollama model (8GB download)
-docker-compose exec ollama ollama pull deepseek-r1
-
-# 7. Access CodeCompass
-# Frontend: http://localhost:3000
-# Backend API: http://localhost:8000
-# Supabase Studio: http://localhost:54323
+# Backend
+cd backend
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
 ```
+
+`requirements.txt` pins CUDA builds of PyTorch (about 3 GB of `nvidia-*` packages). They also run on CPU. On a machine without an NVIDIA GPU you can skip them:
+
+```bash
+grep -vE '^(nvidia-|triton)' requirements.txt > /tmp/requirements-cpu.txt
+pip install torch==2.9.1 --index-url https://download.pytorch.org/whl/cpu
+pip install -r /tmp/requirements-cpu.txt
+```
+
+This also installs Mercurial (`hg`), used for Mercurial repos.
 
 ---
 
-## Configuration
+## 2. Supabase
 
-### Environment Variables
+### Option A: hosted project (simplest)
 
-Edit `.env` with your settings:
+1. Create a project at [supabase.com](https://supabase.com).
+2. Open **SQL Editor** and run each file in `supabase/migrations/`, **in filename order**. They create the tables, row-level security policies, the user sync trigger, and the private `local_repos` storage bucket.
+   (Or with the Supabase CLI: `supabase link --project-ref <ref>` then `supabase db push`.)
+3. From **Project Settings → API Keys**, copy the **publishable** key and the **secret** key. The project URL is `https://<ref>.supabase.co`.
+
+### Option B: local, with the Supabase CLI
 
 ```bash
-=== GitHub Integration ===
-Create a GitHub App at https://github.com/settings/apps
-GITHUB_APP_ID=your_app_id
-GITHUB_APP_CLIENT_ID=your_client_id
-GITHUB_APP_CLIENT_SECRET=your_client_secret
-GITHUB_APP_PRIVATE_KEY_PATH=/app/github-app-key.pem
-GITHUB_WEBHOOK_SECRET=your_webhook_secret
-
-=== Database (Supabase) ===
-DATABASE_URL=postgresql://postgres:postgres@supabase-db:5432/postgres
-SUPABASE_URL=http://supabase:8000
-SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_KEY=your_service_key
-
-=== Ollama ===
-OLLAMA_HOST=http://ollama:11434
-OLLAMA_MODEL=deepseek-r1  or llama3.2, codellama, etc.
-
-=== Backend ===
-API_BASE_URL=http://localhost:8000
-SECRET_KEY=generate_random_secret_here
-
-=== Frontend ===
-NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-NEXT_PUBLIC_API_URL=http://localhost:8000
+# From the repo root (needs Docker, used by the Supabase CLI itself)
+supabase init      # creates supabase/config.toml, keeps the existing migrations
+supabase start     # starts Supabase and applies supabase/migrations/
+supabase status    # prints the API URL and keys
 ```
 
-### GitHub App Setup
+### Auth settings (both options)
 
-CodeCompass requires a GitHub App to clone repositories:
+Under **Authentication → URL Configuration** (local: `[auth]` in `supabase/config.toml`):
 
-1. Go to **Settings → Developer Settings → GitHub Apps → New GitHub App**
-2. Configure:
-   - **Name**: `CodeCompass (Self-Hosted)`
-   - **Homepage URL**: `http://your-domain.com` (or `http://localhost:3000` for testing)
-   - **Callback URL**: `http://your-domain.com/api/auth/callback/github`
-   - **Webhook URL**: `http://your-domain.com/api/webhooks/github` (optional)
-   - **Permissions**:
-     - Repository permissions: Contents (Read-only), Metadata (Read-only)
-   - **Where can this GitHub App be installed?**: Any account
+- **Site URL**: `http://localhost:3000`
+- **Redirect URLs**: add `http://localhost:3000/api/auth/callback`
 
-3. Generate a private key and save as `github-app-key.pem`
-4. Copy App ID, Client ID, and Client Secret to `.env`
+Use your real domain instead of `localhost:3000` when deploying. It must match `NEXT_PUBLIC_APP_URL`.
 
-### Sign-in Providers (GitHub / GitLab / Bitbucket Login)
+Email sign-in (magic link) works out of the box using Supabase's built-in mailer, which is rate-limited. Set up custom SMTP in Supabase for real use.
 
-The "Continue with GitHub", "Continue with GitLab" and "Continue with Bitbucket" buttons go through **Supabase
-Auth**, not the GitHub App above — they are separate credentials. If a provider is
-not enabled in Supabase you get:
+---
 
-```json
-{
-  "code": 400,
-  "error_code": "validation_failed",
-  "msg": "Unsupported provider: provider is not enabled"
-}
+## 3. Models
+
+### Chat (Ollama)
+
+Chat always runs on Ollama. Pull a model and name it in `backend/.env`:
+
+```bash
+ollama pull qwen2.5:3b
 ```
 
-To enable GitHub login:
+`OLLAMA_AGENT_MODEL` picks where to look for an answer (code vs. README); `OLLAMA_CHAT_MODEL` writes the answer. They can be the same model. Larger models give better answers and diagrams if your hardware allows.
 
-1. Create an **OAuth App** (not a GitHub App) at
-   **Settings → Developer settings → OAuth Apps → New OAuth App**.
-   - **Homepage URL**: `http://localhost:3000`
-   - **Authorization callback URL**: `https://<your-project-ref>.supabase.co/auth/v1/callback`
-     (self-hosted Supabase: `http://localhost:54321/auth/v1/callback`)
-2. In the Supabase dashboard, go to **Authentication → Providers → GitHub**, toggle it
-   on, and paste the OAuth App's Client ID and Client Secret. Save.
-3. Under **Authentication → URL Configuration**, set **Site URL** to
-   `http://localhost:3000` and add `http://localhost:3000/api/auth/callback` to
-   **Redirect URLs**. This must match `NEXT_PUBLIC_APP_URL` in `web/.env.local`.
+On startup the backend checks that Ollama is installed and starts `ollama serve` if it isn't running. It does **not** pull models for you.
 
-GitLab is the same flow: create an application at **GitLab → Preferences →
-Applications** with scopes `read_user` + `openid`, redirect URI pointing at the same
-Supabase `/auth/v1/callback`, then enable the GitLab provider in Supabase.
+### Indexing / docs generation (`LLM_*`)
 
-Bitbucket is the same flow too: create an **OAuth consumer** at **Bitbucket →
-Workspace settings → OAuth consumers** with permission **Account: Read** and the
-callback URL set to the Supabase `/auth/v1/callback`, then enable the Bitbucket
-provider in Supabase.
+Indexing makes many LLM calls (a ~250-file repo needs around 1,200) to summarize code and write the docs. It uses any OpenAI-compatible API. Pick one:
 
-These credentials live in Supabase only — no `.env` entry in this repo.
-
-### GitLab / Bitbucket Repository Access
-
-Adding a GitLab or Bitbucket repository uses a separate OAuth app (like the GitHub
-App above), so the backend can clone private repos. Set these in `web/.env.local`:
+**Fully local (Ollama).** Nothing leaves your machine. Slow on CPU.
 
 ```env
-# GitLab → Preferences → Applications, scopes read_api + read_repository,
-# redirect URI http://localhost:3000/api/gitlab/installation
-NEXT_PUBLIC_GITLAB_APP_CLIENT_ID=...
-GITLAB_APP_SECRET=...
-
-# Bitbucket → Workspace settings → OAuth consumers, permissions
-# Account: Read + Repositories: Read,
-# callback URL http://localhost:3000/api/bitbucket/installation
-BITBUCKET_APP_CLIENT_ID=...   # the consumer's "Key"
-BITBUCKET_APP_SECRET=...      # the consumer's "Secret"
+LLM_BASE_URL=http://localhost:11434/v1
+LLM_API_KEY=ollama            # any non-empty value
+LLM_MODEL=qwen2.5:3b
 ```
 
-Run `supabase/migrations/20261104000000_bitbucket_installations.sql` to create the
-`bitbucket_installations` table.
+**Gemini free tier.** Fast and free, but limited to about 500 requests per day **per model**, and Google may use free-tier inputs for training: don't use it for private code.
 
-### Supabase Configuration
+```env
+LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
+LLM_API_KEY=<key from aistudio.google.com>
+LLM_MODEL=gemini-3.1-flash-lite,gemini-3.6-flash   # falls back to the next one when a model's daily quota runs out
+LLM_REASONING_EFFORT=none     # stops "thinking" from using up the token budget
+LLM_RPM=14                    # spaces calls to stay under the per-minute limit
+```
 
-The Docker Compose setup includes a self-hosted Supabase instance. On first run:
+**OpenAI (or another OpenAI-compatible provider).**
 
-1. Access Supabase Studio at `http://localhost:54323`
-2. Default credentials:
-   - Email: `admin@codecompass.local`
-   - Password: `password` (change this in `.env`)
-3. Run database migrations:
-   ```bash
-   docker-compose exec backend python scripts/migrate.py
-   ```
+```env
+LLM_BASE_URL=                 # empty = api.openai.com
+LLM_API_KEY=<key>
+LLM_MODEL=gpt-4o-mini
+```
 
----
+### Embeddings
 
-## Docker Compose Architecture
+Downloaded from Hugging Face on first use and run locally:
 
-The `docker-compose.yml` orchestrates all services:
-
-```yaml
-version: "3.8"
-
-services:
-  # Next.js Frontend
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-    depends_on:
-      - backend
-
-  # FastAPI Backend
-  backend:
-    build: ./backend
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./chroma_db:/app/chroma_db # Vector store persistence
-      - ./cloned_repos:/app/cloned_repos # Temporary repo storage
-      - ./github-app-key.pem:/app/github-app-key.pem:ro
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - OLLAMA_HOST=${OLLAMA_HOST}
-      - GITHUB_APP_ID=${GITHUB_APP_ID}
-      - GITHUB_APP_PRIVATE_KEY_PATH=/app/github-app-key.pem
-    depends_on:
-      - supabase-db
-      - ollama
-
-  # Ollama LLM Server
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_models:/root/.ollama # Persist models between restarts
-    # Uncomment for GPU support:
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
-
-  # PostgreSQL (via Supabase)
-  supabase-db:
-    image: supabase/postgres:15.1.0.117
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  # Supabase Studio (Admin UI)
-  supabase-studio:
-    image: supabase/studio:latest
-    ports:
-      - "54323:3000"
-    environment:
-      SUPABASE_URL: http://supabase-kong:8000
-      STUDIO_PG_META_URL: http://supabase-db:5432
-    depends_on:
-      - supabase-db
-
-  # Supabase Kong (API Gateway)
-  supabase-kong:
-    image: kong:2.8-alpine
-    ports:
-      - "54321:8000"
-      - "54322:8443"
-    environment:
-      KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
-    volumes:
-      - ./supabase/kong.yml:/var/lib/kong/kong.yml
-    depends_on:
-      - supabase-db
-
-volumes:
-  postgres_data:
-  ollama_models:
+```env
+DOCUMENT_EMBEDDING_MODEL=BAAI/bge-small-en-v1.5    # required
+CODE_EMBEDDING_MODEL=Qwen/Qwen3-Embedding-0.6B     # leave unset to use Voyage AI instead (needs VOYAGE_API_KEY)
 ```
 
 ---
 
-## Usage
+## 4. Environment Files
 
-### Starting Services
+### `backend/.env`
 
-```bash
-Start all services in background
-docker-compose up -d
+```env
+# Supabase (backend uses the secret key: it reads uploaded zips and writes results)
+SUPABASE_URL=https://<ref>.supabase.co
+SUPABASE_KEY=<secret key>
 
-View logs
-docker-compose logs -f
+# Chat (Ollama)
+OLLAMA_AGENT_MODEL=qwen2.5:3b
+OLLAMA_CHAT_MODEL=qwen2.5:3b
 
-View specific service logs
-docker-compose logs -f backend
+# Indexing LLM: see section 3
+LLM_BASE_URL=
+LLM_API_KEY=
+LLM_MODEL=
+LLM_REASONING_EFFORT=
+LLM_RPM=
+
+# Embeddings
+DOCUMENT_EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
+CODE_EMBEDDING_MODEL=Qwen/Qwen3-Embedding-0.6B
+VOYAGE_API_KEY=                 # only if CODE_EMBEDDING_MODEL is unset
+
+# GitHub App: section 5 (only for GitHub repos)
+GITHUB_APP_ID=
+GITHUB_APP_PRIVATE_KEY_PATH=/absolute/path/to/github-app.pem
 ```
 
-### Stopping Services
+### `web/.env.local`
 
-```bash
-Stop all services
-docker-compose down
+```env
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+BACKEND_URL=http://localhost:8000
 
-Stop and remove all data (destructive)
-docker-compose down -v
-```
+NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable key>
+SUPABASE_SECRET_KEY=<secret key>
 
-### Updating
+# GitHub App: section 5 (only for GitHub repos)
+NEXT_PUBLIC_GITHUB_APP_CLIENT_ID=   # the numeric App ID, despite the name
+GITHUB_APP_CLIENT_ID=               # the app's Client ID
+GITHUB_APP_CLIENT_SECRET=
+GITHUB_APP_PRIVATE_KEY_PATH=/absolute/path/to/github-app.pem   # or GITHUB_APP_PRIVATE_KEY with \n line breaks
+GITHUB_APP_SLUG=                    # the name in github.com/apps/<slug>
 
-```bash
-Pull latest code
-git pull origin main
+# GitLab: section 5 (only for GitLab repos)
+NEXT_PUBLIC_GITLAB_APP_CLIENT_ID=
+GITLAB_APP_SECRET=
 
-Rebuild containers
-docker-compose build
-
-Restart services
-docker-compose up -d
-```
-
----
-
-## Model Management
-
-### Available Models
-
-CodeCompass supports any Ollama-compatible model. Recommended options:
-
-| Model              | Size | RAM Required | Speed  | Quality |
-| ------------------ | ---- | ------------ | ------ | ------- |
-| deepseek-r1:7b     | 7B   | 8GB          | Fast   | Good    |
-| llama3.2:7b        | 7B   | 8GB          | Fast   | Good    |
-| codellama:13b      | 13B  | 16GB         | Medium | Better  |
-| deepseek-coder:33b | 33B  | 32GB         | Slow   | Best    |
-
-### Changing Models
-
-```bash
-Pull new model
-docker-compose exec ollama ollama pull llama3.2
-
-Update .env
-OLLAMA_MODEL=llama3.2
-
-Restart backend
-docker-compose restart backend
-```
-
-### Managing Disk Space
-
-Models are stored in the `ollama_models` volume. To clean up:
-
-```bash
-List downloaded models
-docker-compose exec ollama ollama list
-
-Remove unused model
-docker-compose exec ollama ollama rm old-model-name
+# Bitbucket: section 5 (only for Bitbucket repos)
+BITBUCKET_APP_CLIENT_ID=
+BITBUCKET_APP_SECRET=
 ```
 
 ---
 
-## Indexing a Repository
+## 5. Repository Sources
 
-Once deployed:
+Set up only the ones you need.
 
-1. Navigate to `http://localhost:3000`
-2. Sign in with GitHub
-3. Install the CodeCompass GitHub App on your repos
-4. Select a repository to index
-5. Click "Index Repository"
-6. Monitor progress in the dashboard
+### GitHub (public and private repos)
 
-**Indexing Time**:
+CodeCompass clones GitHub repos through a **GitHub App** you own.
 
-- Small repo (<100 files): 2-5 minutes
-- Medium repo (100-500 files): 10-20 minutes
-- Large repo (500+ files): 30-60 minutes
+1. Go to **GitHub → Settings → Developer settings → GitHub Apps → New GitHub App**.
+2. Fill in:
+   - **Homepage URL**: `http://localhost:3000`
+   - **Setup URL**: `http://localhost:3000/api/github/installation`, and tick **Redirect on update**
+   - **Webhook**: untick **Active** (CodeCompass doesn't use webhooks)
+   - **Repository permissions**: Contents → Read-only, Metadata → Read-only
+3. Create it, then **Generate a private key** and save the `.pem` file.
+4. Fill in the GitHub variables in both env files: App ID, Client ID, a new client secret, the `.pem` path, and the slug from the app's public URL.
 
-Times assume CPU-only inference. GPU reduces time by 50-70%.
+Users connect GitHub the first time they add a GitHub repo, and choose which repos the app can read.
+
+### GitLab (gitlab.com)
+
+1. **GitLab → Preferences → Applications → Add new application**.
+2. **Redirect URI**: `http://localhost:3000/api/gitlab/installation`. **Scopes**: `read_api`, `read_repository`.
+3. Put the Application ID in `NEXT_PUBLIC_GITLAB_APP_CLIENT_ID` and the secret in `GITLAB_APP_SECRET`.
+
+Self-managed GitLab instances aren't supported yet; only gitlab.com.
+
+### Bitbucket (bitbucket.org)
+
+1. **Bitbucket → Workspace settings → OAuth consumers → Add consumer**.
+2. **Callback URL**: `http://localhost:3000/api/bitbucket/installation`. **Permissions**: Account → Read, Repositories → Read.
+3. Put the consumer's **Key** in `BITBUCKET_APP_CLIENT_ID` and its **Secret** in `BITBUCKET_APP_SECRET`.
+
+### Mercurial
+
+Public repos only, added by their `https://` URL (for example from Heptapod or SourceHut). Nothing to configure beyond `hg`, which `requirements.txt` installs.
+
+### Local folders
+
+Zip the project folder and upload it (up to 100 MB, and 1 GB unpacked). Zips are stored in the private `local_repos` bucket; only the backend can read them.
+
+---
+
+## 6. Sign-In Providers (optional)
+
+Email sign-in works without this. The **Continue with GitHub / GitLab / Bitbucket** buttons use Supabase Auth, which needs its **own** OAuth app per provider, separate from section 5. If a provider isn't enabled you'll see `Unsupported provider: provider is not enabled`.
+
+For each provider, create an OAuth app with the callback URL set to Supabase's, then paste its ID and secret into **Supabase → Authentication → Providers**:
+
+- **Callback URL**: `https://<ref>.supabase.co/auth/v1/callback` (local Supabase: `http://localhost:54321/auth/v1/callback`)
+- **GitHub**: an **OAuth App** (not a GitHub App) under **Settings → Developer settings → OAuth Apps**.
+- **GitLab**: an application under **Preferences → Applications** with scopes `read_user` and `openid`.
+- **Bitbucket**: an OAuth consumer with **Account → Read**.
+
+These credentials live only in Supabase, not in the env files.
+
+---
+
+## 7. Run It
+
+```bash
+./dev.sh    # starts the web app on :3000 and the backend on :8000; Ctrl-C stops both
+```
+
+Then open `http://localhost:3000`, sign in, create an organization, add a repository, and click **Index** on its page. Watch the backend terminal for progress. If indexing fails, the error shows on the repo page.
+
+### Deploying on a server
+
+```bash
+cd web && npm run build && npm start
+cd backend && . .venv/bin/activate && uvicorn main:app --host 127.0.0.1 --port 8000
+```
+
+- **Keep the backend private.** Its endpoints have no authentication. Only the web server should be able to reach port 8000 (bind it to `127.0.0.1` or a private network), and set `BACKEND_URL` to match.
+- Replace `http://localhost:3000` everywhere above (`NEXT_PUBLIC_APP_URL`, Supabase URL settings, GitHub/GitLab/Bitbucket callback URLs) with your HTTPS domain.
 
 ---
 
 ## Troubleshooting
 
-### Ollama Model Not Found
-
-**Error**: `Model 'deepseek-r1' not found`
-
-**Solution**:
-
-```bash
-docker-compose exec ollama ollama pull deepseek-r1
-```
-
-### Out of Memory
-
-**Error**: Container crashes or system becomes unresponsive
-
-**Solution**:
-
-- Use a smaller model (7B instead of 13B)
-- Increase Docker memory limit in Docker Desktop settings
-- Add swap space to host system
-
-### GitHub App Authentication Failed
-
-**Error**: `Invalid GitHub App credentials`
-
-**Solution**:
-
-1. Verify `GITHUB_APP_ID` matches your GitHub App
-2. Ensure `github-app-key.pem` is mounted correctly
-3. Check GitHub App permissions include "Contents" and "Metadata"
-4. Verify callback URL matches your deployment URL
-
-### Database Connection Failed
-
-**Error**: `Could not connect to PostgreSQL`
-
-**Solution**:
-
-```bash
-Check if Supabase DB is running
-docker-compose ps supabase-db
-
-View database logs
-docker-compose logs supabase-db
-
-Restart database
-docker-compose restart supabase-db
-```
-
-### ChromaDB Persistence Issues
-
-**Error**: Vector store resets after restart
-
-**Solution**:
-Ensure `chroma_db` volume is mounted in `docker-compose.yml`:
-
-```yaml
-volumes:
-  - ./chroma_db:/app/chroma_db
-```
-
----
-
-## Performance Tuning
-
-### Using GPU Acceleration
-
-If you have an NVIDIA GPU:
-
-1. Install NVIDIA Container Toolkit:
-
-   ```bash
-   Ubuntu/Debian
-   distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
-   curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
-   curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
-   sudo apt-get update && sudo apt-get install -y nvidia-container-toolkit
-   sudo systemctl restart docker
-   ```
-
-2. Uncomment GPU section in `docker-compose.yml`:
-
-   ```yaml
-   ollama:
-     deploy:
-       resources:
-         reservations:
-           devices:
-             - driver: nvidia
-               count: 1
-               capabilities: [gpu]
-   ```
-
-3. Restart: `docker-compose up -d`
-
-**Expected speedup**: 3-5x faster inference
-
-### Concurrent Indexing
-
-By default, the backend processes one repo at a time. To index multiple repos concurrently:
-
-In `.env`:
-
-```bash
-MAX_CONCURRENT_INDEXING_JOBS=3
-```
-
-Increases memory usage proportionally.
-
-### Reducing Indexing Time
-
-To skip AI summarization (faster but lower quality):
-
-In `.env`:
-
-```bash
-SKIP_AI_SUMMARIES=true
-```
-
-This indexes code into ChromaDB without generating natural language summaries. Chat will still work using raw code chunks.
-
----
-
-## Security Considerations
-
-### Network Isolation
-
-For production deployments:
-
-1. **Use a reverse proxy** (nginx/Caddy) with SSL/TLS
-2. **Restrict external access** to only the frontend
-3. **Use internal Docker networks** for service communication
-
-Example `docker-compose.yml` addition:
-
-```yaml
-networks:
-  public:
-  internal:
-
-services:
-  frontend:
-    networks:
-      - public
-      - internal
-  backend:
-    networks:
-      - internal
-  # Only frontend exposed to public network
-```
-
-### Secrets Management
-
-**Don't commit** `.env` or `github-app-key.pem` to version control.
-
-For production:
-
-- Use Docker secrets or Kubernetes secrets
-- Rotate keys regularly
-- Use separate GitHub Apps for dev/staging/prod
-
-### Database Backups
-
-```bash
-Backup Supabase database
-docker-compose exec supabase-db pg_dump -U postgres > backup.sql
-
-Backup ChromaDB vectors
-tar -czf chroma_backup.tar.gz ./chroma_db/
-```
-
-Schedule regular backups via cron or your cloud provider's backup solution.
-
----
-
-## Resource Limits
-
-To prevent resource exhaustion:
-
-```yaml
-# In docker-compose.yml
-services:
-  backend:
-    deploy:
-      resources:
-        limits:
-          cpus: "4"
-          memory: 8G
-
-  ollama:
-    deploy:
-      resources:
-        limits:
-          cpus: "4"
-          memory: 16G
-```
-
----
-
-## Monitoring
-
-### Health Checks
-
-```bash
-Check service health
-curl http://localhost:8000/health
-
-Response: {"status": "healthy", "ollama": "connected", "database": "connected"}
-```
-
-### Logs
-
-```bash
-Real-time logs
-docker-compose logs -f
-
-Last 100 lines
-docker-compose logs --tail=100
-
-Specific service
-docker-compose logs backend --tail=50
-```
-
-### Metrics (Optional)
-
-For production, consider adding:
-
-- Prometheus for metrics collection
-- Grafana for visualization
-- Node exporter for system metrics
-
----
-
-## Support
-
-For issues or questions:
-
-- **GitHub Issues**: https://github.com/your-org/codecompass/issues
-- **Documentation**: https://docs.codecompass.dev
-- **Enterprise Support**: enterprise@codecompass.dev
-
----
-
-## License
-
-CodeCompass is open-source under the MIT License. Self-hosting is free for all use cases.
+| Error | Fix |
+| --- | --- |
+| `Could not reach the indexing service. Make sure the backend is running.` | Start the backend and check `BACKEND_URL` in `web/.env.local`. |
+| `LLM_API_KEY is not set. Add it to backend/.env and restart the backend.` | Set `LLM_API_KEY` (any value for local Ollama). |
+| `Every model in LLM_MODEL hit its daily free-tier quota.` | Wait for the reset (midnight Pacific for Gemini) or add more models to `LLM_MODEL`. A failed run starts over, so all of it counts again. |
+| `pyright-langserver not found` / `typescript-language-server not found` | Install the language server from **Requirements** and restart the backend. |
+| `clangd not found` | Only needed for C/C++ repos: install LLVM/clangd. |
+| `Ollama error: ... Please check if the model '...' is installed.` | `ollama pull <OLLAMA_CHAT_MODEL>` (and `OLLAMA_AGENT_MODEL`). |
+| `Repository data not found ... Please index the repository first.` | The repo hasn't been indexed on **this** backend (indexes live in `backend/`, not in Supabase). Index it. |
+| `Unsupported provider: provider is not enabled` | Enable that provider in Supabase (section 6). |
+| `Mercurial isn't installed on the server (pip install mercurial)` | Install it in the backend venv. |
+| `Couldn't find that repository on GitLab/Bitbucket, or your account can't access it.` | Check the URL and that the connected account can read the repo. |
+| Diagram shows as code in chat | The chat model wrote invalid Mermaid. A larger `OLLAMA_CHAT_MODEL` helps. |
