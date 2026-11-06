@@ -9,8 +9,20 @@ export function Toaster() {
     <Sonner
       theme={resolvedTheme === "light" ? "light" : "dark"}
       position="bottom-right"
-      richColors
-      closeButton
+      // App surface colors instead of richColors' tinted glow; only the icon carries the status
+      style={
+        {
+          "--normal-bg": "var(--popover)",
+          "--normal-text": "var(--popover-foreground)",
+          "--normal-border": "var(--border)",
+        } as React.CSSProperties
+      }
+      toastOptions={{
+        classNames: {
+          success: "[&_[data-icon]]:text-primary",
+          error: "[&_[data-icon]]:text-destructive",
+        },
+      }}
     />
   );
 }
