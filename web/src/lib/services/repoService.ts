@@ -390,6 +390,38 @@ export async function getRepoWithStatus(
   return { success: true, data: repo as Repo };
 }
 
+// Unsticks a repo whose backend run died (restart, crash) and left it "indexing" forever.
+// ponytail: only flips the status, a still-running backend job isn't killed and will mark it indexed when done
+export async function cancelIndexing(
+  repoId: string,
+): Promise<ActionResult<void>> {
+  const client = await createClient();
+
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: "User not authenticated!" };
+  }
+
+  const { error } = await client
+    .from("repositories")
+    .update({
+      index_status: "failed",
+      metadata: { index_error: "Indexing was cancelled." },
+    })
+    .eq("id", repoId)
+    .eq("index_status", "indexing");
+
+  if (error) {
+    console.error(error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, data: undefined };
+}
+
 // Resolve /dashboard/<owner>/<repo> to a repo id. RLS limits rows to the user's orgs.
 // ponytail: same GitHub repo in two of the user's orgs -> newest wins; add ?org= if that bites
 export async function getRepoIdByGithubSlug(

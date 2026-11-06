@@ -28,6 +28,7 @@ import {
   getDocumentationVersions,
   getDocPagesForVersion,
   getRepoWithStatus,
+  cancelIndexing,
 } from "@/lib/services/repoService";
 import { motion } from "framer-motion";
 
@@ -335,6 +336,16 @@ export default function DocumentationViewer({
               </p>
             )}
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              await cancelIndexing(repoId);
+              await fetchVersions();
+            }}
+          >
+            Cancel
+          </Button>
         </div>
       </div>
     );
@@ -354,7 +365,7 @@ export default function DocumentationViewer({
             icon={<FileText className="h-8 w-8" />}
           >
             {indexError && (
-              <div className="w-full max-w-md p-3 bg-destructive/10 text-destructive text-sm rounded-md text-center break-words">
+              <div className="w-full max-w-md mb-4 p-3 bg-destructive/10 text-destructive text-sm rounded-md text-center break-words">
                 {indexError}
               </div>
             )}
