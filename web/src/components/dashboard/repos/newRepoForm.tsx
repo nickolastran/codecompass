@@ -86,6 +86,15 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
 
         router.push(`/dashboard/org/${orgId}`);
       } else {
+        // The form is noValidate so this message shows inline instead of the browser's popup
+        if (!/^https?:\/\//.test(repoUrl) || !URL.canParse(repoUrl)) {
+          setError(
+            `Enter a full ${PROVIDER_LABELS[type]} URL starting with https://`,
+          );
+          setIsLoading(false);
+          return;
+        }
+
         const result =
           type === "github"
             ? await createRepoViaGithub(formData, orgId)
@@ -131,6 +140,7 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
     <div className="flex flex-col bg-elevated">
       <form
         onSubmit={handleSubmit}
+        noValidate
         autoComplete="off"
         className="space-y-6 px-5 py-5 border rounded-md"
       >
@@ -200,7 +210,10 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
                     name="repo-url"
                     type="url"
                     value={repoUrl}
-                    onChange={(e) => setRepoUrl(e.target.value)}
+                    onChange={(e) => {
+                      setRepoUrl(e.target.value);
+                      setError(null);
+                    }}
                     className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                   />
                   <FieldDescription>
