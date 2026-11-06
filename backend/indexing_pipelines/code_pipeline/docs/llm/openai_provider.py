@@ -9,7 +9,7 @@ import time
 from typing import Optional
 
 from dotenv import load_dotenv
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, AuthenticationError, NotFoundError, PermissionDeniedError
 
 from .providers import LLMProvider, SummaryResult
 
@@ -54,7 +54,8 @@ class OpenAIProvider(LLMProvider):
             if m.strip()
         ]
         self.model = self.models[0]
-        self.quota_exhausted = False  # True once every model hit its daily quota
+        # Set when no further call can succeed (bad key, unknown model, all quota gone); the indexing route aborts on it
+        self.fatal_error: Optional[str] = None
         # e.g. "none" stops Gemini Flash "thinking" from eating max_tokens; unset = provider default
         effort = os.getenv("LLM_REASONING_EFFORT")
         self.extra = {"reasoning_effort": effort} if effort else {}
@@ -101,9 +102,9 @@ class OpenAIProvider(LLMProvider):
     async def _create(
         self, messages: list, temperature: float, max_tokens: int, max_retries: int = 5
     ) -> Optional[str]:
-        """One chat completion. Returns None on failure (and instantly once all quota is gone)."""
+        """One chat completion. Returns None on failure (and instantly once fatal_error is set)."""
         attempt = 0
-        while not self.quota_exhausted:
+        while not self.fatal_error:
             model = self.model
             await self._pace()
             try:
@@ -116,6 +117,12 @@ class OpenAIProvider(LLMProvider):
                 )
                 content = response.choices[0].message.content
                 return content.strip() if content else None
+
+            except (AuthenticationError, PermissionDeniedError, NotFoundError) as e:
+                # Same for every call (bad LLM_API_KEY, unknown LLM_MODEL): stop instead of failing each one
+                self.fatal_error = f"LLM request to {model} failed: {e}"
+                print(f"[LLM] {self.fatal_error}")
+                return None
 
             except Exception as e:
                 error_str = str(e)
@@ -145,7 +152,10 @@ class OpenAIProvider(LLMProvider):
             self.model = self.models[i + 1]
             print(f"[LLM] {model} hit its daily quota; switching to {self.model}")
         else:
-            self.quota_exhausted = True
+            self.fatal_error = (
+                "Every model in LLM_MODEL hit its daily free-tier quota. "
+                "Try again after it resets (midnight Pacific) or add more models to LLM_MODEL."
+            )
             print(f"[LLM] {model} hit its daily quota; no models left in LLM_MODEL")
 
     async def _pace(self):

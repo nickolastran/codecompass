@@ -99,6 +99,13 @@ def _progress_writer(repo_id):
     return report
 
 
+def _raise_if_llm_failed(provider):
+    """Stop the run once the LLM provider can't make any more calls (bad key, unknown model, quota gone)."""
+    error = getattr(provider, "fatal_error", None)
+    if error:
+        raise RuntimeError(error)
+
+
 class IndexRequest(BaseModel):
     repo_url: str
     installation_id: str
@@ -354,12 +361,8 @@ async def index_repo(request: Request):
                 verbose=VERBOSE,
             )
 
-            # Don't build a wiki out of mostly-failed summaries
-            if getattr(provider, "quota_exhausted", False):
-                raise RuntimeError(
-                    "Every model in LLM_MODEL hit its daily free-tier quota. "
-                    "Try again after it resets (midnight Pacific) or add more models to LLM_MODEL."
-                )
+            # Don't build a wiki out of mostly-failed summaries; the except below marks the repo failed with this message
+            _raise_if_llm_failed(provider)
 
             # Phase 3: Generate wiki IA
             report("Planning documentation pages", force=True)
@@ -370,6 +373,7 @@ async def index_repo(request: Request):
                 no_subpages=NO_SUBPAGES,
                 verbose=VERBOSE,
             )
+            _raise_if_llm_failed(provider)
 
             # Get IA stats
             ia_stats = ia.get_stats()
@@ -392,6 +396,7 @@ async def index_repo(request: Request):
                 output_dir=wiki_output_dir,
                 verbose=VERBOSE,
             )
+            _raise_if_llm_failed(provider)
 
             # Phase 6: Database operations (wrapped in try-except for graceful error handling)
             report("Saving documentation", force=True)
