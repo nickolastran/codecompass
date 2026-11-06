@@ -59,7 +59,7 @@ export default function ChatBubble({ repoName }: { repoName: string }) {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
             rows={1}
-            className="w-full bg-background backdrop-blur-md text-gray-900 dark:text-gray-100 px-4 py-6 pr-14 leading-6 rounded-lg border border-gray-300 dark:border-border focus:outline-none
+            className="w-full bg-background backdrop-blur-md text-gray-900 dark:text-gray-100 px-4 py-6 pr-14 leading-6 rounded-lg border border-gray-300 dark:border-teal-500/20 shadow-[0_0_12px_rgba(20,184,166,0.15)] focus:outline-none
                       focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 focus:shadow-[0_0_15px_rgba(20,184,166,0.3)]
                       placeholder-gray-400 dark:placeholder-gray-500 resize-none disabled:cursor-not-allowed
                       transition-shadow duration-200 opacity-90"
