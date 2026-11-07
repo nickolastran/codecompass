@@ -1281,7 +1281,8 @@ export async function indexRepository(
   // Mark the repository as indexing in supabase first (clearing any previous error)
   const { error: updateError } = await client
     .from("repositories")
-    .update({ index_status: "indexing", metadata: null })
+    // indexed_by: the backend stores the index under this user, and chat reads it from there
+    .update({ index_status: "indexing", metadata: null, indexed_by: user.id })
     .eq("id", repoId);
 
   if (updateError) {

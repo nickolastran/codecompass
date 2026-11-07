@@ -15,6 +15,16 @@ export async function POST(request: NextRequest) {
 
     const { query, repoId, conversation } = await request.json();
 
+    // RLS only returns repos in the user's orgs, so this is also the access check
+    const { data: repo } = await supabase
+      .from("repositories")
+      .select("indexed_by")
+      .eq("id", repoId)
+      .maybeSingle();
+    if (!repo) {
+      return NextResponse.json({ error: "Repository not found" }, { status: 404 });
+    }
+
     // Simple proxy to backend - just forward the request
     const response = await fetch(`${process.env.BACKEND_URL}/chat/stream`, {
       method: "POST",
@@ -26,12 +36,11 @@ export async function POST(request: NextRequest) {
         conversationHistory: conversation,
         // Backend uses OLLAMA_CHAT_MODEL; this is only its fallback
         selectedModel: "phi3:latest",
-        user_id: user.id,
+        // The index is stored under whoever last indexed the repo, not the chatting user
+        user_id: repo.indexed_by ?? user.id,
         repo_id: repoId,
       }),
     });
-
-    console.log(response);
 
     if (!response.ok) {
       return NextResponse.json(

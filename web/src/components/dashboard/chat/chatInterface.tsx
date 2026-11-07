@@ -230,6 +230,7 @@ export default function ChatInterface() {
       const assistantMessageId = `temp-assistant-${Date.now()}`;
       let firstContentReceived = false;
       const codeSnippets: CodeSnippet[] = []; // Accumulate snippets from stream
+      let streamError = ""; // Backend reports failures as {"error": "..."} events
 
       // Read the stream
       while (true) {
@@ -264,6 +265,11 @@ export default function ChatInterface() {
 
             try {
               const dataObj = JSON.parse(dataStr);
+
+              if (typeof dataObj.error === "string") {
+                streamError = dataObj.error;
+                continue;
+              }
 
               // Handle content events: {"type": "content", "content": "..."}
               if (dataObj.type === "content" && dataObj.content) {
@@ -384,6 +390,10 @@ export default function ChatInterface() {
             }
           }
         }
+      }
+
+      if (streamError || !accumulatedText) {
+        throw new Error(streamError || "The model returned an empty response");
       }
 
       // Save assistant message to database first to get the real message ID
@@ -507,28 +517,25 @@ export default function ChatInterface() {
       // Build conversation turns from loaded messages and snippets
       const turns: ConversationTurn[] = [];
 
-      for (let i = 0; i < loadedMessages.length; i += 2) {
-        const userMsg = loadedMessages[i];
-        const assistantMsg = loadedMessages[i + 1];
-
-        if (userMsg && assistantMsg) {
-          // Find snippets for this assistant message
-          const snippetsForMsg = (conversationCodeSnippets || [])
-            .filter((snippet) => snippet.message_id === assistantMsg.id)
+      // One turn per question, like MessageList's rows; a question whose answer
+      // failed has no assistant message, so don't assume strict alternation
+      loadedMessages.forEach((msg, i) => {
+        if (msg.sender !== "user") return;
+        const next = loadedMessages[i + 1];
+        const answerId = next?.sender === "assistant" ? next.id : null;
+        turns.push({
+          id: i,
+          userQuestion: msg.text,
+          timestamp: msg.timestamp,
+          codeSnippets: (conversationCodeSnippets || [])
+            .filter((snippet) => snippet.message_id === answerId)
             .map((snippet) => ({
               file: snippet.file_path,
               code: snippet.code_content,
-            }));
-
-          turns.push({
-            id: i / 2,
-            userQuestion: userMsg.text,
-            timestamp: userMsg.timestamp,
-            codeSnippets: snippetsForMsg,
-            loading: false,
-          });
-        }
-      }
+            })),
+          loading: false,
+        });
+      });
 
       setConversationTurns(turns);
     }

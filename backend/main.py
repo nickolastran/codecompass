@@ -71,7 +71,8 @@ app.include_router(routes_indexing.router)
 app.include_router(routes_documentation.router)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # No auth on these endpoints: only the web server should reach them
+    uvicorn.run(app, host="127.0.0.1", port=8000)
 
     #from indexing_pipelines.indexing_script import Indexing_Pipeline_Head
     #obj = Indexing_Pipeline_Head("/home/mann/CodeCompass-RAG", "Mann","Repo-Test5")
