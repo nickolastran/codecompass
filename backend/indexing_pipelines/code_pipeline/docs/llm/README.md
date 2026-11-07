@@ -67,7 +67,6 @@ python test_summarization_async.py --provider ollama --model deepseek-r1 --concu
 ### Batch Execution
 
 [async_executor.py](async_executor.py) - Generic async batch processing:
-- `async_batch_process()` - Process items concurrently
 - `async_batch_process_with_tracking()` - With detailed progress tracking
 - Handles errors gracefully
 - Returns statistics
@@ -111,19 +110,6 @@ provider = OllamaProvider(
     host="http://localhost:11434",
     max_concurrent=50
 )
-```
-
-### From Sync Code
-
-All async functions have `_sync` wrappers:
-
-```python
-from docs.llm import OpenAIProvider
-from docs.summarizers.definition_summarizer import async_summarize_definitions_sync
-
-# No async/await needed
-provider = OpenAIProvider()
-stats = async_summarize_definitions_sync(graph, provider)
 ```
 
 ## Performance
@@ -223,12 +209,3 @@ class AnthropicProvider(LLMProvider):
 
     # ... implement other methods
 ```
-
-## Backward Compatibility
-
-All original sync functions are preserved:
-- `summarize_definitions()` - Original sync version
-- `async_summarize_definitions()` - New async version
-- `async_summarize_definitions_sync()` - Sync wrapper for async version
-
-Use the async versions for production (10-30x faster).

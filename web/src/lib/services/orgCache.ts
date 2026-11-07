@@ -80,34 +80,6 @@ export async function prefetchOrgData(
   };
 }
 
-// Get cached organization access data
-export async function getOrgAccess(
-  orgId: string,
-  userId: string,
-): Promise<ActionResult<OrgAccessData>> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("user_organizations")
-    .select("organization_id, role")
-    .eq("organization_id", orgId)
-    .eq("user_id", userId)
-    .single();
-
-  if (error || !data) {
-    return { success: false, error: "Access denied to this organization" };
-  }
-
-  return {
-    success: true,
-    data: {
-      organizationId: data.organization_id,
-      role: data.role,
-      hasAccess: true,
-    },
-  };
-}
-
 // Get cached organization details
 export async function getOrgDetails(
   orgId: string,

@@ -11,7 +11,6 @@ This provides high-level context about what the file contains and its purpose.
 Supports both sync (legacy) and async (concurrent) execution with pluggable LLM providers.
 """
 
-import asyncio
 import os
 from typing import List, Optional
 
@@ -180,94 +179,6 @@ Format your response as a single paragraph without any prefix labels."""
         return False
 
 
-def summarize_files(
-    graph: Graph,
-    api_key: Optional[str] = None,
-    model: str = "gpt-4o-mini",
-    verbose: bool = True,
-) -> dict:
-    """
-    Generate summaries for all file nodes in a graph.
-
-    Sprint 2: Processes FILE nodes using their classes'/functions' summaries as context.
-    Requires that classes and functions have already been summarized (Sprint 1 & 2).
-
-    Args:
-        graph: Graph containing file nodes with summarized definitions
-        api_key: OpenAI API key (defaults to LLM_API_KEY env var)
-        model: OpenAI model to use
-        verbose: Print progress updates
-
-    Returns:
-        Dictionary with statistics:
-        {
-            "total": int,
-            "succeeded": int,
-            "failed": int,
-            "skipped": int,
-            "missing_definition_summaries": int
-        }
-    """
-    # Collect all file nodes
-    file_nodes = [node for node in graph.nodes.values() if node.label == NodeLabel.FILE]
-
-    stats = {
-        "total": len(file_nodes),
-        "succeeded": 0,
-        "failed": 0,
-        "skipped": 0,
-        "missing_definition_summaries": 0,
-    }
-
-    for i, file_node in enumerate(file_nodes, 1):
-        if verbose:
-            print(f"[{i}/{stats['total']}] Summarizing file {file_node.name}...")
-
-        # Skip if already summarized
-        if file_node.summary_short:
-            stats["skipped"] += 1
-            if verbose:
-                print(f"  → Skipped (already summarized)")
-            continue
-
-        # Check if definitions have summaries (warn if not)
-        classes, functions = _get_file_definitions(file_node, graph)
-        all_definitions = classes + functions
-        unsummarized_defs = [d for d in all_definitions if not d.summary_short]
-
-        if unsummarized_defs and verbose:
-            print(
-                f"  Warning: {len(unsummarized_defs)}/{len(all_definitions)} definitions lack summaries"
-            )
-            stats["missing_definition_summaries"] += 1
-
-        success = summarize_file(file_node, graph, api_key=api_key, model=model)
-
-        if success:
-            stats["succeeded"] += 1
-            if verbose:
-                print(
-                    f"  → Success ({len(classes)} classes, {len(functions)} functions)"
-                )
-        else:
-            stats["failed"] += 1
-            if verbose:
-                print(f"  → Failed")
-
-    if verbose:
-        print(f"\nFile summarization complete:")
-        print(f"  Total: {stats['total']}")
-        print(f"  Succeeded: {stats['succeeded']}")
-        print(f"  Failed: {stats['failed']}")
-        print(f"  Skipped: {stats['skipped']}")
-        if stats["missing_definition_summaries"] > 0:
-            print(
-                f"  Files with unsummarized definitions: {stats['missing_definition_summaries']}"
-            )
-
-    return stats
-
-
 # ============================================================================
 # Async provider-based functions (NEW - concurrent execution)
 # ============================================================================
@@ -344,28 +255,3 @@ async def async_summarize_files(
 
     return stats
 
-
-def async_summarize_files_sync(
-    graph: Graph, provider: LLMProvider, verbose: bool = True
-) -> dict:
-    """
-    Synchronous wrapper for async_summarize_files.
-
-    Useful when calling from sync code. Manages event loop automatically.
-    """
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            import concurrent.futures
-
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                future = pool.submit(
-                    asyncio.run, async_summarize_files(graph, provider, verbose)
-                )
-                return future.result()
-        else:
-            return loop.run_until_complete(
-                async_summarize_files(graph, provider, verbose)
-            )
-    except RuntimeError:
-        return asyncio.run(async_summarize_files(graph, provider, verbose))

@@ -49,36 +49,6 @@ export async function getOrgs(): Promise<ActionResult<OrganizationWithRole[]>> {
   };
 }
 
-export async function getOrgById(
-  orgId: string,
-): Promise<ActionResult<Organization>> {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not found" };
-  }
-
-  const { data: organization, error } = await supabase
-    .from("organizations")
-    .select("id,name,created_at")
-    .eq("id", orgId)
-    .single();
-
-  if (error) {
-    return { success: false, error: error.message };
-  }
-
-  if (!organization) {
-    return { success: false, error: "Organization not found" };
-  }
-
-  return { success: true, data: organization };
-}
-
 export async function getOrgMembers(
   orgId: string,
 ): Promise<ActionResult<OrganizationMember[]>> {

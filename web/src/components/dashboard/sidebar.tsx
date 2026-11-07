@@ -2,13 +2,6 @@
 
 import { useState, createContext, useContext } from "react";
 import { motion } from "motion/react";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -114,64 +107,5 @@ export function SidebarItem({
         </button>
       )}
     </motion.div>
-  );
-}
-
-// Sidebar dropdown item with submenu
-export function SidebarDropdownItem({
-  icon,
-  label,
-  items,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  items: Array<{
-    label: string;
-    icon?: React.ReactNode;
-    action: () => void;
-  }>;
-}) {
-  const { isExpanded: sideBarExpanded } = useSidebar();
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="flex items-center gap-3 px-3 py-2 hover:bg-muted rounded-md cursor-pointer transition-colors w-full">
-          <div className="shrink-0 w-6 h-6 flex items-center justify-center">
-            {icon}
-          </div>
-          {sideBarExpanded && (
-            <>
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                whileHover={{ x: 4 }}
-                className="text-sm text-foreground truncate whitespace-nowrap flex-1"
-              >
-                {label}
-              </motion.span>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
-              </motion.div>
-            </>
-          )}
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent side="bottom" align="start" className="w-48">
-        {items.map((item, index) => (
-          <DropdownMenuItem key={index} onClick={item.action}>
-            {item.icon && <span className="mr-2">{item.icon}</span>}
-            {item.label}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }

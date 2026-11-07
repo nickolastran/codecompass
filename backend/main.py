@@ -18,7 +18,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # import the routers
-from api import routes_chat, routes_documentation, routes_indexing
+from api import routes_chat, routes_indexing
 
 from startup import run_startup_checks
 from contextlib import asynccontextmanager
@@ -68,7 +68,6 @@ print(">>> CORS MIDDLEWARE INSTALLED <<<")
 
 app.include_router(routes_chat.router)
 app.include_router(routes_indexing.router)
-app.include_router(routes_documentation.router)
 
 if __name__ == "__main__":
     # No auth on these endpoints: only the web server should reach them

@@ -25,68 +25,6 @@ class BatchResult:
     errors: List[str]
 
 
-async def async_batch_process(
-    items: List[T],
-    process_func: Callable[[T], Awaitable[bool]],
-    verbose: bool = True,
-    batch_name: str = "items"
-) -> BatchResult:
-    """
-    Process a batch of items concurrently with progress tracking.
-
-    Args:
-        items: List of items to process
-        process_func: Async function that processes one item and returns success bool
-        verbose: Print progress updates
-        batch_name: Name for progress messages (e.g., "definitions", "classes")
-
-    Returns:
-        BatchResult with statistics
-    """
-    total = len(items)
-    succeeded = 0
-    failed = 0
-    skipped = 0
-    errors = []
-
-    if verbose:
-        print(f"Processing {total} {batch_name}...")
-
-    # Create tasks for all items
-    tasks = [process_func(item) for item in items]
-
-    # Process with progress tracking
-    for i, task in enumerate(asyncio.as_completed(tasks), 1):
-        try:
-            success = await task
-            if success is True:
-                succeeded += 1
-            elif success is False:
-                failed += 1
-            else:  # None or other value means skipped
-                skipped += 1
-
-            if verbose and i % 10 == 0:
-                print(f"  Progress: {i}/{total} ({succeeded} succeeded, {failed} failed, {skipped} skipped)")
-
-        except Exception as e:
-            failed += 1
-            errors.append(str(e))
-            if verbose:
-                print(f"  Error processing item: {str(e)}")
-
-    if verbose:
-        print(f"Completed: {succeeded} succeeded, {failed} failed, {skipped} skipped")
-
-    return BatchResult(
-        total=total,
-        succeeded=succeeded,
-        failed=failed,
-        skipped=skipped,
-        errors=errors
-    )
-
-
 async def async_batch_process_with_tracking(
     items: List[T],
     process_func: Callable[[T, int, int], Awaitable[tuple[bool, str]]],

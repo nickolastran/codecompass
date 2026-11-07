@@ -2,11 +2,10 @@
 # API
 
 ## Structure
-CodeCompass Backend has 4 Main FastAPI Endpoints, contained in the following router files:
+The FastAPI endpoints live in two router files:
 
-1. `routes_chat.py` -- contains `/chat/stream` and `/chat/context-snippets??`
-2. `routes_documentation.py` -- contains ` ` 
-3. `routes_indexing.py` -- contains ` `
+1. `routes_chat.py` -- `/chat/stream`
+2. `routes_indexing.py` -- `/repos/index`
 
 Router files define endpoints, but do no create the FastAPI app.
 

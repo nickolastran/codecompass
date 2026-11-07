@@ -19,7 +19,6 @@ import zipfile
 from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException, Request
 from git import GitCommandError, Repo
-from pydantic import BaseModel
 
 from indexing_pipelines.code_pipeline.docs.llm.ollama_provider import OllamaProvider
 
@@ -104,12 +103,6 @@ def _raise_if_llm_failed(provider):
     error = getattr(provider, "fatal_error", None)
     if error:
         raise RuntimeError(error)
-
-
-class IndexRequest(BaseModel):
-    repo_url: str
-    installation_id: str
-    branch: str
 
 
 @router.post("/repos/index")

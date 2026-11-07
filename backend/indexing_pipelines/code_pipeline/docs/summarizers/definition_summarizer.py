@@ -8,10 +8,9 @@ FEATURE_AIDOCUMENTATION2.md.
 Supports both sync (legacy) and async (concurrent) execution with pluggable LLM providers.
 """
 
-import asyncio
 import os
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 from urllib.parse import unquote, urlparse
 
 from openai import OpenAI
@@ -173,76 +172,6 @@ DETAILED: <your 1-2 paragraph detailed summary>"""
         return False
 
 
-def summarize_definitions(
-    graph: Graph,
-    api_key: Optional[str] = None,
-    model: str = "gpt-4o-mini",
-    verbose: bool = True,
-) -> dict:
-    """
-    Generate summaries for all method and function nodes in a graph.
-
-    Sprint 1: Only processes methods and functions (leaf nodes).
-    Classes will be summarized in Sprint 2 using method summaries as context.
-
-    Args:
-        graph: Graph containing definition nodes
-        api_key: OpenAI API key (defaults to LLM_API_KEY env var)
-        model: OpenAI model to use
-        verbose: Print progress updates
-
-    Returns:
-        Dictionary with statistics:
-        {
-            "total": int,
-            "succeeded": int,
-            "failed": int,
-            "skipped": int
-        }
-    """
-    # Collect method and function nodes (not classes - Sprint 2)
-    definition_nodes = [
-        node
-        for node in graph.nodes.values()
-        if node.label in {NodeLabel.FUNCTION, NodeLabel.METHOD}
-    ]
-
-    stats = {"total": len(definition_nodes), "succeeded": 0, "failed": 0, "skipped": 0}
-
-    for i, node in enumerate(definition_nodes, 1):
-        if verbose:
-            print(
-                f"[{i}/{stats['total']}] Summarizing {node.label.value} {node.name}..."
-            )
-
-        # Skip if already summarized
-        if node.summary_short and node.summary_detailed:
-            stats["skipped"] += 1
-            if verbose:
-                print(f"  → Skipped (already summarized)")
-            continue
-
-        success = summarize_definition(node, api_key=api_key, model=model)
-
-        if success:
-            stats["succeeded"] += 1
-            if verbose:
-                print(f"  → Success ({node.loc} LOC)")
-        else:
-            stats["failed"] += 1
-            if verbose:
-                print(f"  → Failed")
-
-    if verbose:
-        print(f"\nSummarization complete:")
-        print(f"  Total: {stats['total']}")
-        print(f"  Succeeded: {stats['succeeded']}")
-        print(f"  Failed: {stats['failed']}")
-        print(f"  Skipped: {stats['skipped']}")
-
-    return stats
-
-
 # ============================================================================
 # Async provider-based functions (NEW - concurrent execution)
 # ============================================================================
@@ -344,49 +273,3 @@ async def async_summarize_definitions(
 
     return stats
 
-
-def async_summarize_definitions_sync(
-    graph: Graph,
-    provider: LLMProvider,
-    verbose: bool = True,
-    include_detailed: bool = False,
-) -> dict:
-    """
-    Synchronous wrapper for async_summarize_definitions.
-
-    Useful when calling from sync code. Manages event loop automatically.
-
-    Args:
-        graph: Graph containing definition nodes
-        provider: LLM provider
-        verbose: Print progress updates
-        include_detailed: If True, generate detailed summaries (slower)
-
-    Returns:
-        Dictionary with statistics
-    """
-    try:
-        # Try to get existing event loop
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            # We're already in an async context, create new loop in thread
-            import concurrent.futures
-
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                future = pool.submit(
-                    asyncio.run,
-                    async_summarize_definitions(
-                        graph, provider, verbose, include_detailed
-                    ),
-                )
-                return future.result()
-        else:
-            # No running loop, run directly
-            return loop.run_until_complete(
-                async_summarize_definitions(graph, provider, verbose, include_detailed)
-            )
-    except RuntimeError:
-        # No event loop exists, create one
-        return asyncio.run(
-            async_summarize_definitions(graph, provider, verbose, include_detailed)
-        )

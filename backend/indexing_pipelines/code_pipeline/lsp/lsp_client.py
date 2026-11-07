@@ -1,5 +1,5 @@
 # lsp_client.py
-import json, subprocess, threading, queue, pathlib, re, os
+import json, subprocess, threading, queue, pathlib, re
 from typing import Dict, List, Tuple
 
 # --- tiny identifier scanner (python-focused) ---
@@ -193,37 +193,3 @@ class LSPClient:
             self.proc.terminate()
         except Exception:
             pass
-
-# --- build edges for one chunk ---
-def edges_for_chunk(client: LSPClient, uri: str, text: str, doc, max_tokens: int = 10):
-    s = int(doc.metadata["start_line"])
-    e = int(doc.metadata["end_line"])
-    idents = collect_identifiers(text, s, 0, e, 10_000)
-    idents = idents[:max_tokens] if max_tokens else idents
-
-    chunk_id = f"chunk:{uri}#{s}-{e}"
-    defs_all: List[dict] = []
-    refs_all: List[dict] = []
-    edges: List[dict] = []
-
-    def norm_defs(d):
-        if not d:
-            return []
-        return d if isinstance(d, list) else [d]
-
-    for (name, ln, col) in idents:
-        pos = to_lsp_pos(text, ln, col)
-        d = norm_defs(client.definition(uri, pos))
-        r = client.references(uri, pos, include_decl=False) or []
-
-        for def_loc in d:
-            edges.append({"type": "references", "from": chunk_id, "to": def_loc, "via": name})
-        if d:
-            first_def = d[0]
-            for ref_loc in r:
-                edges.append({"type": "co_ref", "from": ref_loc, "to": first_def, "via": name})
-
-        defs_all.extend(d)
-        refs_all.extend(r)
-
-    return defs_all, refs_all, edges

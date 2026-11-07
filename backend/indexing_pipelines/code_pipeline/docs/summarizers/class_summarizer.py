@@ -11,7 +11,6 @@ This scales to large classes with many methods.
 Supports both sync (legacy) and async (concurrent) execution with pluggable LLM providers.
 """
 
-import asyncio
 import os
 from typing import List, Optional
 
@@ -155,94 +154,6 @@ Format your response as a single paragraph without any prefix labels."""
         return False
 
 
-def summarize_classes(
-    graph: Graph,
-    api_key: Optional[str] = None,
-    model: str = "gpt-4o-mini",
-    verbose: bool = True,
-) -> dict:
-    """
-    Generate summaries for all class nodes in a graph.
-
-    Sprint 2: Processes CLASS nodes using their methods' summaries as context.
-    Requires that methods have already been summarized (Sprint 1).
-
-    Args:
-        graph: Graph containing class nodes with summarized methods
-        api_key: OpenAI API key (defaults to LLM_API_KEY env var)
-        model: OpenAI model to use
-        verbose: Print progress updates
-
-    Returns:
-        Dictionary with statistics:
-        {
-            "total": int,
-            "succeeded": int,
-            "failed": int,
-            "skipped": int,
-            "missing_method_summaries": int  # Classes skipped due to unsummarized methods
-        }
-    """
-    # Collect all class nodes
-    class_nodes = [
-        node for node in graph.nodes.values() if node.label == NodeLabel.CLASS
-    ]
-
-    stats = {
-        "total": len(class_nodes),
-        "succeeded": 0,
-        "failed": 0,
-        "skipped": 0,
-        "missing_method_summaries": 0,
-    }
-
-    for i, class_node in enumerate(class_nodes, 1):
-        if verbose:
-            print(f"[{i}/{stats['total']}] Summarizing class {class_node.name}...")
-
-        # Skip if already summarized
-        if class_node.summary_short:
-            stats["skipped"] += 1
-            if verbose:
-                print(f"  → Skipped (already summarized)")
-            continue
-
-        # Check if methods have summaries (warn if not)
-        methods = _get_class_methods(class_node, graph)
-        unsummarized_methods = [m for m in methods if not m.summary_short]
-
-        if unsummarized_methods and verbose:
-            print(
-                f"  Warning: {len(unsummarized_methods)}/{len(methods)} methods lack summaries"
-            )
-            # We'll still attempt to summarize, but note this
-            stats["missing_method_summaries"] += 1
-
-        success = summarize_class(class_node, graph, api_key=api_key, model=model)
-
-        if success:
-            stats["succeeded"] += 1
-            if verbose:
-                print(f"  → Success ({len(methods)} methods)")
-        else:
-            stats["failed"] += 1
-            if verbose:
-                print(f"  → Failed")
-
-    if verbose:
-        print(f"\nClass summarization complete:")
-        print(f"  Total: {stats['total']}")
-        print(f"  Succeeded: {stats['succeeded']}")
-        print(f"  Failed: {stats['failed']}")
-        print(f"  Skipped: {stats['skipped']}")
-        if stats["missing_method_summaries"] > 0:
-            print(
-                f"  Classes with unsummarized methods: {stats['missing_method_summaries']}"
-            )
-
-    return stats
-
-
 # ============================================================================
 # Async provider-based functions (NEW - concurrent execution)
 # ============================================================================
@@ -318,28 +229,3 @@ async def async_summarize_classes(
 
     return stats
 
-
-def async_summarize_classes_sync(
-    graph: Graph, provider: LLMProvider, verbose: bool = True
-) -> dict:
-    """
-    Synchronous wrapper for async_summarize_classes.
-
-    Useful when calling from sync code. Manages event loop automatically.
-    """
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            import concurrent.futures
-
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                future = pool.submit(
-                    asyncio.run, async_summarize_classes(graph, provider, verbose)
-                )
-                return future.result()
-        else:
-            return loop.run_until_complete(
-                async_summarize_classes(graph, provider, verbose)
-            )
-    except RuntimeError:
-        return asyncio.run(async_summarize_classes(graph, provider, verbose))

@@ -11,7 +11,6 @@ import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-from uuid import UUID
 from supabase import Client
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
@@ -209,39 +208,3 @@ def _extract_referenced_symbols(page: PageSpec, graph: Graph) -> List[Dict[str, 
 
     return symbols
 
-
-async def delete_pages_by_documentation_id(
-    supabase: Client, documentation_id: str, verbose: bool = False
-) -> int:
-    """
-    Delete all pages associated with a documentation_id.
-    Useful for cleanup after failed insertions or re-indexing.
-
-    Args:
-        supabase: Supabase client instance
-        documentation_id: UUID of the documentation record
-        verbose: Enable detailed logging
-
-    Returns:
-        Number of pages deleted
-    """
-    try:
-        response = (
-            supabase.table("pages")
-            .delete()
-            .eq("documentation_id", documentation_id)
-            .execute()
-        )
-        count = len(response.data) if response.data else 0
-
-        if verbose:
-            logger.info(
-                f"Deleted {count} pages for documentation_id: {documentation_id}"
-            )
-
-        return count
-    except Exception as e:
-        logger.error(
-            f"Error deleting pages for documentation_id {documentation_id}: {e}"
-        )
-        return 0

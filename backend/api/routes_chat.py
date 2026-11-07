@@ -1,16 +1,13 @@
 
-import asyncio
 import json
 import os
-import time
 
 import ollama
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from retrieval_pipeline.rag_agent import RAG_Agent
-from startup.ollama_checks import Ollama_Manager
 
 # Define the FastAPI Router Object
 router = APIRouter(prefix="")
@@ -23,29 +20,6 @@ class RagRequest(BaseModel):
     selectedModel: str
     user_id: str
     repo_id: str
-
-@router.get("/chat/available_models")
-async def fetch_available_Ollama_Models():
-    """
-        Returns a list of available LLMs through ollama to the frontend
-    Args: None
-    Returns:
-        available_model (List[str]): A list of all the ollama models available
-    """
-    try:
-        ollama_obj = Ollama_Manager()
-
-        # TODO
-        #available_models = ollama_obj.parse_installed_models()
-
-        #return available_models
-        return []
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid JSON")
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
 
 @router.post("/chat/stream")
 async def handle_rag_request_stream(request: Request):

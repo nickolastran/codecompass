@@ -89,17 +89,6 @@ export type OrganizationMember = {
   user_email: string;
 };
 
-export type GitHubInstallation = {
-  id: string;
-  installation_id: string;
-  account_login: string;
-  account_type: string | null;
-  installed_by: string | null;
-  repositories_access: string | null;
-  created_at: string | null;
-  updated_at: string | null;
-};
-
 export type CodeSnippet = {
   id: string;
   conversation_id: string;
