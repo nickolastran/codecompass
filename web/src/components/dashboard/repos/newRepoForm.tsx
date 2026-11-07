@@ -181,7 +181,7 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
             </Select>
           </Field>
           {type !== "local" ? (
-            <Field>
+            <Field key="url">
               <FieldLabel htmlFor="repo-url">
                 {PROVIDER_LABELS[type]} URL
               </FieldLabel>
@@ -202,7 +202,7 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
               <FieldError>{error}</FieldError>
             </Field>
           ) : (
-            <Field>
+            <Field key="file">
               <FieldLabel htmlFor="file">File (.zip)</FieldLabel>
               <Input
                 id="file"
