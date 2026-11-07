@@ -1,6 +1,11 @@
 import LandingPage from "@/components/landing/landingPage";
 import Navbar from "@/components/landing/navbar";
 import { createClient } from "@/utils/supabase/server";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: { absolute: "CodeCompass | AI Generated Documentation" },
+};
 
 export default async function Home() {
   // Check if user is authenticated
