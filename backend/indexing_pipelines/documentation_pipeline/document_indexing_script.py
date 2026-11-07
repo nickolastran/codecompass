@@ -40,7 +40,7 @@ class Document_Indexing:
         filename = os.path.basename(filepath)
         _, ext = os.path.splitext(filename)
 
-        # There isn't a need for a default error check for the ext as that is handled earlir in the `indexing_script` before this function is called, we are gauranteed a valid file extension
+        # There isn't a need for a default error check for the ext as that is handled earlir in the "indexing_script" before this function is called, we are gauranteed a valid file extension
         if ext.lower() == ".pdf":
             # TODO
             pass

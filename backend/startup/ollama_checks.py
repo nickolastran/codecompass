@@ -66,7 +66,7 @@ class Ollama_Manager:
                 bool: True if LLM is installed & available through Ollama, False otherwise
         """
         try:
-            # Run `ollama list` to get all installed models
+            # Run "ollama list" to get all installed models
             result = subprocess.run(
                 ["ollama", "list"],
                 check=True,

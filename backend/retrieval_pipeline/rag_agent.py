@@ -135,7 +135,7 @@ class RAG_Agent:
         """
 
         # TODO
-        # Check if the first element in `chat_history` is the system prompt if not add it!!
+        # Check if the first element in "chat_history" is the system prompt if not add it!!
 
         stream = ollama.chat(
             model=selected_llm,

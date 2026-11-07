@@ -6,8 +6,8 @@ import { useTheme } from "next-themes";
 
 let renderCount = 0;
 
-// Renders a ```mermaid block. Until the source parses (still streaming, or the LLM
-// wrote invalid syntax) it shows `fallback`, so a broken diagram reads as code.
+// Renders a "mermaid" code block. Until the source parses (still streaming, or the LLM
+// wrote invalid syntax) it shows "fallback", so a broken diagram reads as code.
 export function MermaidDiagram({
   chart,
   fallback,

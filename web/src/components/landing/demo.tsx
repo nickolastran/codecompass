@@ -28,7 +28,7 @@ export function requireAuth(req, res, next) {
   next();
 }`.split("\n");
 
-// Answers use `backticks` for inline code; lines are 1-indexed
+// Answers use backticks for inline code; lines are 1-indexed
 const examples = [
   {
     question: "Where is login handled?",
