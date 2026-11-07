@@ -271,51 +271,8 @@ export default function ChatInterface() {
                 continue;
               }
 
-              // Handle content events: {"type": "content", "content": "..."}
-              if (dataObj.type === "content" && dataObj.content) {
-                accumulatedText += dataObj.content;
-
-                // On first content, hide loading and create assistant message
-                if (!firstContentReceived) {
-                  firstContentReceived = true;
-                  setResponseLoading(false);
-
-                  setConversationTurns((prevTurns) =>
-                    prevTurns.map((turn) =>
-                      turn.id === turnId
-                        ? {
-                            ...turn,
-                            loading: false,
-                          }
-                        : turn,
-                    ),
-                  );
-
-                  setMessages((prevMessages) => [
-                    ...prevMessages,
-                    {
-                      id: assistantMessageId,
-                      text: accumulatedText,
-                      sender: "assistant",
-                      timestamp: new Date().toLocaleTimeString("en-US", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }),
-                    },
-                  ]);
-                } else {
-                  // Update the assistant message with accumulated text
-                  setMessages((prevMessages) =>
-                    prevMessages.map((msg) =>
-                      msg.id === assistantMessageId
-                        ? { ...msg, text: accumulatedText }
-                        : msg,
-                    ),
-                  );
-                }
-              }
-              // Handle snippet events: {"type": "snippet", "file": "...", "code": "..."}
-              else if (
+              // Snippet events: {"type": "snippet", "file": "...", "code": "..."}
+              if (
                 dataObj.type === "snippet" &&
                 dataObj.file &&
                 dataObj.code
@@ -338,12 +295,8 @@ export default function ChatInterface() {
                   ),
                 );
               }
-              // Fallback: Handle legacy format {"content": "..."} (no type field)
-              else if (
-                dataObj.content &&
-                typeof dataObj.content === "string" &&
-                !dataObj.type
-              ) {
+              // Content events: {"content": "..."} (optionally with "type": "content")
+              else if (typeof dataObj.content === "string" && dataObj.content) {
                 accumulatedText += dataObj.content;
 
                 // On first content, hide loading and create assistant message

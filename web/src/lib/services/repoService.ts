@@ -1,6 +1,11 @@
 "use server";
 
-import { createClient } from "@/utils/supabase/server";
+import {
+  authed,
+  createClient,
+  NOT_AUTHED,
+  toResult,
+} from "@/utils/supabase/server";
 import {
   Repo,
   Documentation,
@@ -19,69 +24,60 @@ import {
   lookupRepo,
 } from "@/lib/gitOAuth";
 
-// Helper function to parse GitHub URLs
+type Client = Awaited<ReturnType<typeof createClient>>;
+
+// owner/repo from https://github.com/owner/repo(.git)(/...) or git@github.com:owner/repo.git
 function parseGitHubUrl(url: string): { owner: string; repo: string } {
-  try {
-    // Handle multiple formats:
-    // - https://github.com/owner/repo
-    // - https://github.com/owner/repo.git
-    // - git@github.com:owner/repo.git
+  const m = url.match(/github\.com[/:]([^/]+)\/([^/?#]+)/i);
+  return { owner: m?.[1] ?? "", repo: m?.[2]?.replace(/\.git$/, "") ?? "" };
+}
 
-    url = url.trim().replace(/\.git$/, "");
-
-    if (url.includes("github.com/")) {
-      const parts = url.split("github.com/")[1].split("/");
-      return { owner: parts[0], repo: parts[1] };
-    }
-
-    if (url.startsWith("git@github.com:")) {
-      const parts = url.replace("git@github.com:", "").split("/");
-      return { owner: parts[0], repo: parts[1] };
-    }
-
-    return { owner: "", repo: "" };
-  } catch (error) {
-    return { owner: "", repo: "" };
-  }
+// The insert every createRepoVia* action ends with
+async function insertRepo(
+  client: Client,
+  userId: string,
+  orgId: string,
+  fields: {
+    name: string;
+    provider: string;
+    repo_url: string | null;
+    object_url?: string;
+  },
+): Promise<ActionResult<Repo>> {
+  return toResult<Repo>(
+    await client
+      .from("repositories")
+      .insert({
+        ...fields,
+        organization_id: orgId,
+        indexed_by: userId,
+        index_status: "not indexed",
+      })
+      .select()
+      .single(),
+  );
 }
 
 export async function getReposByOrganizationId(
   organizationId: string,
 ): Promise<ActionResult<Repo[]>> {
-  const client = await createClient();
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
-  const user = client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
-
-  const { data, error } = await client
-    .from("repositories")
-    .select("*")
-    .eq("organization_id", organizationId);
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, data: (data ?? []) as Repo[] };
+  return toResult<Repo[]>(
+    await client
+      .from("repositories")
+      .select("*")
+      .eq("organization_id", organizationId),
+  );
 }
 
 export async function createRepoViaGithub(
   formData: FormData,
   orgId: string,
-): Promise<ActionResult<Repo | undefined>> {
-  const client = await createClient();
-
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
+): Promise<ActionResult<Repo>> {
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
   const name = formData.get("name") as string;
   const provider = formData.get("type") as string;
@@ -99,61 +95,29 @@ export async function createRepoViaGithub(
 
   if (!installation) {
     // No GitHub App installation - prompt user to install
-    return {
-      success: false,
-      error: "Installation Needed",
-    };
+    return { success: false, error: "Installation Needed" };
   }
 
-  // Parse url for owner and repo
-  const { owner, repo: repoName } = parseGitHubUrl(url);
-
+  const { owner, repo } = parseGitHubUrl(url);
   const hasAccess = await verifyGithubRepoAccess(
     installation.installation_id,
     owner,
-    repoName,
+    repo,
   );
 
   if (!hasAccess) {
-    return {
-      success: false,
-      error: "Access Denied",
-    };
+    return { success: false, error: "Access Denied" };
   }
 
-  const { data: repo, error: repoError } = await client
-    .from("repositories")
-    .insert({
-      name,
-      provider,
-      repo_url: url,
-      organization_id: orgId,
-      indexed_by: user.id,
-      index_status: "not indexed",
-    })
-    .select()
-    .single();
-
-  if (repoError) {
-    return { success: false, error: repoError.message };
-  }
-
-  return { success: true, data: repo as Repo };
+  return insertRepo(client, user.id, orgId, { name, provider, repo_url: url });
 }
 
 export async function createRepoViaOAuthProvider(
   formData: FormData,
   orgId: string,
-): Promise<ActionResult<Repo | undefined>> {
-  const client = await createClient();
-
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
+): Promise<ActionResult<Repo>> {
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
   const name = (formData.get("name") as string)?.trim();
   const provider = formData.get("type") as string;
@@ -189,40 +153,20 @@ export async function createRepoViaOAuthProvider(
     };
   }
 
-  const { data: repo, error: repoError } = await client
-    .from("repositories")
-    .insert({
-      name,
-      provider,
-      repo_url: repoUrl,
-      organization_id: orgId,
-      indexed_by: user.id,
-      index_status: "not indexed",
-    })
-    .select()
-    .single();
-
-  if (repoError) {
-    return { success: false, error: repoError.message };
-  }
-
-  return { success: true, data: repo as Repo };
+  return insertRepo(client, user.id, orgId, {
+    name,
+    provider,
+    repo_url: repoUrl,
+  });
 }
 
 // Public Mercurial repos only: no host has a standard OAuth flow, so nothing to verify against
 export async function createRepoViaMercurial(
   formData: FormData,
   orgId: string,
-): Promise<ActionResult<Repo | undefined>> {
-  const client = await createClient();
-
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
+): Promise<ActionResult<Repo>> {
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
   const name = (formData.get("name") as string)?.trim();
   const url = (formData.get("repo-url") as string)?.trim().replace(/\/+$/, "");
@@ -236,45 +180,24 @@ export async function createRepoViaMercurial(
     return { success: false, error: "Mercurial URL must start with https://" };
   }
 
-  const { data: repo, error: repoError } = await client
-    .from("repositories")
-    .insert({
-      name,
-      provider: "mercurial",
-      repo_url: url,
-      organization_id: orgId,
-      indexed_by: user.id,
-      index_status: "not indexed",
-    })
-    .select()
-    .single();
-
-  if (repoError) {
-    return { success: false, error: repoError.message };
-  }
-
-  return { success: true, data: repo as Repo };
+  return insertRepo(client, user.id, orgId, {
+    name,
+    provider: "mercurial",
+    repo_url: url,
+  });
 }
 
 export async function createRepoViaLocalFile(
   formData: FormData,
   orgId: string,
 ): Promise<ActionResult<Repo>> {
-  const client = await createClient();
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
-
-  const name = formData.get("name") as string;
+  const name = (formData.get("name") as string)?.trim();
   const file = formData.get("file") as File;
 
-  // Validate inputs
-  if (!name || name.trim() === "") {
+  if (!name) {
     return { success: false, error: "Repository name is required" };
   }
 
@@ -282,28 +205,19 @@ export async function createRepoViaLocalFile(
     return { success: false, error: "File is required" };
   }
 
-  // Validate file type
   if (!file.name.endsWith(".zip")) {
     return { success: false, error: "Only .zip files are allowed" };
   }
 
-  // Validate file size (max 100MB)
-  const maxSize = 100 * 1024 * 1024; // 100MB in bytes
-  if (file.size > maxSize) {
-    return {
-      success: false,
-      error: "File size exceeds 100MB limit",
-    };
+  if (file.size > 100 * 1024 * 1024) {
+    return { success: false, error: "File size exceeds 100MB limit" };
   }
 
   try {
-    // Generate a unique file name to prevent collisions
-    const timestamp = Date.now();
-    const sanitizedName = name.trim().replace(/[^a-z0-9-_]/gi, "_");
-    const fileName = `${sanitizedName}_${timestamp}_${file.name}`;
-    const filePath = `${orgId}/${fileName}`;
+    // Unique path so uploads never collide
+    const sanitizedName = name.replace(/[^a-z0-9-_]/gi, "_");
+    const filePath = `${orgId}/${sanitizedName}_${Date.now()}_${file.name}`;
 
-    // Upload file to Supabase Storage
     const { error: uploadError } = await client.storage
       .from("local_repos")
       .upload(filePath, file, {
@@ -319,32 +233,23 @@ export async function createRepoViaLocalFile(
       };
     }
 
-    // Create repository record in database
-    const { data: repo, error: repoError } = await client
-      .from("repositories")
-      .insert({
-        name: name.trim(),
-        provider: "local",
-        repo_url: null,
-        object_url: filePath, // path in the private local_repos bucket
-        organization_id: orgId,
-        indexed_by: user.id,
-        index_status: "not indexed",
-      })
-      .select()
-      .single();
+    const result = await insertRepo(client, user.id, orgId, {
+      name,
+      provider: "local",
+      repo_url: null,
+      object_url: filePath, // path in the private local_repos bucket
+    });
 
-    if (repoError) {
-      console.error("Repository creation error:", repoError);
-      // Attempt to clean up uploaded file
+    if (!result.success) {
+      // Don't leave an orphaned upload behind
       await client.storage.from("local_repos").remove([filePath]);
       return {
         success: false,
-        error: `Repository creation failed: ${repoError.message}`,
+        error: `Repository creation failed: ${result.error}`,
       };
     }
 
-    return { success: true, data: repo as Repo };
+    return result;
   } catch (error) {
     console.error("Unexpected error:", error);
     return {
@@ -355,39 +260,15 @@ export async function createRepoViaLocalFile(
   }
 }
 
-// ============================================================================
-// Repository Management Services
-// ============================================================================
-
 export async function getRepoWithStatus(
   repoId: string,
 ): Promise<ActionResult<Repo>> {
-  const client = await createClient();
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
-
-  const { data: repo, error } = await client
-    .from("repositories")
-    .select("*")
-    .eq("id", repoId)
-    .single();
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  if (!repo) {
-    return { success: false, error: "Repository not found" };
-  }
-
-  return { success: true, data: repo as Repo };
+  return toResult<Repo>(
+    await client.from("repositories").select("*").eq("id", repoId).single(),
+  );
 }
 
 // Unsticks a repo whose backend run died (restart, crash) and left it "indexing" forever.
@@ -395,31 +276,19 @@ export async function getRepoWithStatus(
 export async function cancelIndexing(
   repoId: string,
 ): Promise<ActionResult<void>> {
-  const client = await createClient();
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
-
-  const { error } = await client
-    .from("repositories")
-    .update({
-      index_status: "failed",
-      metadata: { index_error: "Indexing was cancelled." },
-    })
-    .eq("id", repoId)
-    .eq("index_status", "indexing");
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, data: undefined };
+  return toResult<void>(
+    await client
+      .from("repositories")
+      .update({
+        index_status: "failed",
+        metadata: { index_error: "Indexing was cancelled." },
+      })
+      .eq("id", repoId)
+      .eq("index_status", "indexing"),
+  );
 }
 
 // Resolve /dashboard/<owner>/<repo> to a repo id. RLS limits rows to the user's orgs.
@@ -445,26 +314,12 @@ export async function getRepoIdByGithubSlug(
   return match?.id ?? null;
 }
 
-type UpdateData = {
-  name?: string;
-  repo_url?: string;
-  object_url?: string;
-  index_status?: string;
-};
-
 export async function updateRepoSettings(
   repoId: string,
   settings: { name?: string; repo_url?: string; file?: File },
 ): Promise<ActionResult<Repo>> {
-  const client = await createClient();
-
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
   // Get the current repo to check its provider type
   const { data: currentRepo } = await client
@@ -477,16 +332,14 @@ export async function updateRepoSettings(
     return { success: false, error: "Repository not found!" };
   }
 
-  const updateData: UpdateData = {};
+  const updateData: Record<string, string> = {};
   const provider: string = currentRepo.provider;
 
-  // Handle name update
   if (settings.name) {
     updateData.name = settings.name;
   }
 
-  // Handle GitHub URL update
-  if (settings.repo_url && currentRepo.provider === "github") {
+  if (settings.repo_url && provider === "github") {
     const { owner, repo } = parseGitHubUrl(settings.repo_url);
 
     if (!owner || !repo) {
@@ -548,20 +401,15 @@ export async function updateRepoSettings(
     updateData.index_status = "not indexed"; // Trigger re-indexing
   }
 
-  // Handle local file upload
-  if (settings.file && currentRepo.provider === "local") {
-    const file = settings.file;
-    const fileExt = file.name.split(".").pop();
-
-    if (fileExt !== "zip") {
+  if (settings.file && provider === "local") {
+    if (!settings.file.name.endsWith(".zip")) {
       return { success: false, error: "Only .zip files are allowed!" };
     }
 
-    // Upload to Supabase Storage
     const fileName = `${repoId}-${Date.now()}.zip`;
     const { error: uploadError } = await client.storage
       .from("local_repos")
-      .upload(fileName, file);
+      .upload(fileName, settings.file);
 
     if (uploadError) {
       console.error(uploadError);
@@ -572,283 +420,63 @@ export async function updateRepoSettings(
     updateData.index_status = "pending"; // Trigger re-indexing
   }
 
-  // Update the repository
-  const { data: repo, error } = await client
-    .from("repositories")
-    .update(updateData)
-    .eq("id", repoId)
-    .select()
-    .single();
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, data: repo as Repo };
+  return toResult<Repo>(
+    await client
+      .from("repositories")
+      .update(updateData)
+      .eq("id", repoId)
+      .select()
+      .single(),
+  );
 }
 
 export async function deleteRepo(
   repoId: string,
 ): Promise<ActionResult<{ organizationId: string }>> {
-  const client = await createClient();
-
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
   // Fetch the organization_id before deleting
-  const { data: repo, error: repoError } = await client
-    .from("repositories")
-    .select("organization_id")
-    .eq("id", repoId)
-    .single();
+  const repo = toResult<{ organization_id: string }>(
+    await client
+      .from("repositories")
+      .select("organization_id")
+      .eq("id", repoId)
+      .single(),
+  );
+  if (!repo.success) return repo;
 
-  if (repoError) {
-    console.error(repoError);
-    return { success: false, error: repoError.message };
-  }
+  const deleted = toResult(
+    await client.from("repositories").delete().eq("id", repoId),
+  );
+  if (!deleted.success) return deleted;
 
-  if (!repo) {
-    return { success: false, error: "Repository not found" };
-  }
-
-  const { error } = await client.from("repositories").delete().eq("id", repoId);
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, data: { organizationId: repo.organization_id } };
+  return { success: true, data: { organizationId: repo.data.organization_id } };
 }
 
-export async function triggerReindex(
-  repoId: string,
-): Promise<ActionResult<void>> {
-  const client = await createClient();
-
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
-
-  // Update the index_status to 'pending' to trigger reindexing
-  const { error } = await client
-    .from("repositories")
-    .update({ index_status: "pending" })
-    .eq("id", repoId);
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  // TODO: Trigger actual indexing job/webhook/queue here
-  // This could be an API call to your indexing service
-
-  return { success: true, data: undefined };
-}
-
-// ============================================================================
-// Documentation Services
-// ============================================================================
-
-export async function getDocumentation(
-  repoId: string,
-): Promise<ActionResult<Documentation>> {
-  const client = await createClient();
-
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
-
-  const { data: documentation, error } = await client
-    .from("documentation")
-    .select("*")
-    .eq("repo_id", repoId)
-    .single();
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  if (!documentation) {
-    return { success: false, error: "Documentation not found" };
-  }
-
-  return { success: true, data: documentation as Documentation };
-}
-
-export async function getDocPages(
-  repoId: string,
-): Promise<ActionResult<DocPage[]>> {
-  const client = await createClient();
-
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
-
-  // Get the latest documentation version for this repo
-  const { data: documentation, error: docError } = await client
-    .from("documentation")
-    .select("id")
-    .eq("repo_id", repoId)
-    .order("version", { ascending: false })
-    .limit(1)
-    .single();
-
-  if (docError || !documentation) {
-    console.error(docError);
-    return { success: false, error: "Documentation not found" };
-  }
-
-  const { data: pages, error } = await client
-    .from("pages")
-    .select("*")
-    .eq("documentation_id", documentation.id)
-    .order("order_index", { ascending: true });
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, data: (pages ?? []) as DocPage[] };
-}
-
-export async function getDocPageById(
-  pageId: string,
-): Promise<ActionResult<DocPage>> {
-  const client = await createClient();
-
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
-
-  const { data: page, error } = await client
-    .from("pages")
-    .select("*")
-    .eq("id", pageId)
-    .single();
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  if (!page) {
-    return { success: false, error: "Page not found" };
-  }
-
-  return { success: true, data: page as DocPage };
-}
-
-export async function getDocPagesHierarchical(
-  repoId: string,
-): Promise<ActionResult<DocPage[]>> {
-  const client = await createClient();
-
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
-
-  // First get the documentation ID for this repo
-  const { data: documentation, error: docError } = await client
-    .from("documentation")
-    .select("id")
-    .eq("repo_id", repoId)
-    .single();
-
-  if (docError || !documentation) {
-    console.error(docError);
-    return { success: false, error: "Documentation not found" };
-  }
-
-  const { data: pages, error } = await client
-    .from("pages")
-    .select("*")
-    .eq("documentation_id", documentation.id)
-    .order("order_index", { ascending: true });
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  // Pages are already sorted by order_index
-  // The parent_page_id field maintains the hierarchy
-  // Frontend can use this to render the tree structure
-  return { success: true, data: (pages ?? []) as DocPage[] };
-}
-
-// Get all documentation versions for a repository
+// All documentation versions for a repository, newest first
 export async function getDocumentationVersions(
   repoId: string,
 ): Promise<ActionResult<Documentation[]>> {
-  const client = await createClient();
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
-
-  const { data: versions, error } = await client
-    .from("documentation")
-    .select("*")
-    .eq("repo_id", repoId)
-    .order("version", { ascending: false });
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, data: (versions ?? []) as Documentation[] };
+  return toResult<Documentation[]>(
+    await client
+      .from("documentation")
+      .select("*")
+      .eq("repo_id", repoId)
+      .order("version", { ascending: false }),
+  );
 }
 
-// Get the latest completed documentation version for a repository
 export async function getLatestDocumentation(
   repoId: string,
 ): Promise<ActionResult<Documentation>> {
-  const client = await createClient();
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
-
-  const { data: documentation, error } = await client
+  const { data } = await client
     .from("documentation")
     .select("*")
     .eq("repo_id", repoId)
@@ -856,77 +484,45 @@ export async function getLatestDocumentation(
     .limit(1)
     .single();
 
-  if (!documentation) {
-    return { success: false, error: "Documentation not found" };
-  }
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, data: documentation as Documentation };
+  return data
+    ? { success: true, data: data as Documentation }
+    : { success: false, error: "Documentation not found" };
 }
 
-// Get documentation pages for a specific version
 export async function getDocPagesForVersion(
   repoId: string,
   version: number,
 ): Promise<ActionResult<DocPage[]>> {
-  const client = await createClient();
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
-
-  // Get the documentation record for this version
-  const { data: documentation, error: docError } = await client
+  const { data: documentation } = await client
     .from("documentation")
     .select("id")
     .eq("repo_id", repoId)
     .eq("version", version)
     .single();
 
-  if (docError || !documentation) {
+  if (!documentation) {
     return { success: false, error: "Documentation version not found" };
   }
 
-  const { data: pages, error } = await client
-    .from("pages")
-    .select("*")
-    .eq("documentation_id", documentation.id)
-    .order("order_index", { ascending: true });
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, data: (pages ?? []) as DocPage[] };
+  return toResult<DocPage[]>(
+    await client
+      .from("pages")
+      .select("*")
+      .eq("documentation_id", documentation.id)
+      .order("order_index", { ascending: true }),
+  );
 }
-
-// ============================================================================
-// Conversation Services
-// ============================================================================
 
 export async function getConversations(
   repoId: string,
   limit: number = 20,
   version: number | null = null,
 ): Promise<ActionResult<Conversation[]>> {
-  const client = await createClient();
-
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
   let query = client
     .from("conversations")
@@ -934,53 +530,29 @@ export async function getConversations(
     .eq("repo_id", repoId)
     .eq("user_id", user.id);
 
-  // Filter by version if specified
   if (version !== null && version !== undefined) {
     query = query.eq("repo_version", version);
   }
 
-  const { data: conversations, error } = await query
-    .order("updated_at", { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, data: (conversations ?? []) as Conversation[] };
+  return toResult<Conversation[]>(
+    await query.order("updated_at", { ascending: false }).limit(limit),
+  );
 }
 
 export async function getConversationById(
   conversationId: string,
 ): Promise<ActionResult<Conversation>> {
-  const client = await createClient();
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
-
-  const { data: conversation, error } = await client
-    .from("conversations")
-    .select("*")
-    .eq("id", conversationId)
-    .eq("user_id", user.id)
-    .single();
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  if (!conversation) {
-    return { success: false, error: "Conversation not found" };
-  }
-
-  return { success: true, data: conversation as Conversation };
+  return toResult<Conversation>(
+    await client
+      .from("conversations")
+      .select("*")
+      .eq("id", conversationId)
+      .eq("user_id", user.id)
+      .single(),
+  );
 }
 
 export async function createConversation(
@@ -988,121 +560,36 @@ export async function createConversation(
   title?: string,
   version?: number | null,
 ): Promise<ActionResult<Conversation>> {
-  const client = await createClient();
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
-
-  const { data: conversation, error } = await client
-    .from("conversations")
-    .insert({
-      repo_id: repoId,
-      user_id: user.id,
-      title: title || "New Conversation",
-      repo_version: version ?? null,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, data: conversation as Conversation };
+  return toResult<Conversation>(
+    await client
+      .from("conversations")
+      .insert({
+        repo_id: repoId,
+        user_id: user.id,
+        title: title || "New Conversation",
+        repo_version: version ?? null,
+      })
+      .select()
+      .single(),
+  );
 }
-
-export async function deleteConversation(
-  conversationId: string,
-): Promise<ActionResult<void>> {
-  const client = await createClient();
-
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
-
-  const { error } = await client
-    .from("conversations")
-    .delete()
-    .eq("id", conversationId)
-    .eq("user_id", user.id);
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, data: undefined };
-}
-
-export async function renameConversation(
-  conversationId: string,
-  newTitle: string,
-): Promise<ActionResult<Conversation>> {
-  const client = await createClient();
-
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
-
-  const { data: conversation, error } = await client
-    .from("conversations")
-    .update({ title: newTitle })
-    .eq("id", conversationId)
-    .eq("user_id", user.id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, data: conversation as Conversation };
-}
-
-// ============================================================================
-// Message Services
-// ============================================================================
 
 export async function getConversationMessages(
   conversationId: string,
 ): Promise<ActionResult<ConversationMessage[]>> {
-  const client = await createClient();
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
-
-  const { data: messages, error } = await client
-    .from("messages")
-    .select("*")
-    .eq("conversation_id", conversationId)
-    .order("created_at", { ascending: true });
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, data: (messages ?? []) as ConversationMessage[] };
+  return toResult<ConversationMessage[]>(
+    await client
+      .from("messages")
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: true }),
+  );
 }
 
 export async function createMessage(
@@ -1110,38 +597,26 @@ export async function createMessage(
   role: "user" | "assistant",
   content: string,
 ): Promise<ActionResult<ConversationMessage>> {
-  const client = await createClient();
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
-  const {
-    data: { user },
-  } = await client.auth.getUser();
+  const result = toResult<ConversationMessage>(
+    await client
+      .from("messages")
+      .insert({ conversation_id: conversationId, role, content })
+      .select()
+      .single(),
+  );
 
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
+  if (result.success) {
+    // Bump the conversation so it sorts first in Recents
+    await client
+      .from("conversations")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", conversationId);
   }
 
-  const { data: message, error } = await client
-    .from("messages")
-    .insert({
-      conversation_id: conversationId,
-      role,
-      content,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-
-  // Update the conversation's updated_at timestamp
-  await client
-    .from("conversations")
-    .update({ updated_at: new Date().toISOString() })
-    .eq("id", conversationId);
-
-  return { success: true, data: message as ConversationMessage };
+  return result;
 }
 
 export async function saveCodeSnippets(
@@ -1149,80 +624,48 @@ export async function saveCodeSnippets(
   messageId: string,
   snippets: Array<{ file: string; code: string }>,
 ): Promise<ActionResult<CodeSnippet[]>> {
-  const supabase = await createClient();
+  const client = await createClient();
 
-  const snippetsToInsert = snippets.map((snippet) => ({
-    conversation_id: conversationId,
-    message_id: messageId,
-    file_path: snippet.file,
-    code_content: snippet.code,
-    language: snippet.file.split(".").pop() || null,
-  }));
-
-  const { data, error } = await supabase
-    .from("code_snippets")
-    .insert(snippetsToInsert)
-    .select();
-
-  if (error) {
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, data: data as CodeSnippet[] };
+  return toResult<CodeSnippet[]>(
+    await client
+      .from("code_snippets")
+      .insert(
+        snippets.map((snippet) => ({
+          conversation_id: conversationId,
+          message_id: messageId,
+          file_path: snippet.file,
+          code_content: snippet.code,
+          language: snippet.file.split(".").pop() || null,
+        })),
+      )
+      .select(),
+  );
 }
 
 export async function getCodeSnippetsForConversation(
   conversationId: string,
 ): Promise<ActionResult<CodeSnippet[]>> {
-  const supabase = await createClient();
+  const client = await createClient();
 
-  const { data, error } = await supabase
-    .from("code_snippets")
-    .select("*")
-    .eq("conversation_id", conversationId)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, data: data as CodeSnippet[] };
-}
-
-export async function deleteCodeSnippet(
-  snippetId: string,
-): Promise<ActionResult<null>> {
-  const supabase = await createClient();
-
-  const { error } = await supabase
-    .from("code_snippets")
-    .delete()
-    .eq("id", snippetId);
-
-  if (error) {
-    return { success: false, error: error.message };
-  }
-
-  return { success: true, data: null };
+  return toResult<CodeSnippet[]>(
+    await client
+      .from("code_snippets")
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: false }),
+  );
 }
 
 export async function indexRepository(
   repoId: string,
 ): Promise<ActionResult<void>> {
-  const client = await createClient();
-
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
+  const { client, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
   const repoResult = await getRepoWithStatus(repoId);
 
   if (!repoResult.success) {
-    return { success: false, error: repoResult.error };
+    return repoResult;
   }
 
   const { provider, repo_url: repoUrl } = repoResult.data;
@@ -1266,7 +709,7 @@ export async function indexRepository(
     return { success: false, error: "This repository has nothing to index." };
   }
 
-  // Get the latest version number for this repo
+  // Next version number (1 if there are none yet)
   const { data: latestDoc } = await client
     .from("documentation")
     .select("version")
@@ -1274,29 +717,22 @@ export async function indexRepository(
     .order("version", { ascending: false })
     .limit(1)
     .single();
-
-  // Increment version (start at 1 if no previous versions)
   const nextVersion = (latestDoc?.version ?? 0) + 1;
 
-  // Mark the repository as indexing in supabase first (clearing any previous error)
-  const { error: updateError } = await client
-    .from("repositories")
-    // indexed_by: the backend stores the index under this user, and chat reads it from there
-    .update({ index_status: "indexing", metadata: null, indexed_by: user.id })
-    .eq("id", repoId);
+  // Mark the repository as indexing first (clearing any previous error).
+  // indexed_by: the backend stores the index under this user, and chat reads it from there
+  const marked = toResult(
+    await client
+      .from("repositories")
+      .update({ index_status: "indexing", metadata: null, indexed_by: user.id })
+      .eq("id", repoId),
+  );
+  if (!marked.success) return marked;
 
-  if (updateError) {
-    console.error(updateError);
-    return { success: false, error: updateError.message };
-  }
-
-  // Call the backend to start indexing (fire-and-forget)
-  // Don't await the run itself since this is a long-running operation
+  // Fire-and-forget: indexing is long-running, so don't await the run itself
   const request = fetch(`${process.env.BACKEND_URL}/repos/index`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       repo_url: repoUrl,
       repo_id: repoId,
@@ -1330,6 +766,5 @@ export async function indexRepository(
     return { success: false, error: message };
   }
 
-  // Return success - the indexing will happen in the background
   return { success: true, data: undefined };
 }

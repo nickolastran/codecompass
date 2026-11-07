@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { ActionResult } from "@/app/types/action";
 
 export async function createClient() {
   const cookieStore = await cookies();
@@ -27,6 +28,35 @@ export async function createClient() {
       },
     },
   );
+}
+
+// Server client plus the signed-in user (null when signed out)
+export async function authed() {
+  const client = await createClient();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  return { client, user };
+}
+
+export const NOT_AUTHED = {
+  success: false,
+  error: "User not authenticated!",
+} as const;
+
+// A Supabase { data, error } response as an ActionResult
+export function toResult<T>({
+  data,
+  error,
+}: {
+  data: unknown;
+  error: { message: string } | null;
+}): ActionResult<T> {
+  if (error) {
+    console.error(error);
+    return { success: false, error: error.message };
+  }
+  return { success: true, data: data as T };
 }
 
 // Admin client using secret key - bypasses RLS policies

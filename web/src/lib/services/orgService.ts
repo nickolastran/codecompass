@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { authed, createAdminClient, NOT_AUTHED } from "@/utils/supabase/server";
 import {
   Organization,
   OrganizationWithRole,
@@ -9,14 +9,8 @@ import {
 import { ActionResult } from "@/app/types/action";
 
 export async function getOrgs(): Promise<ActionResult<OrganizationWithRole[]>> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not found" };
-  }
+  const { client: supabase, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
   // Query from user_organizations table to properly filter by user_id
   const { data: userOrgs, error: organizationsError } = await supabase
@@ -52,15 +46,8 @@ export async function getOrgs(): Promise<ActionResult<OrganizationWithRole[]>> {
 export async function getOrgMembers(
   orgId: string,
 ): Promise<ActionResult<OrganizationMember[]>> {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated" };
-  }
+  const { client: supabase, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
   // Verify user has access to this organization
   const { data: userOrg, error: accessError } = await supabase
@@ -113,15 +100,8 @@ export async function getOrgMembers(
 export async function createOrg(
   formData: FormData,
 ): Promise<ActionResult<Organization>> {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not found" };
-  }
+  const { client: supabase, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
   const name = formData.get("name") as string;
 
@@ -161,16 +141,8 @@ export async function createOrg(
 export async function createInviteLink(
   organizationId: string,
 ): Promise<ActionResult<{ token: string; expiresAt: string }>> {
-  const supabase = await createClient();
-
-  // Authenticate user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated!" };
-  }
+  const { client: supabase, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
   // Check membership
   const { data: userOrg, error: accessError } = await supabase
@@ -223,18 +195,9 @@ export async function createInviteLink(
 export async function acceptInvite(
   token: string,
 ): Promise<ActionResult<{ organizationId: string }>> {
-  const supabase = await createClient();
-
-  // 1. Authenticate user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const { client: supabase, user } = await authed();
   if (!user) {
-    return {
-      success: false,
-      error: "You must be logged in to accept an invite",
-    };
+    return { success: false, error: "You must be logged in to accept an invite" };
   }
 
   // Invitee isn't a member yet, so RLS blocks these reads/writes; use the admin client
@@ -312,16 +275,8 @@ export async function removeMemberFromOrg(
   organizationId: string,
   userIdToRemove: string,
 ): Promise<ActionResult<void>> {
-  const supabase = await createClient();
-
-  // 1. Authenticate user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated" };
-  }
+  const { client: supabase, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
   // 2. Verify current user is an owner (RLS will also enforce this)
   const { data: currentUserRole, error: roleError } = await supabase
@@ -375,16 +330,8 @@ export async function removeMemberFromOrg(
 export async function leaveOrganization(
   organizationId: string,
 ): Promise<ActionResult<void>> {
-  const supabase = await createClient();
-
-  // 1. Authenticate user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated" };
-  }
+  const { client: supabase, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
   // 2. Verify user is a member of this organization
   const { data: membership, error: membershipError } = await supabase
@@ -440,16 +387,8 @@ export async function updateMemberRole(
   userIdToUpdate: string,
   newRole: "owner" | "teammate",
 ): Promise<ActionResult<void>> {
-  const supabase = await createClient();
-
-  // 1. Authenticate user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "User not authenticated" };
-  }
+  const { client: supabase, user } = await authed();
+  if (!user) return NOT_AUTHED;
 
   // 2. Verify current user is an owner
   const { data: currentUserRole, error: roleError } = await supabase
