@@ -35,13 +35,13 @@ export default function Hero({ isAuthenticated }: HeroProps) {
             style={{ lineHeight: "1.2" }}
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
           >
             <motion.span
               className="block text-foreground"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+              transition={{ duration: 0.4, delay: 0.05, ease: "easeOut" }}
             >
               Navigate any codebase
             </motion.span>
@@ -49,7 +49,7 @@ export default function Hero({ isAuthenticated }: HeroProps) {
               className="text-accent"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+              transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
             >
               in minutes, not months
             </motion.span>
@@ -58,7 +58,7 @@ export default function Hero({ isAuthenticated }: HeroProps) {
             className="relative z-10 pt-2 text-foreground my-3 text-sm sm:mt-5 lg:mb-0 sm:text-base lg:text-lg text-center max-w-4xl px-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.4, delay: 0.15, ease: "easeOut" }}
           >
             CodeCompass is <span className="font-semibold italic">the</span>{" "}
             <span className="text-accent font-semibold italic">
@@ -75,7 +75,7 @@ export default function Hero({ isAuthenticated }: HeroProps) {
             className="relative z-10 flex flex-row justify-center gap-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
           >
             <Button className="group" asChild>
               <Link

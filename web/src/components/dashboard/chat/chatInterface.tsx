@@ -95,6 +95,7 @@ export default function ChatInterface() {
   const selectedVersion = useChatUIStore((state) => state.selectedVersion);
   const minimize = useChatUIStore((state) => state.minimize);
   const hasSentInitialMessage = useRef(false);
+  const createdConversationId = useRef<string | null>(null);
 
   // Fetch messages for selected conversation
   const { data: conversationMessages, isLoading: messagesLoading } = useQuery({
@@ -134,43 +135,7 @@ export default function ChatInterface() {
       minute: "2-digit",
     });
 
-    // If no conversation exists, create one
-    let currentConversation = conversation;
-    if (!currentConversation && repoId) {
-      const result = await createConversation(
-        repoId,
-        userQuestion,
-        selectedVersion,
-      );
-      if (result.success) {
-        currentConversation = result.data;
-        setConversation(currentConversation);
-
-        // Invalidate conversations query to refresh the list
-        queryClient.invalidateQueries({
-          queryKey: ["conversations", repoId, selectedVersion],
-        });
-      } else {
-        console.error("Failed to create conversation:", result.error);
-        setChatInputDisabled(false);
-        setResponseLoading(false);
-        return;
-      }
-    }
-
-    // Save user message to database
-    if (currentConversation) {
-      const messageResult = await createMessage(
-        currentConversation.id,
-        "user",
-        userQuestion,
-      );
-      if (!messageResult.success) {
-        console.error("Failed to save user message:", messageResult.error);
-      }
-    }
-
-    // Add user message to chat
+    // Show the user message right away; saving it happens below
     setMessages((prevMessages) => [
       ...prevMessages,
       {
@@ -197,6 +162,38 @@ export default function ChatInterface() {
     setInputValue("");
 
     try {
+      // If no conversation exists, create one
+      let currentConversation = conversation;
+      if (!currentConversation && repoId) {
+        const result = await createConversation(
+          repoId,
+          userQuestion,
+          selectedVersion,
+        );
+        if (!result.success) throw new Error(result.error);
+        currentConversation = result.data;
+        // Keep the clear-on-conversation-change effect from wiping the message shown above
+        createdConversationId.current = currentConversation.id;
+        setConversation(currentConversation);
+
+        // Invalidate conversations query to refresh the list
+        queryClient.invalidateQueries({
+          queryKey: ["conversations", repoId, selectedVersion],
+        });
+      }
+
+      // Save user message to database
+      if (currentConversation) {
+        const messageResult = await createMessage(
+          currentConversation.id,
+          "user",
+          userQuestion,
+        );
+        if (!messageResult.success) {
+          console.error("Failed to save user message:", messageResult.error);
+        }
+      }
+
       // Call the streaming API endpoint
 
       const new_conversation: Message[] = [];
@@ -480,6 +477,10 @@ export default function ChatInterface() {
 
   // Clear messages when conversation changes (including when set to null)
   useEffect(() => {
+    if (conversation?.id && conversation.id === createdConversationId.current) {
+      createdConversationId.current = null;
+      return;
+    }
     setMessages([]);
     setConversationTurns([]);
   }, [conversation?.id]);

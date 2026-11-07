@@ -16,8 +16,6 @@ import {
   Select,
   SelectTrigger,
   SelectContent,
-  SelectGroup,
-  SelectLabel,
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
@@ -56,6 +54,13 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
 
+  // Default the name from the URL or zip so the user doesn't have to type it
+  const derivedName =
+    (type === "local"
+      ? uploadedFile?.name.replace(/\.zip$/i, "")
+      : repoUrl.trim().replace(/\/+$/, "").split("/").pop()?.replace(/\.git$/i, "")) ?? "";
+  const finalName = name.trim() || derivedName;
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
@@ -63,6 +68,7 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
 
     try {
       const formData = new FormData(e.currentTarget);
+      formData.set("name", finalName);
 
       if (type === "local") {
         // Validate that a file has been uploaded
@@ -86,14 +92,16 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
 
         router.push(`/dashboard/org/${orgId}`);
       } else {
+        // Accept "github.com/foo/bar" too: add the scheme instead of rejecting it
+        const trimmed = repoUrl.trim();
+        const url = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
         // The form is noValidate so this message shows inline instead of the browser's popup
-        if (!/^https?:\/\//.test(repoUrl) || !URL.canParse(repoUrl)) {
-          setError(
-            `Enter a full ${PROVIDER_LABELS[type]} URL starting with https://`,
-          );
+        if (!trimmed || !URL.canParse(url) || !new URL(url).hostname.includes(".")) {
+          setError(`Enter the ${PROVIDER_LABELS[type]} repository URL`);
           setIsLoading(false);
           return;
         }
+        formData.set("repo-url", url);
 
         const result =
           type === "github"
@@ -158,104 +166,85 @@ export function NewProjectForm({ orgId }: NewProjectFormProps) {
 
         <FieldSet>
           <Field>
+            <FieldLabel htmlFor="type">Type</FieldLabel>
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger id="type" name="type">
+                <SelectValue placeholder="Select a type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="local">Local</SelectItem>
+                <SelectItem value="github">GitHub</SelectItem>
+                <SelectItem value="gitlab">GitLab</SelectItem>
+                <SelectItem value="bitbucket">Bitbucket</SelectItem>
+                <SelectItem value="mercurial">Mercurial</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          {type !== "local" ? (
+            <Field>
+              <FieldLabel htmlFor="repo-url">
+                {PROVIDER_LABELS[type]} URL
+              </FieldLabel>
+              <Input
+                id="repo-url"
+                name="repo-url"
+                type="url"
+                value={repoUrl}
+                onChange={(e) => {
+                  setRepoUrl(e.target.value);
+                  setError(null);
+                }}
+                className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+              />
+              {type === "mercurial" && (
+                <FieldDescription>Must be a public repository.</FieldDescription>
+              )}
+              <FieldError>{error}</FieldError>
+            </Field>
+          ) : (
+            <Field>
+              <FieldLabel htmlFor="file">File (.zip)</FieldLabel>
+              <Input
+                id="file"
+                name="file"
+                type="file"
+                accept=".zip,application/zip"
+                onChange={(e) => setUploadedFile(e.target.files?.[0] || null)}
+                className="cursor-pointer file:cursor-pointer file:border file:border-gray-700 file:bg-elevated file:hover:border-gray-600 file:px-4 file:py-1 file:rounded-md file:mr-3 file:transition-colors"
+              />
+              {uploadedFile && (
+                <FieldDescription>
+                  {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                </FieldDescription>
+              )}
+              <FieldError>{error}</FieldError>
+            </Field>
+          )}
+          <Field>
             <FieldLabel htmlFor="name">Name</FieldLabel>
             <input
               id="name"
               name="name"
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Repository name"
-              required
+              onChange={(e) => {
+                setName(e.target.value);
+                setNameError(null);
+              }}
+              placeholder={derivedName || "Repository name"}
               className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
             />
             <FieldDescription>
-              Choose a name for the repository.
+              Optional. Defaults to the repository&apos;s name.
             </FieldDescription>
             <FieldError>{nameError}</FieldError>
-          </Field>
-          <Separator />
-          <Field>
-            <FieldLabel htmlFor="type">Type</FieldLabel>
-            <Select
-              value={type}
-              onValueChange={(value) => {
-                setType(value);
-              }}
-            >
-              <SelectTrigger id="type" name="type">
-                <SelectValue placeholder="Select a type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Select a Type</SelectLabel>
-                  <SelectItem value="local">Local</SelectItem>
-                  <SelectItem value="github">GitHub</SelectItem>
-                  <SelectItem value="gitlab">GitLab</SelectItem>
-                  <SelectItem value="bitbucket">Bitbucket</SelectItem>
-                  <SelectItem value="mercurial">Mercurial</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <FieldDescription>Select a repository type</FieldDescription>
-            {type !== "local" && (
-              <div className="flex flex-col gap-3 py-2">
-                <Separator />
-                <Field className="py-2">
-                  <FieldLabel htmlFor="repo-url">
-                    {PROVIDER_LABELS[type]} URL
-                  </FieldLabel>
-                  <Input
-                    id="repo-url"
-                    name="repo-url"
-                    type="url"
-                    value={repoUrl}
-                    onChange={(e) => {
-                      setRepoUrl(e.target.value);
-                      setError(null);
-                    }}
-                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-                  />
-                  <FieldDescription>
-                    {type === "mercurial"
-                      ? "Enter the https:// URL of a public Mercurial repository."
-                      : `Enter the URL of the ${PROVIDER_LABELS[type]} repository.`}
-                  </FieldDescription>
-                  <FieldError>{error}</FieldError>
-                </Field>
-              </div>
-            )}
-            {type === "local" && (
-              <div className="flex flex-col gap-3 py-2">
-                <Separator />
-                <Field className="py-2">
-                  <FieldLabel htmlFor="file">File (.zip)</FieldLabel>
-                  <Input
-                    id="file"
-                    name="file"
-                    type="file"
-                    accept=".zip,application/zip"
-                    onChange={(e) =>
-                      setUploadedFile(e.target.files?.[0] || null)
-                    }
-                    className="cursor-pointer file:cursor-pointer file:border file:border-gray-700 file:bg-elevated file:hover:border-gray-600 file:px-4 file:py-1 file:rounded-md file:mr-3 file:transition-colors"
-                  />
-                  <FieldDescription>
-                    {uploadedFile
-                      ? `Selected: ${uploadedFile.name} (${(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)`
-                      : "Upload a .zip file of the local repository."}
-                  </FieldDescription>
-                  <FieldError>{error}</FieldError>
-                </Field>
-              </div>
-            )}
           </Field>
         </FieldSet>
 
         <Separator />
 
         <div className="flex gap-3">
-          <Button type="submit" size="sm" disabled={isLoading || !name.trim()}>
+          <Button type="submit" size="sm" disabled={isLoading || !finalName}>
             {isLoading ? "Creating..." : "Create Repository"}
           </Button>
           <Button

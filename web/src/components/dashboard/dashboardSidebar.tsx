@@ -55,21 +55,17 @@ export function DashboardSidebar() {
             <SidebarItem
               icon={<FolderCode className="h-4.5 w-4.5" />}
               label="Repositories"
-              action={() => router.push(`/dashboard/org/${currentContext.id}`)}
+              href={`/dashboard/org/${currentContext.id}`}
             />
             <SidebarItem
               icon={<Users className="h-4.5 w-4.5" />}
               label="Team"
-              action={() =>
-                router.push(`/dashboard/org/${currentContext.id}/team`)
-              }
+              href={`/dashboard/org/${currentContext.id}/team`}
             />
             <SidebarItem
               icon={<Settings className="h-4.5 w-4.5" />}
               label="Settings"
-              action={() =>
-                router.push(`/dashboard/org/${currentContext.id}/settings`)
-              }
+              href={`/dashboard/org/${currentContext.id}/settings`}
             />
           </>
         );
@@ -82,7 +78,7 @@ export function DashboardSidebar() {
               <SidebarItem
                 icon={<BookOpen className="h-4.5 w-4.5" />}
                 label="Documentation"
-                action={() => router.push(repoPath)}
+                href={repoPath}
               />
               <SidebarItem
                 icon={<MessageSquare className="h-4.5 w-4.5" />}
@@ -95,7 +91,7 @@ export function DashboardSidebar() {
               <SidebarItem
                 icon={<Settings className="h-4.5 w-4.5" />}
                 label="Settings"
-                action={() => router.push(`${repoPath}/settings`)}
+                href={`${repoPath}/settings`}
               />
             </>
           );
@@ -129,9 +125,7 @@ export function DashboardSidebar() {
             <SidebarItem
               icon={<Settings className="h-4.5 w-4.5" />}
               label="Settings"
-              action={() =>
-                router.push(`${currentContext.id}/settings`)
-              }
+              href={`${currentContext.id}/settings`}
             />
           </>
         );
@@ -142,12 +136,12 @@ export function DashboardSidebar() {
             <SidebarItem
               icon={<Building2 className="h-4.5 w-4.5" />}
               label="Organizations"
-              action={() => router.push("/dashboard/organizations")}
+              href="/dashboard/organizations"
             />
             <SidebarItem
               icon={<CircleUser className="h-4.5 w-4.5" />}
               label="Profile"
-              action={() => router.push("/dashboard/profile")}
+              href="/dashboard/profile"
             />
           </>
         );

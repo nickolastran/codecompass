@@ -29,6 +29,11 @@ export function RepoList({ organizationId }: RepoListProps) {
 
       return result.data as Repo[];
     },
+    // Keep "Indexing" cards live so they flip to done/failed without a reload
+    refetchInterval: (q) =>
+      q.state.data?.some((r) => ["indexing", "pending"].includes(r.index_status))
+        ? 5000
+        : false,
   });
 
   if (isLoading) {

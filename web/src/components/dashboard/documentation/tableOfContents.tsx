@@ -129,7 +129,7 @@ export function TableOfContentsSidebar({
         {onClose && (
           <div className="xl:hidden p-3 border-b border-border flex items-center justify-between shrink-0">
             <span className="text-sm font-semibold">Table of Contents</span>
-            <button onClick={onClose} className="p-1 hover:bg-border rounded">
+            <button onClick={onClose} aria-label="Close" className="p-2.5 -m-1.5 hover:bg-border rounded">
               <X className="w-4 h-4" />
             </button>
           </div>

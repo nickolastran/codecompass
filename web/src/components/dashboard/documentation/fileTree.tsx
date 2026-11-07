@@ -163,7 +163,7 @@ export function FileTreeSidebar({
         {onClose && (
           <div className="lg:hidden p-3 border-b border-border flex items-center justify-between">
             <span className="text-sm font-semibold">Documentation</span>
-            <button onClick={onClose} className="p-1 hover:bg-elevated rounded">
+            <button onClick={onClose} aria-label="Close" className="p-2.5 -m-1.5 hover:bg-elevated rounded">
               <X className="w-4 h-4" />
             </button>
           </div>
