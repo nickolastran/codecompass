@@ -124,6 +124,14 @@ LLM_API_KEY=ollama            # any non-empty value
 LLM_MODEL=qwen2.5:3b
 ```
 
+Ollama loads models with a 4096-token context by default and silently cuts off longer prompts, so large files lose their instructions. Raise it on the Ollama server (Linux install):
+
+```bash
+sudo mkdir -p /etc/systemd/system/ollama.service.d
+printf '[Service]\nEnvironment="OLLAMA_CONTEXT_LENGTH=32768"\n' | sudo tee /etc/systemd/system/ollama.service.d/context.conf
+sudo systemctl daemon-reload && sudo systemctl restart ollama
+```
+
 **Gemini free tier.** Fast and free, but limited to about 500 requests per day **per model**, and Google may use free-tier inputs for training: don't use it for private code.
 
 ```env
