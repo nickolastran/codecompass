@@ -6,6 +6,7 @@ import ollama
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from starlette.concurrency import iterate_in_threadpool, run_in_threadpool
 
 from retrieval_pipeline.rag_agent import RAG_Agent
 
@@ -79,8 +80,9 @@ async def handle_rag_request_stream(request: Request):
             status_code=400, detail=f"Request validation error: {str(e)}"
         )
 
-    def generate_stream():
+    async def generate_stream():
         agent_obj = None
+        stream = None
         try:
             # Initialize the RAG Agent
             print(
@@ -88,19 +90,24 @@ async def handle_rag_request_stream(request: Request):
             )
             agent_obj = RAG_Agent(user_id, repo_id)
 
-            # Run RAG pipeline and get streaming response
+            # Run RAG pipeline (blocking Ollama/Chroma calls) off the event loop
             print(f"[/chat/stream] Running RAG pipeline with model={selected_model}")
-            stream, chunks_list, chunks_file_paths = agent_obj.run(user_query, chat_history, selected_model)#
-
+            stream, chunks_list, chunks_file_paths = await run_in_threadpool(
+                agent_obj.run, user_query, chat_history, selected_model
+            )
 
             # Combine the lists into a list of snippet-like objects/tuples
             snippets_data = zip(chunks_file_paths, chunks_list)
-            
+
             for file_path, chunk_content in snippets_data:
                 yield f"data: {json.dumps({"type": "snippet", "file": file_path, "code": chunk_content})}\n\n"
-               
+
             #Stream tokens back to client
-            for chunk in stream:
+            async for chunk in iterate_in_threadpool(stream):
+                # Browser gone (refresh/navigation): stop so finally closes the Ollama stream
+                if await request.is_disconnected():
+                    print("[/chat/stream] Client disconnected, stopping generation")
+                    return
                 if "message" in chunk and "content" in chunk["message"]:
                     content = chunk["message"]["content"]
                     yield f"data: {json.dumps({'content': content})}\n\n"
@@ -134,6 +141,10 @@ async def handle_rag_request_stream(request: Request):
             traceback.print_exc()
             yield f"data: {json.dumps({'error': error_msg})}\n\n"
         finally:
+            # Closing drops the HTTP connection, which makes Ollama stop generating.
+            # Left open, an abandoned answer keeps the CPU model busy and every new question queues behind it.
+            if stream is not None:
+                stream.close()
             # Cleanup resources if RAG agent has cleanup method
             if agent_obj and hasattr(agent_obj, "cleanup"):
                 try:

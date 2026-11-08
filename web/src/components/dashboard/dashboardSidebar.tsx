@@ -12,6 +12,7 @@ import {
   MessageSquarePlus,
   CircleUser,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { useChatUIStore } from "@/lib/stores/useChatUIStore";
 import ConversationPanel from "./conversationPanel";
@@ -19,9 +20,10 @@ import ConversationPanel from "./conversationPanel";
 export function DashboardSidebar() {
   const pathname = usePathname();
   const params = useParams();
+  const router = useRouter();
   const { hasDocumentation } = useChatUIStore();
 
-  const { toggle, isExpanded: chatExpanded } = useChatUIStore();
+  const { toggle, expand, isExpanded: chatExpanded } = useChatUIStore();
 
   // Access dynamic route parameters
   const id = params.id as string | undefined;
@@ -81,7 +83,10 @@ export function DashboardSidebar() {
               <SidebarItem
                 icon={<MessageSquare className="h-4.5 w-4.5" />}
                 label="Chat"
-                href={`${repoPath}?chat=`}
+                action={() => {
+                  router.push(repoPath);
+                  expand("");
+                }}
               />
               <SidebarItem
                 icon={<Settings className="h-4.5 w-4.5" />}

@@ -503,12 +503,10 @@ export default function ChatInterface() {
   useEffect(() => {
     if (initialMessage && !hasSentInitialMessage.current) {
       hasSentInitialMessage.current = true;
-      // Clear any existing conversation to start fresh
-      setConversation(null);
-      // Send the initial message
+      // expand() already cleared the conversation, so this starts a fresh chat
       sendMessage(initialMessage);
     }
-  }, [initialMessage, setConversation]);
+  }, [initialMessage]);
 
   // Show empty state when there are no messages and no initial message
   const showEmptyState =

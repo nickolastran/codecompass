@@ -26,8 +26,10 @@ export const useChatUIStore = create<ChatUIState>((set) => ({
   hasDocumentation: false,
   repoId: null,
   selectedVersion: null,
+  // Bubble questions start a fresh chat; clearing here (before ChatInterface mounts)
+  // keeps its clear-on-conversation-change effect from wiping the question just sent
   expand: (message: string) =>
-    set({ isExpanded: true, initialMessage: message }),
+    set({ isExpanded: true, initialMessage: message, conversation: null }),
   minimize: () => set({ isExpanded: false, initialMessage: "" }),
   toggle: () => set((state) => ({ isExpanded: !state.isExpanded })),
   setHasDocumentation: (hasDocumentation: boolean) => set({ hasDocumentation }),
