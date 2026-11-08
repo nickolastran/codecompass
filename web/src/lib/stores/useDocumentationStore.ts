@@ -6,34 +6,22 @@ interface VersionInfo {
   updatedAt: string | null;
 }
 
+// Shared with the version pickers (docs header, chat). Indexing/loading state
+// lives in DocumentationViewer, derived from the repo's index_status.
 interface DocumentationState {
   selectedVersion: number | null;
   availableVersions: VersionInfo[];
-  isLoading: boolean;
-  isIndexing: boolean;
 
   selectVersion: (version: number) => void;
   setAvailableVersions: (versions: VersionInfo[]) => void;
-  setIsLoading: (loading: boolean) => void;
-  setIsIndexing: (indexing: boolean) => void;
   reset: () => void;
 }
 
 export const useDocumentationStore = create<DocumentationState>((set) => ({
   selectedVersion: null,
   availableVersions: [],
-  isLoading: false,
-  isIndexing: false,
 
   selectVersion: (version) => set({ selectedVersion: version }),
   setAvailableVersions: (versions) => set({ availableVersions: versions }),
-  setIsLoading: (loading) => set({ isLoading: loading }),
-  setIsIndexing: (indexing) => set({ isIndexing: indexing }),
-  reset: () =>
-    set({
-      selectedVersion: null,
-      availableVersions: [],
-      isLoading: false,
-      isIndexing: false,
-    }),
+  reset: () => set({ selectedVersion: null, availableVersions: [] }),
 }));

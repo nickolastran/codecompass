@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Menu, List, FileText, Loader2 } from "lucide-react";
 import { FileTreeSidebar } from "./fileTree";
 import { MainContent } from "./mainContent";
@@ -9,7 +10,7 @@ import { FileTreeSkeleton } from "./fileTreeSkeleton";
 import { MainContentSkeleton } from "./mainContentSkeleton";
 import { TableOfContentsSkeleton } from "./tableOfContentsSkeleton";
 import { EmptyStateSkeleton } from "./emptyStateSkeleton";
-import { Page, FileTreeNode, Heading } from "./types";
+import { Page } from "./types";
 import { buildFileTree, extractHeadings } from "./utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +31,45 @@ import {
   getRepoWithStatus,
   cancelIndexing,
 } from "@/lib/services/repoService";
+import { ActionResult } from "@/app/types/action";
+import { DocPage } from "@/app/types/supabase";
 import { motion } from "framer-motion";
+
+async function unwrap<T>(promise: Promise<ActionResult<T>>): Promise<T> {
+  const result = await promise;
+  if (!result.success) throw new Error(result.error);
+  return result.data;
+}
+
+// pages.referenced_* are jsonb; older rows stored them as JSON strings
+function toStringArray(field: unknown): string[] | null {
+  if (Array.isArray(field)) return field;
+  if (typeof field !== "string") return null;
+  try {
+    const parsed = JSON.parse(field);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function toPage(docPage: DocPage): Page {
+  return {
+    id: docPage.id,
+    documentation_id: docPage.documentation_id,
+    title: docPage.title ?? "Untitled",
+    slug: docPage.slug ?? "",
+    content: docPage.content ?? "",
+    order_index: docPage.order_index ?? 0,
+    parent_page_id: docPage.parent_page_id,
+    referenced_files: toStringArray(docPage.referenced_files),
+    referenced_symbols: toStringArray(docPage.referenced_symbols),
+    metadata: docPage.metadata,
+    created_at: docPage.created_at,
+    updated_at: docPage.updated_at ?? docPage.created_at,
+    version: 1, // Default version for now
+  };
+}
 
 export default function DocumentationViewer({
   repoId,
@@ -39,197 +78,121 @@ export default function DocumentationViewer({
   repoId: string;
   hasDocs: boolean;
 }) {
-  const [fileTree, setFileTree] = useState<FileTreeNode[]>([]);
-  const [selectedFile, setSelectedFile] = useState<Page | null>(null);
+  const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [headings, setHeadings] = useState<Heading[]>([]);
   const [showRefreshModal, setShowRefreshModal] = useState(false);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [isTocOpen, setIsTocOpen] = useState(false);
-  const [error, setError] = useState("");
-  const [indexError, setIndexError] = useState("");
-  const [indexProgress, setIndexProgress] = useState("");
   const mainContentScrollRef = useRef<HTMLDivElement>(null);
   const setHasDocumentation = useChatUIStore(
     (state) => state.setHasDocumentation,
   );
-
-  const selectedVersion = useDocumentationStore(
-    (state) => state.selectedVersion,
-  );
-  const setAvailableVersions = useDocumentationStore(
-    (state) => state.setAvailableVersions,
-  );
-  const selectVersion = useDocumentationStore((state) => state.selectVersion);
-  const isIndexing = useDocumentationStore((state) => state.isIndexing);
-  const setIsIndexing = useDocumentationStore((state) => state.setIsIndexing);
-  const availableVersions = useDocumentationStore(
-    (state) => state.availableVersions,
-  );
   const setSelectedVersionInChat = useChatUIStore(
     (state) => state.setSelectedVersion,
   );
+  const selectedVersion = useDocumentationStore(
+    (state) => state.selectedVersion,
+  );
+  const selectVersion = useDocumentationStore((state) => state.selectVersion);
+  const setAvailableVersions = useDocumentationStore(
+    (state) => state.setAvailableVersions,
+  );
+  const resetDocumentationStore = useDocumentationStore((state) => state.reset);
 
-  // This is a React anti-pattern. Replace with tanstack query later
-  useEffect(() => {
-    fetchVersions();
-  }, []);
+  // The repo's index_status is the source of truth for which screen shows.
+  // Versions are only read once indexing is over; poll until then.
+  const statusQuery = useQuery({
+    queryKey: ["documentation-status", repoId],
+    queryFn: async () => {
+      const repo = await unwrap(getRepoWithStatus(repoId));
+      const versions =
+        repo.index_status === "indexing"
+          ? []
+          : (await unwrap(getDocumentationVersions(repoId))).map((doc) => ({
+              version: doc.version ?? 0,
+              createdAt: doc.created_at,
+              updatedAt: doc.updated_at,
+            }));
+      return { repo, versions };
+    },
+    staleTime: 0,
+    refetchInterval: (q) =>
+      q.state.data?.repo.index_status === "indexing" ? 5000 : false,
+  });
+  const repo = statusQuery.data?.repo;
+  const versions = statusQuery.data?.versions;
 
-  // Poll while indexing so completion or failure shows up without a refresh
+  // A version's pages never change once written
+  const pagesQuery = useQuery({
+    queryKey: ["documentation-pages", repoId, selectedVersion],
+    queryFn: async () =>
+      (await unwrap(getDocPagesForVersion(repoId, selectedVersion!))).map(
+        toPage,
+      ),
+    enabled: versions?.some((v) => v.version === selectedVersion) ?? false,
+    staleTime: Infinity,
+  });
+  const pages = pagesQuery.data;
+
+  const startIndexing = useMutation({
+    mutationFn: () => unwrap(indexRepository(repoId)),
+    // Returned promise keeps the mutation pending until the status shows "indexing"
+    onSuccess: async () => {
+      await statusQuery.refetch();
+      setShowRefreshModal(false);
+      setShowGenerateModal(false);
+    },
+  });
+
+  type View = "loading" | "error" | "indexing" | "empty" | "ready";
+  const view: View =
+    statusQuery.isError || pagesQuery.isError
+      ? "error"
+      : !repo
+        ? "loading"
+        : repo.index_status === "indexing"
+          ? "indexing"
+          : versions!.length === 0
+            ? "empty"
+            : !pages
+              ? "loading"
+              : pages.length === 0
+                ? "empty"
+                : "ready";
+
+  const indexError =
+    repo?.index_status === "failed"
+      ? repo.metadata?.index_error || "Indexing failed."
+      : "";
+  const indexProgress = repo?.metadata?.index_progress ?? "";
+
+  const fileTree = useMemo(() => buildFileTree(pages ?? []), [pages]);
+  const selectedFile =
+    pages?.find((page) => page.id === selectedPageId) ?? pages?.[0] ?? null;
+  const headings = useMemo(
+    () => (selectedFile ? extractHeadings(selectedFile.content) : []),
+    [selectedFile],
+  );
+
+  // Show the newest version whenever the version list changes (first load, finished reindex)
   useEffect(() => {
-    if (!isIndexing) return;
-    const interval = setInterval(fetchVersions, 5000);
-    return () => clearInterval(interval);
-  }, [isIndexing]);
+    if (!versions) return;
+    setAvailableVersions(versions);
+    if (versions.length > 0) selectVersion(versions[0].version);
+  }, [versions, setAvailableVersions, selectVersion]);
+
+  // Version picks are per repo; don't carry them to the next one
+  useEffect(() => resetDocumentationStore, [resetDocumentationStore]);
 
   useEffect(() => {
-    if (selectedVersion !== null) {
-      // Sync the selected version to the chat store
-      setSelectedVersionInChat(selectedVersion);
-      fetchDocumentation();
-    }
+    if (selectedVersion !== null) setSelectedVersionInChat(selectedVersion);
   }, [selectedVersion, setSelectedVersionInChat]);
 
   useEffect(() => {
-    if (selectedFile) {
-      const extractedHeadings = extractHeadings(selectedFile.content);
-      setHeadings(extractedHeadings);
-    }
-  }, [selectedFile]);
-
-  const fetchVersions = async () => {
-    try {
-      // Check if repository is still indexing
-      const repoResult = await getRepoWithStatus(repoId);
-
-      if (!repoResult.success) {
-        console.error("Error fetching repo status:", repoResult.error);
-        return;
-      }
-
-      setIndexError(
-        repoResult.data.index_status === "failed"
-          ? repoResult.data.metadata?.index_error || "Indexing failed."
-          : "",
-      );
-
-      setIndexProgress(repoResult.data.metadata?.index_progress ?? "");
-
-      // Don't fetch documentation if still indexing
-      if (repoResult.data.index_status === "indexing") {
-        console.log("Repository is still indexing, skipping version fetch");
-        setIsIndexing(true);
-        setIsLoading(false);
-        return;
-      }
-
-      // If we get here, indexing is complete
-      setIsIndexing(false);
-
-      const result = await getDocumentationVersions(repoId);
-
-      if (!result.success) {
-        console.error("Error fetching versions:", result.error);
-        return;
-      }
-
-      // If no documentation versions exist, the repo has never been indexed
-      if (result.data.length === 0) {
-        console.log("No documentation versions found");
-        setIsIndexing(false);
-        setIsLoading(false);
-        return;
-      }
-
-      const versions = result.data.map((doc) => ({
-        version: doc.version ?? 0,
-        createdAt: doc.created_at,
-        updatedAt: doc.updated_at,
-      }));
-
-      setAvailableVersions(versions);
-
-      // Auto-select the latest version
-      if (versions.length > 0) {
-        selectVersion(versions[0].version);
-      }
-    } catch (error) {
-      console.error("Error fetching versions:", error);
-    }
-  };
-
-  const fetchDocumentation = async () => {
-    try {
-      setIsLoading(true);
-
-      if (selectedVersion === null) {
-        setIsLoading(false);
-        return;
-      }
-
-      const result = await getDocPagesForVersion(repoId, selectedVersion);
-
-      if (!result.success) {
-        console.error("Error fetching documentation:", result.error);
-        setFileTree([]);
-        setHasDocumentation(false);
-        setIsLoading(false);
-        return;
-      }
-
-      // Map DocPage[] to Page[]
-      const pages: Page[] = result.data.map((docPage) => {
-        // Helper function to parse JSON fields to string arrays
-        const parseToStringArray = (field: unknown): string[] | null => {
-          if (!field) return null;
-          if (Array.isArray(field)) return field;
-          if (typeof field === "string") {
-            try {
-              const parsed = JSON.parse(field);
-              return Array.isArray(parsed) ? parsed : null;
-            } catch {
-              return null;
-            }
-          }
-          return null;
-        };
-
-        return {
-          id: docPage.id,
-          documentation_id: docPage.documentation_id,
-          title: docPage.title ?? "Untitled",
-          slug: docPage.slug ?? "",
-          content: docPage.content ?? "",
-          order_index: docPage.order_index ?? 0,
-          parent_page_id: docPage.parent_page_id,
-          referenced_files: parseToStringArray(docPage.referenced_files),
-          referenced_symbols: parseToStringArray(docPage.referenced_symbols),
-          metadata: docPage.metadata,
-          created_at: docPage.created_at,
-          updated_at: docPage.updated_at ?? docPage.created_at,
-          version: 1, // Default version for now
-        };
-      });
-
-      const tree = buildFileTree(pages);
-      setFileTree(tree);
-
-      // Set the first page as selected if available
-      if (pages.length > 0) {
-        setSelectedFile(pages[0]);
-      }
-
-      // Update chat UI store with documentation availability
-      setHasDocumentation(pages.length > 0);
-    } catch (error) {
-      setHasDocumentation(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    setHasDocumentation(view === "ready");
+  }, [view, setHasDocumentation]);
 
   const toggleExpanded = (nodeId: string) => {
     setExpandedNodes((prev) => {
@@ -243,62 +206,31 @@ export default function DocumentationViewer({
     });
   };
 
-  const handleRefresh = async () => {
-    try {
-      setError("");
-      setIsIndexing(true);
+  const startError = startIndexing.error?.message ?? "";
+  const isStarting = startIndexing.isPending;
 
-      const result = await indexRepository(repoId);
+  if (view === "error") {
+    return (
+      <div className="flex h-full items-center justify-center bg-background">
+        <Empty
+          title="Could not load documentation"
+          description={(statusQuery.error ?? pagesQuery.error)?.message}
+          icon={<FileText className="h-8 w-8" />}
+        >
+          <Button
+            onClick={() => {
+              statusQuery.refetch();
+              if (pagesQuery.isError) pagesQuery.refetch();
+            }}
+          >
+            Try Again
+          </Button>
+        </Empty>
+      </div>
+    );
+  }
 
-      if (!result.success) {
-        setError(result.error);
-        setIsIndexing(false);
-        return;
-      }
-
-      // Clear client-side documentation state
-      setFileTree([]);
-      setSelectedFile(null);
-      setExpandedNodes(new Set());
-      setHeadings([]);
-      setHasDocumentation(false);
-
-      setShowRefreshModal(false);
-      // Keep isIndexing true - it will be cleared when fetchVersions detects completion
-
-      // Refetch versions to include the new one
-      await fetchVersions();
-    } catch (e) {
-      setError("Could not refresh: " + e);
-      setIsIndexing(false);
-    }
-  };
-
-  const handleGenerate = async () => {
-    try {
-      setError("");
-      setIsIndexing(true);
-
-      const result = await indexRepository(repoId);
-
-      if (!result.success) {
-        setError(result.error);
-        setIsIndexing(false);
-        return;
-      }
-
-      setShowGenerateModal(false);
-      // Keep isIndexing true - it will be cleared when fetchVersions detects completion
-
-      // Refetch versions to include the new one
-      await fetchVersions();
-    } catch (e) {
-      setError("Could not generate documentation: " + e);
-      setIsIndexing(false);
-    }
-  };
-
-  if (isLoading) {
+  if (view === "loading") {
     if (!hasDocs) return <EmptyStateSkeleton />;
     return (
       <div className="flex bg-background h-full">
@@ -309,7 +241,7 @@ export default function DocumentationViewer({
     );
   }
 
-  if (isIndexing) {
+  if (view === "indexing") {
     return (
       <div className="flex h-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -341,7 +273,7 @@ export default function DocumentationViewer({
             size="sm"
             onClick={async () => {
               await cancelIndexing(repoId);
-              await fetchVersions();
+              await statusQuery.refetch();
             }}
           >
             Cancel
@@ -351,7 +283,7 @@ export default function DocumentationViewer({
     );
   }
 
-  if (fileTree.length === 0) {
+  if (view === "empty") {
     return (
       <>
         <div className="flex h-full items-center justify-center bg-background">
@@ -384,9 +316,9 @@ export default function DocumentationViewer({
                 depending on the size of your repository.
               </DialogDescription>
             </DialogHeader>
-            {error && (
+            {startError && (
               <div className="w-full p-3 bg-destructive/10 text-destructive text-sm rounded-md text-center">
-                {error}
+                {startError}
               </div>
             )}
             <DialogFooter>
@@ -394,16 +326,16 @@ export default function DocumentationViewer({
                 variant="outline"
                 onClick={() => setShowGenerateModal(false)}
                 className="w-full sm:w-auto"
-                disabled={isIndexing}
+                disabled={isStarting}
               >
                 Cancel
               </Button>
               <Button
                 className="w-full sm:w-auto"
-                onClick={handleGenerate}
-                disabled={isIndexing}
+                onClick={() => startIndexing.mutate()}
+                disabled={isStarting}
               >
-                {isIndexing ? (
+                {isStarting ? (
                   <div className="flex items-center">
                     <motion.div
                       animate={{ rotate: 360 }}
@@ -462,11 +394,11 @@ export default function DocumentationViewer({
         expandedNodes={expandedNodes}
         searchQuery={searchQuery}
         lastIndexed={
-          availableVersions.find(
+          versions?.find(
             (version) => version.version === selectedVersion,
           )?.updatedAt ?? ""
         }
-        onSelectFile={setSelectedFile}
+        onSelectFile={(page) => setSelectedPageId(page.id)}
         onToggleExpanded={toggleExpanded}
         onSearchChange={setSearchQuery}
         isOpen={isFileTreeOpen}
@@ -517,9 +449,9 @@ export default function DocumentationViewer({
               repository.
             </DialogDescription>
           </DialogHeader>
-          {error && (
+          {startError && (
             <div className="w-full p-3 bg-destructive/10 text-destructive text-sm rounded-md text-center">
-              {error}
+              {startError}
             </div>
           )}
           <DialogFooter>
@@ -527,16 +459,16 @@ export default function DocumentationViewer({
               variant="outline"
               onClick={() => setShowRefreshModal(false)}
               className="w-full sm:w-auto"
-              disabled={isIndexing}
+              disabled={isStarting}
             >
               Cancel
             </Button>
             <Button
               className="w-full sm:w-auto"
-              onClick={handleRefresh}
-              disabled={isIndexing}
+              onClick={() => startIndexing.mutate()}
+              disabled={isStarting}
             >
-              {isIndexing ? (
+              {isStarting ? (
                 <div className="flex items-center">
                   <motion.div
                     animate={{ rotate: 360 }}
