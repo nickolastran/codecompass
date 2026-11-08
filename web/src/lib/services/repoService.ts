@@ -417,7 +417,7 @@ export async function updateRepoSettings(
     }
 
     updateData.object_url = fileName; // path in the private local_repos bucket
-    updateData.index_status = "pending"; // Trigger re-indexing
+    updateData.index_status = "not indexed"; // Trigger re-indexing
   }
 
   return toResult<Repo>(

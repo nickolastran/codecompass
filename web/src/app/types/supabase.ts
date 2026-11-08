@@ -22,6 +22,10 @@ export type OrganizationWithRole = Organization & {
   joined_at: string;
 };
 
+// Repo indexing lifecycle. Mirrors the index_status enum in supabase/migrations; change both together.
+// not indexed -> indexing -> indexed | failed; indexing again from any of them
+export type IndexStatus = "not indexed" | "indexing" | "indexed" | "failed";
+
 export type Repo = {
   id: string;
   created_at: string;
@@ -31,7 +35,7 @@ export type Repo = {
   repo_url: string | null;
   last_indexed_at: string | null;
   metadata: { index_error?: string; index_progress?: string } | null;
-  index_status: "not indexed" | "indexed" | "indexing" | "failed";
+  index_status: IndexStatus;
   object_url: string | null;
   name: string;
 };

@@ -5,16 +5,16 @@ import { FolderCode, ChevronRight, Droplet } from "lucide-react";
 import { Github } from "@geist-ui/icons";
 import { Gitlab } from "@geist-ui/icons";
 import { BitbucketIcon } from "@/components/bitbucketIcon";
-import { Repo } from "@/app/types/supabase";
+import { IndexStatus, Repo } from "@/app/types/supabase";
 import Link from "next/link";
 import { repoHref } from "@/lib/repoHref";
 import { motion } from "framer-motion";
 
-// [label, dot color]; anything unknown falls back to "Not indexed"
-const STATUS: Record<string, [string, string]> = {
-  indexed: ["Indexed", "bg-primary"],
+// [label, dot color]
+const STATUS: Record<IndexStatus, [string, string]> = {
+  "not indexed": ["Not indexed", "bg-muted-foreground"],
   indexing: ["Indexing", "bg-amber-500 animate-pulse"],
-  pending: ["Queued", "bg-amber-500 animate-pulse"],
+  indexed: ["Indexed", "bg-primary"],
   failed: ["Failed", "bg-destructive"],
 };
 
@@ -24,10 +24,7 @@ type RepoButtonProps = {
 
 export function RepoButton({ repo }: RepoButtonProps) {
   const type = repo.provider;
-  const [statusLabel, statusDot] = STATUS[repo.index_status] ?? [
-    "Not indexed",
-    "bg-muted-foreground",
-  ];
+  const [statusLabel, statusDot] = STATUS[repo.index_status];
 
   return (
     <motion.div whileHover="hover" className="parent">
