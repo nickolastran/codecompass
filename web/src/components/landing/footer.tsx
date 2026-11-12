@@ -21,7 +21,19 @@ export default function Footer() {
             <span className="font-semibold text-foreground">CodeCompass</span>
           </Link>
 
-          <nav className="flex items-center gap-6 text-sm text-muted-foreground">
+          <nav className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+            <Link
+              href="/docs/privacy"
+              className="hover:text-foreground transition-colors"
+            >
+              Privacy
+            </Link>
+            <Link
+              href="/docs/terms"
+              className="hover:text-foreground transition-colors"
+            >
+              Terms
+            </Link>
             <a
               href={`${REPO_URL}/issues`}
               target="_blank"

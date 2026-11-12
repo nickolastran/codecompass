@@ -46,7 +46,15 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Allow unauthenticated access to public pages
-  const publicPaths = ["/", "/login", "/auth", "/api/auth", "/error"];
+  const publicPaths = [
+    "/",
+    "/login",
+    "/auth",
+    "/api/auth",
+    "/error",
+    "/docs/privacy",
+    "/docs/terms",
+  ];
   const isPublicPath = publicPaths.some(
     (path) =>
       request.nextUrl.pathname === path ||
