@@ -91,9 +91,7 @@ export default function ConversationPanel() {
               }`}
             >
               {sideBarExpanded && (
-                <div
-                  className="text-xs truncate"
-                >
+                <div data-sidebar-label className="text-xs truncate">
                   {conversation.title}
                 </div>
               )}
